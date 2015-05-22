@@ -1,5 +1,5 @@
-/* Copyright (c) 2011-2015, EPFL/Blue Brain Project
- *                          Ahmet Bilgili <ahmet.bilgili@epfl.ch>
+/* Copyright (c) 2011-2014, EPFL/Blue Brain Project
+ *                     Ahmet Bilgili <ahmet.bilgili@epfl.ch>
  *
  * This file is part of Livre <https://github.com/BlueBrain/Livre>
  *
@@ -17,208 +17,129 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <livre/core/Dash/DashRenderNode.h>
-#include <livre/core/Dash/DashTree.h>
-#include <livre/core/Render/RenderBrick.h>
-#include <livre/core/Data/VolumeDataSource.h>
-#include <livre/core/Data/VolumeInformation.h>
-#include <livre/core/Visitor/RenderNodeVisitor.h>
 #include <livre/Lib/Render/AvailableSetGenerator.h>
 #include <livre/Lib/Visitor/CollectionTraversal.h>
 #include <livre/Lib/Visitor/DFSTraversal.h>
 #include <livre/Lib/Cache/TextureObject.h>
-#include <livre/Lib/Algorithm/LODFrustum.h>
+#include <livre/Lib/Cache/TextureCache.h>
+
+#include <livre/core/Data/VolumeDataSource.h>
+#include <livre/core/Data/NodeId.h>
+#include <livre/core/Dash/DashRenderNode.h>
+#include <livre/core/Dash/DashTree.h>
+#include <livre/core/Maths/Maths.h>
+#include <livre/core/Render/GLWidget.h>
+
+#include <boost/bind.hpp>
 
 namespace livre
 {
+void removeChildren( const NodeId& nodeId,
+                     uint32_t maxLevel,
+                     NodeIdSet& renderNodeSet );
 
-typedef boost::unordered_map< NodeId, dash::NodePtr > NodeIdDashNodeMap;
-
-class VisibleCollectorVisitor : public RenderNodeVisitor
+void removeSiblings( const NodeId& nodeId,
+                     uint32_t maxLevel,
+                     NodeIdSet& renderNodeSet )
 {
-public:
-
-    VisibleCollectorVisitor( DashTreePtr dashTree,
-                             const Frustum& frustum,
-                             const float screenSpaceError,
-                             const uint32_t windowHeight,
-                             DashNodeVector& nodeVector );
-
-    void visit( DashRenderNode& renderNode, VisitState& state ) final;
-
-    LODFrustum lodFrustum_;
-    DashNodeVector& nodeVector_;
-};
-
-VisibleCollectorVisitor::VisibleCollectorVisitor(
-        DashTreePtr dashTree,
-        const Frustum& frustum,
-        const float screenSpaceError,
-        const uint32_t windowHeight,
-        DashNodeVector& nodeVector )
-    : RenderNodeVisitor( dashTree ),
-      nodeVector_( nodeVector )
-{
-    FloatVector distances;
-
-    const float frustumSurfaceDelta = 0.0f;
-    distances.resize( PL_FAR + 1, frustumSurfaceDelta );
-
-    const VolumeInformation& volumeInformation =
-            dashTree->getDataSource()->getVolumeInformation();
-    const float wsPerVoxel = volumeInformation.worldSpacePerVoxel;
-    const float depth = volumeInformation.rootNode.getDepth();
-    const float levelZeroNodeSize = float( volumeInformation.maximumBlockSize[ 0 ] ) *
-                                    volumeInformation.worldSpacePerVoxel;
-
-    lodFrustum_ = LODFrustum( frustum,
-                              screenSpaceError,
-                              windowHeight,
-                              wsPerVoxel,
-                              levelZeroNodeSize,
-                              depth,
-                              distances );
-}
-
-void VisibleCollectorVisitor::visit( DashRenderNode& renderNode, VisitState& state )
-{
-    const LODNode& lodNode = renderNode.getLODNode();
-    if( !lodNode.isValid( ))
-        return;
-
-    if( lodNode.getRefLevel() == INVALID_LEVEL )
-        return;
-
-    const Boxf& worldBox = lodNode.getWorldBox();
-
-    if( !lodFrustum_.getFrustum().boxInFrustum( worldBox) )
+    const NodeIds& siblings = nodeId.getSiblings();
+    BOOST_FOREACH( const NodeId& s, siblings)
     {
-        state.setVisitChild( false );
-        return;
-    }
-
-    const int32_t index = lodNode.getMaxRefLevel() - lodNode.getRefLevel() - 1;
-
-    if( lodFrustum_.boxInSubFrustum( worldBox, index ) )
-    {
-        nodeVector_.push_back( renderNode.getDashNode() );
-        state.setVisitChild( false );
+        renderNodeSet.erase( s );
+        removeChildren( s, maxLevel, renderNodeSet );
     }
 }
 
-class LoadedTextureCollectVisitor : public RenderNodeVisitor
+void removeChildren( const NodeId& nodeId,
+                     uint32_t maxLevel,
+                     NodeIdSet& renderNodeSet )
 {
-public:
+    if( nodeId.getLevel() == maxLevel - 1 )
+        return;
 
-    LoadedTextureCollectVisitor( DashTreePtr dashTree,
-                                 NodeIdDashNodeMap& nodeIdDashNodeMap,
-                                 DashNodeVector& notAvailableRenderNodeList )
-        : RenderNodeVisitor( dashTree ),
-          _nodeIdDashNodeMap( nodeIdDashNodeMap ),
-          _notAvailableRenderNodeList( notAvailableRenderNodeList )
-    {}
-
-    void visit( DashRenderNode& renderNode, VisitState& )
+    const NodeIds& children = nodeId.getChildren();
+    BOOST_FOREACH( const NodeId& c, children)
     {
-        dash::NodePtr current = renderNode.getDashNode();
-        while( current )
-        {
-            DashRenderNode currentRenderNode( current );
-            const NodeId& nodeId = currentRenderNode.getLODNode().getNodeId();
-
-            const ConstTextureObjectPtr texture =
-                boost::static_pointer_cast< const TextureObject >(
-                        currentRenderNode.getTextureObject( ));
-
-            if( texture && texture->isLoaded( ))
-            {
-                _nodeIdDashNodeMap[ nodeId ] = current;
-                break;
-            }
-
-            current = nodeId.isRoot() ? 0 : getDashTree()->getParentNode( nodeId );
-        }
-
-        if( renderNode.getDashNode() != current )
-            _notAvailableRenderNodeList.push_back( renderNode.getDashNode() );
+        renderNodeSet.erase( c );
+        removeSiblings( c, maxLevel, renderNodeSet );
     }
 
-private:
-    NodeIdDashNodeMap& _nodeIdDashNodeMap;
-    DashNodeVector& _notAvailableRenderNodeList;
-};
+}
 
-
-bool hasParentInMap( DashRenderNode& childRenderNode,
-                     const NodeIdDashNodeMap& nodeIdDashNodeMap )
+bool areSiblingsLoaded( const LODTree& lodTree,
+                        const Frustum& frustum,
+                        const NodeId& nodeId,
+                        const TextureCache& textureCache )
 {
-    const LODNode& childNode = childRenderNode.getLODNode();
-
-    const NodeId childNodeId = childNode.getNodeId();
-    const NodeIds& parentNodeIds = childNodeId.getParents();
-
-    BOOST_FOREACH( const NodeId& parentId, parentNodeIds )
+    const NodeIds& siblings = nodeId.getSiblings();
+    BOOST_FOREACH( const NodeId& s, siblings)
     {
-        if( nodeIdDashNodeMap.find( parentId ) != nodeIdDashNodeMap.end() )
-            return true;
+       if( frustum.boxInFrustum( lodTree.getLODNode( nodeId ).getWorldBox()) &&
+               !textureCache.getObjectFromCache( s.getId() )->isLoaded() )
+           return false;
     }
-    return false;
+
+    return true;
+}
+
+bool isParentLoaded( const NodeId& nodeId, const TextureCache& textureCache )
+{
+    return textureCache.getObjectFromCache( nodeId.getId() )->isLoaded();
 }
 
 AvailableSetGenerator::AvailableSetGenerator( DashTreePtr tree,
-                          const uint32_t windowHeight,
-                          const float screenSpaceError )
-    : RenderingSetGenerator( tree ),
-      _windowHeight( windowHeight ),
-      _screenSpaceError( screenSpaceError )
+                                              const uint32_t windowHeight,
+                                              const float screenSpaceError )
+    : ComputeFullLODSet( textureCachePtr, lodTreePtr, screenSpaceError )
 {
 }
 
-void AvailableSetGenerator::generateRenderingSet( const Frustum& viewFrustum,
-                                        DashNodeVector& allNodesList,
-                                        DashNodeVector& renderNodeList,
-                                        DashNodeVector& notAvailableRenderNodeList,
-                                        RenderBricks& renderBrickList )
+void AvailableSetGenerator::generateRenderingSet(const GLWidget& widget,
+                                                  const Frustum& viewFrustum,
+                                                  NodeIdSet& requestedNodeSet,
+                                                  NodeIdSet& renderNodeSet )
 {
-    DFSTraversal dfsTraverser_;
-    VisibleCollectorVisitor visibleSelector( _tree,
-                                             viewFrustum,
-                                             _screenSpaceError,
-                                             _windowHeight,
-                                             allNodesList );
-    dfsTraverser_.traverse( _tree->getDataSource()->getVolumeInformation().rootNode,
-                            visibleSelector );
+    NodeIdSet renderSet;
+    _generateRenderingSet( widget, viewFrustum, renderSet );
 
-    NodeIdDashNodeMap nodeIdDashNodeMap;
-
-    LoadedTextureCollectVisitor collector( _tree,
-                                           nodeIdDashNodeMap,
-                                           notAvailableRenderNodeList );
-
-    CollectionTraversal colTraverser;
-    colTraverser.traverse( allNodesList, collector );
-
-    NodeIdDashNodeMap::const_iterator it = nodeIdDashNodeMap.begin();
-    while( it != nodeIdDashNodeMap.end() )
+    // NodeIds (std::set<NodeId>) keeps the list of NodeIds in order of their level of detail order.
+    // The below algorithm uses this information to traverse the set.
+    while( !renderSet.empty() )
     {
-        DashRenderNode childNode( it->second );
-        if( !notAvailableRenderNodeList.empty() && hasParentInMap( childNode, nodeIdDashNodeMap ) )
+        const NodeId& nodeId = *renderSet.end() ;
+        if( nodeId.isRoot() )
         {
-            it = nodeIdDashNodeMap.erase( it );
+            renderNodeSet.insert( nodeId );
+            renderSet.erase( nodeId );
+            continue;
+        }
+
+        if( areSiblingsLoaded( *_lodTreePtr, viewFrustum, nodeId, *_textureCachePtr ) )
+        {
+            const NodeIds& siblings = nodeId.getSiblings();
+            renderNodeSet.insert( siblings.begin(), siblings.end() );
+            removeChildren( nodeId, _lodTreePtr->getDataSource()->getDepth(), renderNodeSet );
+            removeChildren( nodeId, _lodTreePtr->getDataSource()->getDepth(), renderSet );
+            removeSiblings( nodeId, _lodTreePtr->getDataSource()->getDepth(), renderSet );
         }
         else
         {
-            renderNodeList.push_back( it->second );
-
-            const ConstTextureObjectPtr texture =
-                boost::static_pointer_cast< const TextureObject >( childNode.getTextureObject( ));
-
-            RenderBrickPtr renderBrick( new RenderBrick( texture->getLODNode(),
-                                                         texture->getTextureState( )));
-            renderBrickList.push_back( renderBrick );
-            ++it;
+            removeSiblings( nodeId, _lodTreePtr->getDataSource()->getDepth(), renderNodeSet );
+            const NodeIds& parents = nodeId.getParents();
+            BOOST_FOREACH( const NodeId& p, parents )
+            {
+                if( isParentLoaded( p, *_textureCachePtr ) )
+                {
+                    removeChildren( p, _lodTreePtr->getDataSource()->getDepth(), renderNodeSet );
+                    removeChildren( p, _lodTreePtr->getDataSource()->getDepth(), renderSet );
+                    renderSet.insert( p );
+                    break;
+                }
+            }
         }
     }
+
+    requestedNodeSet = renderNodeSet;
 }
 
 }

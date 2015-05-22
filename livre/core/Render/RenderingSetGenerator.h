@@ -47,14 +47,11 @@ public:
      * @param viewFrustum parameter is frustum to query HVD
      * @param allNodesList The list of nodes to be should have been rendered.
      * @param renderNodeList The list of nodes to be rendered.
-     * @param notAvailableRenderNodeList The nodes which are not available for the frustum query.
-     * @param renderBrickList The list of bricks to be rendered.
      */
-    virtual void generateRenderingSet( const Frustum& viewFrustum,
-                                       DashNodeVector& allNodesList,
-                                       DashNodeVector& renderNodeList,
-                                       DashNodeVector& notAvailableRenderNodeList,
-                                       RenderBricks& renderBrickList ) = 0;
+    virtual void generateRenderingSet( const GLWidget& widget,
+                                       const Frustum& viewFrustum,
+                                       NodeIdSet& requestedNodeSet,
+                                       NodeIdSet& renderNodeSet ) = 0;
 
     /**
      * @return Get dash tree.

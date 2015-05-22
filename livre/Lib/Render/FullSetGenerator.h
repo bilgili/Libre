@@ -1,5 +1,5 @@
-/* Copyright (c) 2011-2015, EPFL/Blue Brain Project
- *                         Ahmet Bilgili <ahmet.bilgili@epfl.ch>
+/* Copyright (c) 2011-2014, EPFL/Blue Brain Project
+ *                     Ahmet Bilgili <ahmet.bilgili@epfl.ch>
  *
  * This file is part of Livre <https://github.com/BlueBrain/Livre>
  *
@@ -17,31 +17,31 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _AvailableSetGenerator_h_
-#define _AvailableSetGenerator_h_
+#ifndef _ComputeFullLODSet_h_
+#define _ComputeFullLODSet_h_
 
 #include <livre/core/Render/RenderingSetGenerator.h>
+
+#include <livre/Lib/types.h>
 
 namespace livre
 {
 
 /**
- * The AvailableSetGenerator class, generates a rendering set according to the availability
- * of the textures.
+ * The FullSetGenerator class generates the complete rendering set for a given screen space error.
  */
-class AvailableSetGenerator : public RenderingSetGenerator
+class FullSetGenerator : public RenderingSetGenerator
 {
 public:
 
     /**
-     * @param tree The initialized dash tree with the volume.
-     * @param windowHeight View height in pixels.
-     * @param screenSpaceError Screen space error in pixels.
+     * @param textureCache The \see TextureCache
+     * @param lodTree LODTree.
+     * @param screenSpaceError Screen space error.
      */
-    AvailableSetGenerator( DashTreePtr tree,
-                           const uint32_t windowHeight,
-                           const float screenSpaceError );
-
+    FullSetGenerator( DashTreePtr tree,
+                      const uint32_t windowHeight,
+                      const float screenSpaceError );
 
     /**
      * Generates the rendering set according to the given frustum.
@@ -51,9 +51,18 @@ public:
     void generateRenderingSet( const GLWidget& widget,
                                const Frustum& viewFrustum,
                                NodeIdSet& requestedNodeSet,
-                               NodeIdSet& renderNodeSet ) final;
+                               NodeIdSet& renderNodeSet ) override;
+
+protected:
+
+    void _generateRenderingSet( const GLWidget& widget,
+                                const Frustum& viewFrustum,
+                                NodeIdSet& requestedNodeSet );
+
+    const TextureCachePtr _textureCachePtr;
+    const float _screenSpaceError;
 };
 
 
 }
-#endif // _AvailableSetGenerator_h_
+#endif // _ComputeFullLODSet_h_
