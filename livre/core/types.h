@@ -183,7 +183,7 @@ typedef std::vector< NodeId > NodeIds;
 /**
  * Vector definitions for complex types
  */
-typedef std::vector< ConstCacheObjectPtr > ConstCacheObjectPtrVector;
+typedef std::vector< ConstCacheObjectPtr > ConstCacheObjects;
 typedef std::vector< RenderBrickPtr > RenderBricks;
 typedef std::vector< VolumeDataSourcePtr > VolumeDataSourcePtrVector;
 typedef std::vector< TexturePoolPtr > TexturePoolPtrVector;
