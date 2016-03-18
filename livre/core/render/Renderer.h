@@ -35,6 +35,8 @@ class Renderer
 {
 public:
 
+    LIVRECORE_API virtual ~Renderer();
+
     /**
      * Renders the list of render bricks for a given frustum.
      * @param frustum is used for rendering the bricks according to view point.
@@ -93,7 +95,6 @@ protected:
                               const PixelViewport& view LB_UNUSED,
                               const NodeIds& orderedBricks LB_UNUSED ) {}
 
-    LIVRECORE_API virtual ~Renderer();
 };
 
 }

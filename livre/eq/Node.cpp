@@ -55,10 +55,16 @@ public:
 
         const size_t maxMemBytes = vrRenderParameters.getMaxCPUCacheMemoryMB() * LB_1MB;
 
+<<<<<<< e0f41d0fe59e7cb190c9530a560345d42fffb837
         _dataCache.reset( new DataCache( maxMemBytes, *_dataSource.get(), GL_UNSIGNED_BYTE ));
         const size_t histCacheSize =
                 32 * LB_1MB; // Histogram cache is 32 MB. Can hold approx 16k hists
         _histogramCache.reset( new HistogramCache( histCacheSize, *_dataCache ));
+=======
+        _dataCache.reset( new livre::TextureDataCache( maxMemBytes,
+                                                              *_dataSource.get(),
+                                                              GL_UNSIGNED_BYTE ));
+>>>>>>> Ospray
     }
 
     bool initializeVolume()
@@ -107,8 +113,12 @@ public:
     livre::Node* const _node;
     livre::Config* const _config;
     std::unique_ptr< DataSource > _dataSource;
+<<<<<<< e0f41d0fe59e7cb190c9530a560345d42fffb837
     std::unique_ptr< DataCache > _dataCache;
     std::unique_ptr< HistogramCache > _histogramCache;
+=======
+    std::unique_ptr< TextureDataCache > _dataCache;
+>>>>>>> Ospray
 };
 
 Node::Node( eq::Config* parent )
@@ -154,15 +164,25 @@ bool Node::configExit()
     return eq::Node::configExit();
 }
 
+<<<<<<< e0f41d0fe59e7cb190c9530a560345d42fffb837
 DataCache& Node::getDataCache()
+=======
+TextureDataCache& Node::getDataCache()
+>>>>>>> Ospray
 {
     return *_impl->_dataCache;
 }
 
+<<<<<<< e0f41d0fe59e7cb190c9530a560345d42fffb837
 
 livre::HistogramCache& livre::Node::getHistogramCache()
 {
     return *_impl->_histogramCache;
+=======
+const TextureDataCache &Node::getDataCache() const
+{
+    return *_impl->_dataCache;
+>>>>>>> Ospray
 }
 
 void Node::frameStart( const eq::uint128_t &frameId,

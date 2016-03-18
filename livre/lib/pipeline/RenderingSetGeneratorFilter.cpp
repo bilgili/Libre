@@ -32,8 +32,8 @@ namespace livre
 
 struct RenderingSetGenerator
 {
-    explicit RenderingSetGenerator( const TextureCache& textureCache )
-        : _textureCache( textureCache )
+    explicit RenderingSetGenerator( const Cache& cache )
+        : _cache( cache )
     {}
 
     bool hasParentInMap( const NodeId& childRenderNode,
@@ -48,17 +48,22 @@ struct RenderingSetGenerator
         return false;
     }
 
-    void collectLoadedTextures( const NodeId& nodeId,
+    void collectLoadedObjects( const NodeId& nodeId,
                                 ConstCacheMap& cacheMap ) const
     {
         NodeId current = nodeId;
         while( current.isValid( ))
         {
             const NodeId& currentNodeId = current;
+<<<<<<< e0f41d0fe59e7cb190c9530a560345d42fffb837
             const ConstCacheObjectPtr texture = _textureCache.get( currentNodeId.getId( ));
             if( texture )
+=======
+            const ConstCacheObjectPtr cacheObject = _cache.get( currentNodeId.getId( ));
+            if( cacheObject && cacheObject->isLoaded( ))
+>>>>>>> Ospray
             {
-                cacheMap[ currentNodeId.getId() ] = texture;
+                cacheMap[ currentNodeId.getId() ] = cacheObject;
                 break;
             }
 
@@ -73,9 +78,14 @@ struct RenderingSetGenerator
         ConstCacheMap cacheMap;
         for( const NodeId& nodeId : visibles )
         {
+<<<<<<< e0f41d0fe59e7cb190c9530a560345d42fffb837
             collectLoadedTextures( nodeId, cacheMap );
             cacheMap.count( nodeId.getId( )) > 0 ?
                         ++availability.nAvailable : ++availability.nNotAvailable;
+=======
+            collectLoadedObjects( nodeId, cacheMap );
+            cacheMap.count( nodeId.getId( )) > 0 ? ++nAvailable : ++nNotAvailable;
+>>>>>>> Ospray
         }
 
         if( visibles.size() != cacheMap.size( ))
@@ -98,21 +108,18 @@ struct RenderingSetGenerator
 
         ConstCacheObjects cacheObjects;
         cacheObjects.reserve( cacheMap.size( ));
-        for( ConstCacheMap::const_iterator it = cacheMap.begin();
-             it != cacheMap.end(); ++it )
-        {
-            cacheObjects.push_back( it->second );
-        }
+        for( const auto& it: cacheMap )
+            cacheObjects.push_back( it.second );
 
         return cacheObjects;
     }
 
-    const TextureCache& _textureCache;
+    const Cache& _cache;
 };
 
 struct RenderingSetGeneratorFilter::Impl
 {
-    explicit Impl( const TextureCache& cache )
+    explicit Impl( const Cache& cache )
         : _cache( cache )
     {}
 
@@ -157,10 +164,10 @@ struct RenderingSetGeneratorFilter::Impl
         };
     }
 
-    const TextureCache& _cache;
+    const Cache& _cache;
 };
 
-RenderingSetGeneratorFilter::RenderingSetGeneratorFilter( const TextureCache& cache )
+RenderingSetGeneratorFilter::RenderingSetGeneratorFilter( const Cache& cache )
     : _impl( new RenderingSetGeneratorFilter::Impl( cache ))
 {
 }

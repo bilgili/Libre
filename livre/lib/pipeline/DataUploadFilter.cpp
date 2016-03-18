@@ -41,6 +41,7 @@ public:
         , _nUploaders( nUploaders )
     {}
 
+    /* CHANGE ME !
     ConstCacheObjects load( const NodeIds& visibles ) const
     {
         ConstCacheObjects cacheObjects;
@@ -74,6 +75,33 @@ public:
         {
             ConstCacheObjectPtr texture = _textureCache.get( nodeId.getId( ));
             cacheObjects.push_back( texture );
+        }
+
+        return cacheObjects;
+    }
+    */
+
+    ConstCacheObjects load( const NodeIds& visibles ) const
+    {
+        ConstCacheObjects cacheObjects;
+        cacheObjects.reserve( visibles.size( ));
+        for( const NodeId& nodeId: visibles )
+        {
+           CacheObjectPtr data = _textureCache.getDataCache().load( nodeId.getId( ));
+           cacheObjects.push_back( data );
+        }
+
+        return cacheObjects;
+    }
+
+    ConstCacheObjects get( const NodeIds& visibles ) const
+    {
+        ConstCacheObjects cacheObjects;
+        cacheObjects.reserve( visibles.size( ));
+        for( const NodeId& nodeId: visibles )
+        {
+            ConstCacheObjectPtr data = _textureCache.getDataCache().get( nodeId.getId( ));
+            cacheObjects.push_back( data );
         }
 
         return cacheObjects;
@@ -145,12 +173,9 @@ DataUploadFilter::DataUploadFilter( const size_t id,
 }
 
 DataUploadFilter::~DataUploadFilter()
-{
+{}
 
-}
-
-void DataUploadFilter::execute( const FutureMap& input,
-                                PromiseMap& output ) const
+void DataUploadFilter::execute( const FutureMap& input, PromiseMap& output ) const
 {
     _impl->execute( input, output );
 }

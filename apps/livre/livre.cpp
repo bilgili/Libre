@@ -29,6 +29,8 @@
 #include <livre/eq/Channel.h>
 #include <livre/eq/Error.h>
 
+#include <ospray/ospray.h>
+
 #include <stdlib.h>
 
 class NodeFactory : public eq::NodeFactory
@@ -55,6 +57,11 @@ public:
 
 int main( const int argc, char** argv )
 {
+    // CHANGE ME !
+    int argCount = argc;
+    const char **argV = (const char **)argv;
+    ospInit( &argCount, argV );
+
     for( int i = 1; i < argc; ++i )
     {
         if( std::string( "--help" ) == argv[i] )

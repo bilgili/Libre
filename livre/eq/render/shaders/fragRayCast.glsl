@@ -119,6 +119,8 @@ void main( void )
     if( result.a > EARLY_EXIT )
         discard;
 
+    sampler3D volumeTex2 = volumeTex;
+
     vec4 brickResult = vec4( 0.0f );
 
     for( int i = 0; i < nSamplesPerPixel; i++ )

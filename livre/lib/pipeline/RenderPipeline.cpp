@@ -113,9 +113,15 @@ struct RenderPipeline::Impl
                 renderPipeline.add< VisibleSetGeneratorFilter >(
                     "VisibleSetGenerator", _dataSource );
 
+        // CHANGE ME !
         PipeFilter renderingSetGenerator =
+<<<<<<< e0f41d0fe59e7cb190c9530a560345d42fffb837
                 renderPipeline.add< RenderingSetGeneratorFilter >(
                     "RenderingSetGenerator", _textureCache );
+=======
+                computePipeline.add< RenderingSetGeneratorFilter >(
+                    "RenderingSetGenerator", _textureCache.getDataCache( ));
+>>>>>>> Ospray
 
         visibleSetGenerator.connect( "VisibleNodes",
                                      renderingSetGenerator, "VisibleNodes" );

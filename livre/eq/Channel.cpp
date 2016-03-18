@@ -30,6 +30,7 @@
 #include <livre/eq/Pipe.h>
 #include <livre/eq/render/EqContext.h>
 #include <livre/eq/render/RayCastRenderer.h>
+#include <livre/eq/render/OSPrayRenderer.h>
 #include <livre/eq/settings/CameraSettings.h>
 #include <livre/eq/settings/FrameSettings.h>
 #include <livre/eq/settings/RenderSettings.h>
@@ -146,6 +147,24 @@ struct EqRaycastRenderer : public RayCastRenderer
 };
 
 
+struct EqOSPrayRenderer : public OSPrayRenderer
+{
+    EqOSPrayRenderer( Channel::Impl& channel,
+                       const TextureDataCache& dataCache,
+                       uint32_t samplesPerRay,
+                       uint32_t samplesPerPixel )
+        : OSPrayRenderer( dataCache, samplesPerRay, samplesPerPixel )
+        , _channel( channel )
+    {}
+
+    void _onFrameStart( const Frustum& frustum,
+                        const PixelViewport& view,
+                        const NodeIds& renderBricks ) final;
+
+    Channel::Impl& _channel;
+};
+
+
 struct Channel::Impl
 {
 public:
@@ -172,15 +191,22 @@ public:
 
     void initializeRenderer()
     {
-        const uint32_t nSamplesPerRay =
-            getFrameData()->getVRParameters().getSamplesPerRay();
+        const uint32_t nSamplesPerRay = 512; // getFrameData()->getVRParameters().getSamplesPerRay();
 
-        const uint32_t nSamplesPerPixel =
-            getFrameData()->getVRParameters().getSamplesPerPixel();
+        const uint32_t nSamplesPerPixel = 512; //  getFrameData()->getVRParameters().getSamplesPerPixel();
 
+        // CHANGE ME !
+        /*
         const Window* window = static_cast< const Window* >( _channel->getWindow( ));
+
         _renderer.reset( new EqRaycastRenderer( *this,
                                                 window->getTextureCache(),
+                                                nSamplesPerRay,
+                                                nSamplesPerPixel ));*/
+
+        const Node* node = static_cast< const Node* >( _channel->getNode( ));
+        _renderer.reset( new EqOSPrayRenderer( *this,
+                                                node->getDataCache(),
                                                 nSamplesPerRay,
                                                 nSamplesPerPixel ));
     }
@@ -288,7 +314,8 @@ public:
         const livre::Window* window = static_cast< const livre::Window* >( _channel->getWindow( ));
         const RenderPipeline& renderPipeline = window->getRenderPipeline();
 
-        _renderer->update( *pipe->getFrameData( ));
+        // CHANGE ME !
+        // _renderer->update( *pipe->getFrameData( ));
         renderPipeline.render( pipe->getFrameData()->getVRParameters(),
                                _frameInfo,
                                {{ _drawRange.start, _drawRange.end }},
@@ -393,7 +420,9 @@ public:
         else if( ratio == 1.0f )
             unit = "m";
 
-        const size_t nBricks = _renderer->getNumBricksUsed();
+        // CHANGE ME !
+        // const size_t nBricks = _renderer->getNumBricksUsed();
+        const size_t nBricks = 0;
         const float mbBricks =
             float( dataSource.getVolumeInfo().maximumBlockSize.product( )) /
             1024.f / 1024.f * float( nBricks );
@@ -576,8 +605,12 @@ public:
     eq::Frame _frame;
     FrameGrabber _frameGrabber;
     FrameInfo _frameInfo;
+<<<<<<< e0f41d0fe59e7cb190c9530a560345d42fffb837
     NodeAvailability _availability;
     std::unique_ptr< RayCastRenderer > _renderer;
+=======
+    std::unique_ptr< Renderer > _renderer;
+>>>>>>> Ospray
     ::lexis::data::Progress _progress;
 #ifdef LIVRE_USE_ZEROEQ
     zeroeq::Publisher _publisher;
@@ -591,6 +624,14 @@ void EqRaycastRenderer::_onFrameStart( const Frustum& frustum,
 {
     _channel.updateRegions( renderBricks, frustum );
     RayCastRenderer::_onFrameStart( frustum, planes, view, renderBricks );
+}
+
+void EqOSPrayRenderer::_onFrameStart( const Frustum& frustum,
+                                      const PixelViewport& view,
+                                      const NodeIds& renderBricks )
+{
+    _channel.updateRegions( renderBricks, frustum );
+    OSPrayRenderer::_onFrameStart( frustum, view, renderBricks );
 }
 
 Channel::Channel( eq::Window* parent )

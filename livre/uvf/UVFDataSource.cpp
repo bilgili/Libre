@@ -118,7 +118,7 @@ public:
                                                       maxBrickSize[1],
                                                       maxBrickSize[2] );
 
-            const UINTVECTOR3& overlap = _uvfDataSetPtr->GetBrickOverlapSize( );
+            const UINTVECTOR3& overlap = _uvfDataSetPtr->GetBrickOverlapSize();
             _volumeInfo.overlap = Vector3ui( overlap[0], overlap[1], overlap[2] );
 
             const UINT64VECTOR3& domainSize = _uvfDataSetPtr->GetDomainSize( );

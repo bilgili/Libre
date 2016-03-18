@@ -44,12 +44,20 @@ public:
     /**
      * @return The data cache.
      */
+<<<<<<< e0f41d0fe59e7cb190c9530a560345d42fffb837
     DataCache& getDataCache();
 
     /**
      * @return The histogram cache.
      */
     HistogramCache& getHistogramCache();
+=======
+    TextureDataCache& getDataCache();
+    /**
+     * @return The texture data cache.
+     */
+    const TextureDataCache& getDataCache() const;
+>>>>>>> Ospray
 
 private:
     bool configInit( const eq::uint128_t& initId ) final;
