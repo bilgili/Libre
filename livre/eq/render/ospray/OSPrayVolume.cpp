@@ -20,7 +20,7 @@
 #include <livre/eq/render/ospray/OSPrayVolume.h>
 
 #include <livre/core/data/DataSource.h>
-#include <livre/lib/cache/TextureDataCache.h>
+#include <livre/lib/cache/DataCache.h>
 
 #include <ospray/common/Data.h>
 #include <ospray/common/Core.h>
@@ -57,22 +57,36 @@ void OSPrayVolume::createEquivalentISPC()
     if( ispcEquivalent != 0 )
         return;
 
-    ispcEquivalent = ispc::constructISPCVolume( this /*, ospBBox */ );
+    ispcEquivalent = ispc::constructISPCVolume( this );
 }
 
 void OSPrayVolume::commit()
 {
     if( !ispcEquivalent )
-        return;
+        createEquivalentISPC();
 
     ospray::Data* nodeIdsData = getParamData( "nodeIds",  0 );
-    uint64_t* nodeIds = (uint64_t*)nodeIdsData->data;
-    const size_t count = getParam1i( "count",  0 );
-    ospray::Data* cachePtr = getParamData( "dataCache",  0 );
-    _dataCache = (const TextureDataCache *)cachePtr->data;
-    _dataSource = &_dataCache->getDataSource();
-    _volInfo = &_dataSource->getVolumeInfo();
-    ispc::setListOfNodes( ispcEquivalent, nodeIds, count );
+    if( nodeIdsData )
+    {
+        uint64_t* nodeIds = (uint64_t*)nodeIdsData->data;
+        const size_t count = getParam1i( "count",  0 );
+        ispc::setListOfNodes( ispcEquivalent, nodeIds, count );
+    }
+
+    void* cachePtr = getVoidPtr( "dataCache",  0 );
+    if( cachePtr )
+    {
+        _dataCache = (const DataCache *)cachePtr;
+        _dataSource = &_dataCache->getDataSource();
+        _volInfo = &_dataSource->getVolumeInfo();
+    }
+
+    ospray::vec3f boundingBoxMin = getParam3f( "boundingBoxMin", ospray::vec3f(-1.f));
+    ospray::vec3f boundingBoxMax = getParam3f( "boundingBoxMax", ospray::vec3f(1.f));
+
+    ispc::setBoundingBox( ispcEquivalent, (ispc::vec3f&)boundingBoxMin, (ispc::vec3f&)boundingBoxMax );
+
+    updateEditableParameters();
 }
 
 void OSPrayVolume::computeSamples( float** results,
@@ -112,7 +126,7 @@ float OSPrayVolume::sample( const uint64_t* nodeIds,
         return 0.0f;
 
     // Compute sample
-    return 0.1f;
+    return 100.0f;
 }
 
 }
@@ -134,6 +148,9 @@ float sampleLivreData( void* osprayVolume,
                        float z )
 {
     const ::livre::OSPrayVolume* volume = static_cast< ::livre::OSPrayVolume* >( osprayVolume );
+    if( !volume )
+        return 0.0f;
     return volume->sample( nodeIds, count, x, y, z );
 }
 }
+

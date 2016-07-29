@@ -26,7 +26,7 @@
 
 struct OSPrayISPCVolume
 {
-    Volume* super;
+    Volume super;
     void* cppEquivalent;
     unsigned int64* nodeIds;
     unsigned int64 count;

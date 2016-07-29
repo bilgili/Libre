@@ -38,18 +38,53 @@
 
 extern "C" uniform float sampleLivreData( void* uniform cppEquivalent,
                                           uniform unsigned int64 *uniform nodeIds,
-                                          uniform unsigned int64 count,
+                                          uniform unsigned int64 size,
                                           uniform float x,
                                           uniform float y,
                                           uniform float z );
 
+inline void intersect(void *uniform self, varying Ray &ray)
+{
+    uniform OSPrayISPCVolume* uniform volume = (uniform OSPrayISPCVolume* uniform)self;
+
+    // The recommended step size for ray casting based volume renderers.
+    const uniform float step = volume->super.samplingStep / volume->super.samplingRate;
+
+    ray.t0 += step;
+}
+
+
+inline varying float computeSample(void *uniform self, const varying vec3f &worldCoordinates)
+{
+    uniform OSPrayISPCVolume* uniform volume = (uniform OSPrayISPCVolume* uniform)self;
+    float sample;
+    if( volume->count == 0 )
+        return sample;
+
+    float x; float y; float z;
+    x =  worldCoordinates.x;
+    y =  worldCoordinates.y;
+    z =  worldCoordinates.z;
+    foreach_active( lane )
+    {
+         insert( sample, lane, sampleLivreData( volume->super.cppEquivalent,
+                                                volume->nodeIds,
+                                                volume->count,
+                                                extract( x, lane ),
+                                                extract( y, lane ),
+                                                extract( z, lane )));
+    }
+    return sample;
+}
+
 export void* uniform constructISPCVolume( void *uniform cppEquivalent )
 {
-
     OSPrayISPCVolume *uniform volume = uniform new uniform OSPrayISPCVolume;
     volume->nodeIds = 0;
     volume->count = 0;
-    Volume_Constructor( volume->super, cppEquivalent );
+    Volume_Constructor( &volume->super, cppEquivalent );
+    volume->super.computeSample = &computeSample;
+    volume->super.intersect = &intersect;
     return volume;
 }
 
@@ -60,6 +95,14 @@ export void setListOfNodes( void *uniform self,
     uniform OSPrayISPCVolume* uniform volume = (uniform OSPrayISPCVolume* uniform)self;
     volume->nodeIds = nodeIds;
     volume->count = count;
+}
+
+export void setBoundingBox( void *uniform self,
+                            uniform vec3f& boundingBoxMin,
+                            uniform vec3f& boundingBoxMax )
+{
+    uniform OSPrayISPCVolume* uniform volume = (uniform OSPrayISPCVolume* uniform)self;
+    volume->super.boundingBox = make_box3f( boundingBoxMin, boundingBoxMax );
 }
 
 export void computeSamples( void *uniform self,
@@ -77,7 +120,7 @@ export void computeSamples( void *uniform self,
         z =  worldCoordinates[ i ].z;
         foreach_active( lane )
         {
-             insert( sample, lane, sampleLivreData( volume->cppEquivalent,
+             insert( sample, lane, sampleLivreData( volume->super.cppEquivalent,
                                                     volume->nodeIds,
                                                     volume->count,
                                                     extract( x, lane ),
@@ -87,3 +130,5 @@ export void computeSamples( void *uniform self,
         results[ i ] = sample;
     }
 }
+
+

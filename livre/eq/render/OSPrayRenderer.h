@@ -40,7 +40,7 @@ public:
      * @param internalFormat Internal format of the texture in GPU memory.
      * @param volInfo Volume information.
      */
-    OSPrayRenderer( const TextureDataCache& dataCache,
+    OSPrayRenderer( const DataCache& dataCache,
                     uint32_t samplesPerRay,
                     uint32_t samplesPerPixel );
     ~OSPrayRenderer();
@@ -58,14 +58,17 @@ protected:
                     const Frustum& frustum ) const override;
 
     void _onFrameStart( const Frustum& frustum,
+                        const ClipPlanes& planes,
                         const PixelViewport& view,
                         const NodeIds& orderedBricks ) override;
 
     void _onFrameRender( const Frustum& frustum,
+                         const ClipPlanes& planes,
                          const PixelViewport& view,
                          const NodeIds& orderedBricks ) final;
 
     void _onFrameEnd( const Frustum& frustum,
+                      const ClipPlanes& planes,
                       const PixelViewport& view,
                       const NodeIds& orderedBricks ) override;
 

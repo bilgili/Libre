@@ -150,7 +150,7 @@ struct EqRaycastRenderer : public RayCastRenderer
 struct EqOSPrayRenderer : public OSPrayRenderer
 {
     EqOSPrayRenderer( Channel::Impl& channel,
-                       const TextureDataCache& dataCache,
+                       const DataCache& dataCache,
                        uint32_t samplesPerRay,
                        uint32_t samplesPerPixel )
         : OSPrayRenderer( dataCache, samplesPerRay, samplesPerPixel )
@@ -158,6 +158,7 @@ struct EqOSPrayRenderer : public OSPrayRenderer
     {}
 
     void _onFrameStart( const Frustum& frustum,
+                        const ClipPlanes& planes,
                         const PixelViewport& view,
                         const NodeIds& renderBricks ) final;
 
@@ -204,7 +205,7 @@ public:
                                                 nSamplesPerRay,
                                                 nSamplesPerPixel ));*/
 
-        const Node* node = static_cast< const Node* >( _channel->getNode( ));
+        Node* node = static_cast< Node* >( _channel->getNode( ));
         _renderer.reset( new EqOSPrayRenderer( *this,
                                                 node->getDataCache(),
                                                 nSamplesPerRay,
@@ -605,12 +606,9 @@ public:
     eq::Frame _frame;
     FrameGrabber _frameGrabber;
     FrameInfo _frameInfo;
-<<<<<<< e0f41d0fe59e7cb190c9530a560345d42fffb837
     NodeAvailability _availability;
-    std::unique_ptr< RayCastRenderer > _renderer;
-=======
     std::unique_ptr< Renderer > _renderer;
->>>>>>> Ospray
+
     ::lexis::data::Progress _progress;
 #ifdef LIVRE_USE_ZEROEQ
     zeroeq::Publisher _publisher;
@@ -627,11 +625,12 @@ void EqRaycastRenderer::_onFrameStart( const Frustum& frustum,
 }
 
 void EqOSPrayRenderer::_onFrameStart( const Frustum& frustum,
+                                      const ClipPlanes& planes,
                                       const PixelViewport& view,
                                       const NodeIds& renderBricks )
 {
     _channel.updateRegions( renderBricks, frustum );
-    OSPrayRenderer::_onFrameStart( frustum, view, renderBricks );
+    OSPrayRenderer::_onFrameStart( frustum, planes, view, renderBricks );
 }
 
 Channel::Channel( eq::Window* parent )

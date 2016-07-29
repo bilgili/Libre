@@ -8,29 +8,10 @@
 #       Main Authors: Ahmet Bilgili
 #
 #
-<<<<<<< e0f41d0fe59e7cb190c9530a560345d42fffb837
-=======
 
 set(LIVREEQ_LINK_LIBRARIES PUBLIC Lexis LivreLib Equalizer)
 
-if(OSPRAY_FOUND)
-  # compiler selection for the non-MIC part
-  if(APPLE)
-    set(OSPRAY_COMPILER "CLANG" CACHE STRING "compiler to use (ICC,GCC, or CLANG)")
-    set_property(CACHE OSPRAY_COMPILER PROPERTY STRINGS ICC GCC CLANG)
-  else(APPLE)
-    set(OSPRAY_COMPILER "GCC" CACHE STRING "compiler to use (ICC or GCC)")
-    set_property(CACHE OSPRAY_COMPILER PROPERTY STRINGS ICC GCC)
-  endif()
-  # the arch we're targeting for the non-MIC/non-xeon phi part of ospray
-  set(BRAYNS_BUILD_ISA "ALL" CACHE STRING "Target ISA (SSE,AVX,AVX2,or ALL)")
-  set_property(CACHE BRAYNS_BUILD_ISA PROPERTY STRINGS ALL SSE AVX AVX2)
-  list(APPEND LIVREEQ_LINK_LIBRARIES ${OSPRAY_LIBRARIES})
-endif()
-
 include(StringifyShaders)
-include(Files.cmake)
->>>>>>> Ospray
 
 set(LIVREEQ_HEADERS
       Channel.h
@@ -106,6 +87,28 @@ if(LibJpegTurbo_FOUND)
   list(APPEND LIVREEQ_LINK_LIBRARIES PRIVATE ${LibJpegTurbo_LIBRARIES})
 endif()
 
+if(OSPRAY_FOUND)
+    if(APPLE)
+        set(OSPRAY_COMPILER "CLANG" CACHE STRING "compiler to use (ICC,GCC, or CLANG)")
+        set_property(CACHE OSPRAY_COMPILER PROPERTY STRINGS ICC GCC CLANG)
+        else(APPLE)
+        set(OSPRAY_COMPILER "GCC" CACHE STRING "compiler to use (ICC or GCC)")
+        set_property(CACHE OSPRAY_COMPILER PROPERTY STRINGS ICC GCC)
+    endif()
+    # the arch we're targeting for the non-MIC/non-xeon phi part of ospray
+    set(BRAYNS_BUILD_ISA "ALL" CACHE STRING "Target ISA (SSE,AVX,AVX2,or ALL)")
+    set_property(CACHE BRAYNS_BUILD_ISA PROPERTY STRINGS ALL SSE AVX AVX2)
+    list(APPEND LIVREEQ_LINK_LIBRARIES ${OSPRAY_LIBRARIES})
+    include(ispc)
+    CONFIGURE_ISPC()
+    INCLUDE_DIRECTORIES_ISPC(${OSPRAY_INCLUDE_DIRS})
+    set(OSPRAY_EMBREE_SOURCE_DIR ${OSPRAY_ROOT}/include/ospray/embree)
+    OSPRAY_ISPC_COMPILE(render/ospray/OSPrayVolume.ispc)
+    list(APPEND LIVREEQ_HEADERS render/OSPrayRenderer.h render/ospray/OSPrayVolume.h)
+    list(APPEND LIVREEQ_SOURCES render/OSPrayRenderer.cpp render/ospray/OSPrayVolume.cpp ${ISPC_OBJECTS})
+  # compiler selection for the non-MIC part
+
+endif()
 
 set(LIVREEQ_INCLUDE_NAME livre/eq)
 set(LIVREEQ_NAMESPACE livreeq)

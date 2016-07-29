@@ -23,16 +23,16 @@
 #include <livre/core/render/Frustum.h>
 #include <livre/core/render/TransferFunction1D.h>
 #include <livre/core/data/LODNode.h>
-#include <livre/core/maths/maths.h>
 #include <livre/core/render/GLContext.h>
 
 #include <livre/lib/configuration/VolumeRendererParameters.h>
-#include <livre/lib/cache/TextureDataCache.h>
+#include <livre/lib/cache/DataCache.h>
 
 #include <livre/eq/FrameData.h>
 #include <livre/eq/render/OSPrayRenderer.h>
+#include <livre/eq/render/shaders/fragTexCopy.glsl.h>
+#include <livre/eq/render/shaders/vertTexCopy.glsl.h>
 #include <livre/eq/settings/RenderSettings.h>
-
 #include <livre/eq/render/ospray/OSPrayVolume.h>
 
 #pragma GCC diagnostic push
@@ -98,7 +98,7 @@ const GLfloat fullScreenQuad[] = { -1.0f, -1.0f, 0.0f,
 
 struct OSPrayRenderer::Impl
 {
-    Impl( const TextureDataCache& dataCache,
+    Impl( const DataCache& dataCache,
           uint32_t samplesPerRay,
           uint32_t samplesPerPixel )
         : _nSamplesPerRay( samplesPerRay )
@@ -117,6 +117,14 @@ struct OSPrayRenderer::Impl
 
     {
         setDefaultOsprayParameters();
+
+        const int error = _texCopyShaders.loadShaders( ShaderData( vertTexCopy_glsl,
+                                                                   fragTexCopy_glsl ));
+
+        if( error != GL_NO_ERROR )
+            LBTHROW( std::runtime_error( "Can't load glsl shaders: " +
+                                         eq::glError( error ) +
+                                         where( __FILE__, __LINE__ )));
 
         glGenBuffers( 1, &_quadVBO );
         glBindBuffer( GL_ARRAY_BUFFER, _quadVBO );
@@ -191,9 +199,13 @@ struct OSPrayRenderer::Impl
         if( !_ospRenderer )
             LBTHROW( std::runtime_error( "OSP renderer cannot be created" ));
 
+        updateOSPTf( TransferFunction1D( ));
+
         ospCommit( _ospAmbientLight.get( ));
         ospCommit( _ospDirectionalLight.get( ));
-
+        ospCommit( _ospCamera.get( ));
+        ospCommit( _ospModel.get( ));
+        ospCommit( _ospVolume.get( ));
 
         ospSetObject( _ospRenderer.get(), "camera", _ospCamera.get( ));
         std::array< osp::Light*, 2 > lights = { _ospAmbientLight.get(),
@@ -202,9 +214,9 @@ struct OSPrayRenderer::Impl
                                                               OSP_OBJECT,
                                                               lights.data( )));
 
-        const Boxf& boundingBox = _dataSource.getVolumeInfo().boundingBox;
-        const Vector3f& bbMin = boundingBox.getMin();
-        const Vector3f& bbMax = boundingBox.getMax();
+        const Boxf boundingBox( Vector3f( 0.0f ), _dataSource.getVolumeInfo().worldSize );
+        const Vector3f& bbMin = ( boundingBox.getMin() - 0.5f );
+        const Vector3f& bbMax = ( boundingBox.getMax() - 0.5f );
         const osp::box3f ospBBox = {{ bbMin.x(), bbMin.y(), bbMin.z( )},
                                     { bbMax.x(), bbMax.y(), bbMax.z( )}};
 
@@ -213,13 +225,11 @@ struct OSPrayRenderer::Impl
         ospCommit( _ospVolume.get( ));
 
         ospAddVolume( _ospModel.get(), _ospVolume.get( ));
+        ospCommit( _ospModel.get( ));
         ospSetObject( _ospRenderer.get(), "model", _ospModel.get( ));
         ospCommit( _ospRenderer.get( ));
-        ospSetData( _ospVolume.get(), "dataCache", ospNewData( 1,
-                                                               OSP_OBJECT,
-                                                               &_dataCache ));
-
-        updateOSPTf( TransferFunction1D( ));
+        ospSetVoidPtr( _ospVolume.get(), "dataCache", const_cast<void*>((const void *)&_dataCache) );
+        ospCommit( _ospVolume.get( ));
     }
 
     void update( const FrameData& frameData )
@@ -234,15 +244,20 @@ struct OSPrayRenderer::Impl
                        const PixelViewport& view,
                        const NodeIds& orderedBricks )
     {
+
+        ospSet1i( _ospVolume.get(), "count", orderedBricks.size( ));
         ospSetData(  _ospVolume.get(), "nodeIds", ospNewData( orderedBricks.size(),
                                                               OSP_ULONG,
                                                               orderedBricks.data( )));
+        ospCommit( _ospVolume.get( ));
 
         const Vector3f& eyePos = frustum.getEyePos();
         const osp::vec3f eye = { eyePos.x(), eyePos.y(), eyePos.z() };
 
         const Vector3f& direction = frustum.getViewDir();
-        const osp::vec3f dir = { direction.x(), direction.y(), direction.z() };
+        const osp::vec3f dir = { -direction.x(),
+                                 -direction.y(),
+                                 -direction.z() };
 
         const osp::vec3f up = { 0.0f, 1.0f, 0.0f };
 
@@ -255,12 +270,17 @@ struct OSPrayRenderer::Impl
         ospSetf( _ospCamera.get(), "aspect", w / h );
 
         const float near = frustum.nearPlane();
-        const float fovy = 2.0f * std::atan2( h / 2.0, near );
+        const float height = frustum.getHeight();
+        const float fovy = 2.0f * std::atan2( height / 2.0, near );
 
         ospSetf( _ospCamera.get(), "fovy", fovy );
         ospCommit( _ospCamera.get( ));
 
         createFBIfViewportChanges( view );
+
+        ospSetObject( _ospRenderer.get(), "maxDepthTexture", 0 );
+        ospSet1i( _ospRenderer.get(), "backgroundEnabled", 1 );
+        ospCommit( _ospRenderer.get( ));
     }
 
     void onFrameRender( const Frustum&,
@@ -317,7 +337,7 @@ struct OSPrayRenderer::Impl
     GLuint _quadVBO;
     eq::util::Texture _renderTexture;
 
-    const TextureDataCache& _dataCache;
+    const DataCache& _dataCache;
     const DataSource& _dataSource;
     const VolumeInformation& _volInfo;
 
@@ -332,7 +352,7 @@ struct OSPrayRenderer::Impl
     std::unique_ptr< osp::Model > _ospModel;
 };
 
-OSPrayRenderer::OSPrayRenderer( const TextureDataCache& dataCache,
+OSPrayRenderer::OSPrayRenderer( const DataCache& dataCache,
                                 uint32_t samplesPerRay,
                                 uint32_t samplesPerPixel  )
     : _impl( new OSPrayRenderer::Impl( dataCache,
@@ -356,6 +376,7 @@ NodeIds OSPrayRenderer::_order( const NodeIds& bricks,
 }
 
 void OSPrayRenderer::_onFrameStart( const Frustum& frustum,
+                                    const ClipPlanes&,
                                     const PixelViewport& view,
                                     const NodeIds& orderedBricks )
 {
@@ -363,6 +384,7 @@ void OSPrayRenderer::_onFrameStart( const Frustum& frustum,
 }
 
 void OSPrayRenderer::_onFrameRender( const Frustum& frustum,
+                                     const ClipPlanes&,
                                      const PixelViewport& view,
                                      const NodeIds& orderedBricks )
 {
@@ -370,6 +392,7 @@ void OSPrayRenderer::_onFrameRender( const Frustum& frustum,
 }
 
 void OSPrayRenderer::_onFrameEnd( const Frustum& frustum,
+                                  const ClipPlanes&,
                                   const PixelViewport& view,
                                   const NodeIds& orderedBricks )
 {

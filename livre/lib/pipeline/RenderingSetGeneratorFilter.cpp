@@ -55,13 +55,9 @@ struct RenderingSetGenerator
         while( current.isValid( ))
         {
             const NodeId& currentNodeId = current;
-<<<<<<< e0f41d0fe59e7cb190c9530a560345d42fffb837
-            const ConstCacheObjectPtr texture = _textureCache.get( currentNodeId.getId( ));
-            if( texture )
-=======
+
             const ConstCacheObjectPtr cacheObject = _cache.get( currentNodeId.getId( ));
-            if( cacheObject && cacheObject->isLoaded( ))
->>>>>>> Ospray
+            if( cacheObject )
             {
                 cacheMap[ currentNodeId.getId() ] = cacheObject;
                 break;
@@ -78,14 +74,9 @@ struct RenderingSetGenerator
         ConstCacheMap cacheMap;
         for( const NodeId& nodeId : visibles )
         {
-<<<<<<< e0f41d0fe59e7cb190c9530a560345d42fffb837
-            collectLoadedTextures( nodeId, cacheMap );
-            cacheMap.count( nodeId.getId( )) > 0 ?
-                        ++availability.nAvailable : ++availability.nNotAvailable;
-=======
             collectLoadedObjects( nodeId, cacheMap );
-            cacheMap.count( nodeId.getId( )) > 0 ? ++nAvailable : ++nNotAvailable;
->>>>>>> Ospray
+            cacheMap.count( nodeId.getId( )) > 0 ? ++availability.nAvailable
+                                                 : ++availability.nNotAvailable;
         }
 
         if( visibles.size() != cacheMap.size( ))

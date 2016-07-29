@@ -77,7 +77,7 @@ private:
 
     void createEquivalentISPC();
 
-    const TextureDataCache* _dataCache;
+    const DataCache* _dataCache;
     const DataSource* _dataSource;
     const VolumeInformation* _volInfo;
 };

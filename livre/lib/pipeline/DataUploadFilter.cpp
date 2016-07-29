@@ -87,7 +87,7 @@ public:
         cacheObjects.reserve( visibles.size( ));
         for( const NodeId& nodeId: visibles )
         {
-           CacheObjectPtr data = _textureCache.getDataCache().load( nodeId.getId( ));
+           ConstCacheObjectPtr data = _textureCache.getDataCache().load( nodeId.getId( ));
            cacheObjects.push_back( data );
         }
 
