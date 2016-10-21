@@ -23,6 +23,8 @@
 #include <livre/core/api.h>
 #include <livre/core/types.h>
 
+#include <servus/uri.h>
+#include <lunchbox/pluginFactory.h>
 #include <lunchbox/plugin.h>
 
 namespace livre
@@ -37,7 +39,7 @@ public:
      * Constructor
      * @param name is the name of the renderer plugin
      */
-    LIVRECORE_API RendererPlugin( const std::string& name LB_UNUSED ) {}
+    LIVRECORE_API RendererPlugin( const std::string& name  LIVRE_UNUSED ) {}
 
     /** Needed by the PluginRegisterer. */
     typedef RendererPlugin PluginT;
@@ -50,24 +52,24 @@ public:
      * @param renderInputs necessary information for rendering
      * @param bricks is the list of bricks.
      */
-    virtual void preRender( const RenderInputs& renderInputs LB_UNUSED,
-                            const ConstCacheObjects& renderData LB_UNUSED ) {}
+    virtual void preRender( const RenderInputs& renderInputs  LIVRE_UNUSED,
+                            const ConstCacheObjects& renderData  LIVRE_UNUSED ) {}
 
     /**
      * Is called on start of each render. Default is front to back rendering.
      * @param renderInputs necessary information for rendering
      * @param orderedBricks is the list of bricks.
     */
-    virtual void render( const RenderInputs& renderInputs LB_UNUSED,
-                         const ConstCacheObjects& renderData LB_UNUSED ) = 0;
+    virtual void render( const RenderInputs& renderInputs  LIVRE_UNUSED,
+                         const ConstCacheObjects& renderData  LIVRE_UNUSED ) = 0;
 
     /**
      * Is called on end of each rendering.
      * @param renderInputs necessary information for rendering
      * @param orderedBricks is the list of bricks.
      */
-    virtual void postRender( const RenderInputs& renderInputs LB_UNUSED,
-                             const ConstCacheObjects& renderData LB_UNUSED ) {}
+    virtual void postRender( const RenderInputs& renderInputs  LIVRE_UNUSED,
+                             const ConstCacheObjects& renderData  LIVRE_UNUSED ) {}
 
     virtual ~RendererPlugin() {}
 };

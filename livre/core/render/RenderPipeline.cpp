@@ -25,7 +25,9 @@
 #include <livre/core/cache/CacheObject.h>
 #include <livre/core/version.h>
 
+#include <servus/uri.h>
 #include <lunchbox/pluginFactory.h>
+#include <lunchbox/plugin.h>
 
 namespace livre
 {

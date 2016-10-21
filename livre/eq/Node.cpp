@@ -69,7 +69,7 @@ public:
         try
         {
             const VolumeSettings& volumeSettings = _config->getFrameData().getVolumeSettings();
-            const lunchbox::URI& uri = lunchbox::URI( volumeSettings.getURI( ));
+            const servus::URI& uri = servus::URI( volumeSettings.getURI( ));
             _dataSource.reset( new livre::DataSource( uri ));
         }
         catch( const std::runtime_error& err )

@@ -17,8 +17,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _GLRaycasterPipeline_h_
-#define _GLRaycasterPipeline_h_
+#ifndef _CudaRaycasterPipeline_h_
+#define _CudaRaycasterPipeline_h_
 
 #include <livre/core/configuration/RendererParameters.h>
 #include <livre/lib/types.h>
@@ -34,7 +34,7 @@ namespace livre
 /**
  * RenderPipeline generates and executes the rendering pipeline every frame
  */
-class GLRaycasterPipeline : public RenderPipelinePlugin
+class CudaRaycastPipeline : public RenderPipelinePlugin
 {
 
 public:
@@ -42,14 +42,14 @@ public:
      * Constructor
      * @param name is the name of the pipeline
      */
-    GLRaycasterPipeline( const std::string& name );
-    ~GLRaycasterPipeline();
+    CudaRaycastPipeline( const std::string& name );
+    ~CudaRaycastPipeline();
 
     /**
      * @param name is checked for the right plugin
      * @return true if renderer handles the name
      */
-    static bool handles( const std::string& name ) { return name == "gl"; }
+    static bool handles( const std::string& name ) { return name == "cuda"; }
 
 private:
 
@@ -61,5 +61,5 @@ private:
 
 }
 
-#endif // GLRaycasterPipeline
+#endif // _CudaRaycasterPipeline_h_
 

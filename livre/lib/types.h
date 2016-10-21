@@ -28,9 +28,10 @@ namespace livre
 
 class DataObject;
 class HistogramObject;
-class GLRaycasterPipeline;
+class GLRaycastPipeline;
 class RenderSettings;
 class TextureObject;
+class TexturePool;
 
 struct ApplicationParameters;
 

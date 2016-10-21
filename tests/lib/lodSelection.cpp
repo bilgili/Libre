@@ -75,7 +75,7 @@ Identifiers getVisibles( const livre::DataSource& dataSource,
 
 BOOST_AUTO_TEST_CASE( testLODSelection )
 {
-    const lunchbox::URI uri( "mem://#4096,4096,4096,256" );
+    const servus::URI uri( "mem://#4096,4096,4096,256" );
     livre::DataSource dataSource( uri );
 
     {

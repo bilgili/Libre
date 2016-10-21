@@ -281,7 +281,7 @@ void Config::resetCamera()
         getApplicationParameters().cameraLookAt );
 }
 
-bool Config::init( const int argc LB_UNUSED, char** argv LB_UNUSED )
+bool Config::init( const int argc  LIVRE_UNUSED, char** argv  LIVRE_UNUSED )
 {
 #ifdef LIVRE_USE_ZEROEQ
     _impl->communicator.reset( new zeroeq::Communicator( *this, argc, argv ));

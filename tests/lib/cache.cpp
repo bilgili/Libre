@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE( testCache )
     volumeName << "mem://#" << VOXEL_SIZE_X << "," << VOXEL_SIZE_Y << ","
                << VOXEL_SIZE_Z << "," << BLOCK_SIZE;
 
-    const lunchbox::URI uri( volumeName.str( ));
+    const servus::URI uri( volumeName.str( ));
     livre::DataSource source( uri );
     const livre::VolumeInformation& info = source.getVolumeInfo();
 

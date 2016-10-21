@@ -24,6 +24,7 @@
 #include <livre/core/types.h>
 
 #include <lexis/render/frame.h>
+#include <lunchbox/debug.h>
 
 namespace livre
 {

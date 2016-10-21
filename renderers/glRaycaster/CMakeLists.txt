@@ -4,10 +4,10 @@
 #
 
 set(LIVREGLRAYCASTPIPELINE_HEADERS GLRaycastRenderer.h
-                                   GLRaycasterPipeline.h
+                                   GLRaycastPipeline.h
                                    GLRenderUploadFilter.h)
 set(LIVREGLRAYCASTPIPELINE_SOURCES GLRaycastRenderer.cpp
-                                   GLRaycasterPipeline.cpp
+                                   GLRaycastPipeline.cpp
                                    GLRenderUploadFilter.cpp)
 
 install(DIRECTORY shaders
@@ -26,5 +26,5 @@ foreach(SHADER ${LIVRE_SHADERS})
 endforeach()
 
 set(LIVREGLRAYCASTPIPELINE_LINK_LIBRARIES PUBLIC LivreLib)
-set(LIVREGLRAYCASTPIPELINE_INCLUDE_NAME livre/renderer)
+set(LIVREGLRAYCASTPIPELINE_INCLUDE_NAME livre/renderer/gl)
 common_library(LivreGLRaycastPipeline)

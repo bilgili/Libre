@@ -47,10 +47,10 @@ FrameGrabber::~FrameGrabber()
 #endif
 }
 
-uint8_t* FrameGrabber::_encodeJpeg( const uint32_t width LB_UNUSED,
-                                    const uint32_t height LB_UNUSED,
-                                    const uint8_t* rawData LB_UNUSED,
-                                    unsigned long& dataSize LB_UNUSED )
+uint8_t* FrameGrabber::_encodeJpeg( const uint32_t width  LIVRE_UNUSED,
+                                    const uint32_t height  LIVRE_UNUSED,
+                                    const uint8_t* rawData  LIVRE_UNUSED,
+                                    unsigned long& dataSize  LIVRE_UNUSED )
 {
 #ifdef LIVRE_USE_LIBJPEGTURBO
     uint8_t* tjSrcBuffer = const_cast< uint8_t* >(rawData);

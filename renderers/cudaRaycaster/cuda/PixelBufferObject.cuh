@@ -19,6 +19,8 @@
 #ifndef _Cuda_PixelBufferObject_h_
 #define _Cuda_PixelBufferObject_h_
 
+#include "cuda.h"
+#include <cuda_runtime.h>
 #include <memory>
 #include <GL/glew.h>
 
@@ -37,17 +39,17 @@ public:
     void unmapBuffer();
     size_t getBufferSize() const;
 
-    __host__ __device__ float* getBuffer() const { return _buffer; };
-    __host__ __device__ unsigned int getWidth() const { return _width; };
-    __host__ __device__ unsigned int getHeight() const { return _height; }
+    float4* getBuffer() const { return _buffer; };
+    unsigned int getWidth() const { return _width; };
+    unsigned int getHeight() const { return _height; }
 
 private:
 
-    float* _buffer;
+    float4* _buffer;
+    cudaGraphicsResource_t _pboResource;
     GLuint _pbo;
     unsigned int _width;
     unsigned int _height;
-    const size_t _nComponent;
 };
 }
 }

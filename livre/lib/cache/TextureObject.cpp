@@ -25,6 +25,8 @@
 #include <livre/core/data/DataSource.h>
 #include <livre/core/render/TexturePool.h>
 
+#include <lunchbox/debug.h>
+
 #include <GL/glew.h>
 
 namespace livre

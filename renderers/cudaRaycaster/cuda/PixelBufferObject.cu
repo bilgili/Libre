@@ -19,8 +19,6 @@
 #include "PixelBufferObject.cuh"
 
 #include <cuda_gl_interop.h>
-#include <cuda_runtime.h>
-
 #include <lunchbox/debug.h>
 
 namespace livre
@@ -32,7 +30,7 @@ PixelBufferObject::PixelBufferObject()
     : _pbo( -1u )
     , _width( -1u )
     , _height( -1u )
-    , _nComponent( 4 )
+    , _pboResource( 0 )
 {}
 
 PixelBufferObject::~PixelBufferObject()
@@ -48,21 +46,22 @@ void PixelBufferObject::resize( const unsigned int width, const unsigned int hei
     _width = width;
     _height = height;
 
-    if( _pbo != -1u )
+    if( _pboResource )
     {
-        cudaGLUnregisterBufferObject( _pbo );
-        glDeleteBuffersARB( 1, &_pbo );
+        checkCudaErrors( cudaGraphicsUnregisterResource( _pboResource ));
+        glDeleteBuffers( 1, &_pbo );
     }
 
     glGenBuffers( 1, &_pbo );
     glBindBuffer( GL_PIXEL_UNPACK_BUFFER, _pbo );
     glBufferData( GL_PIXEL_UNPACK_BUFFER, _width *
                                           _height *
-                                          sizeof( float ) *
-                                          _nComponent,
+                                          sizeof( float4 ),
                                           0, GL_STREAM_DRAW );
     glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0 );
-    cudaGLRegisterBufferObject( _pbo );
+    checkCudaErrors( cudaGraphicsGLRegisterBuffer( &_pboResource,
+                                                   _pbo,
+                                                   cudaGraphicsMapFlagsWriteDiscard ));
 
     const int ret = glGetError();
     if( ret != GL_NO_ERROR )
@@ -71,18 +70,22 @@ void PixelBufferObject::resize( const unsigned int width, const unsigned int hei
 
 void PixelBufferObject::mapBuffer()
 {
-    cudaGLMapBufferObject( (void**)&_buffer, _pbo );
-    cudaMemset( _buffer, 0, _width * _height * _nComponent );
+    checkCudaErrors( cudaGraphicsMapResources( 1, &_pboResource, 0 ));
+    size_t size;
+    checkCudaErrors( cudaGraphicsResourceGetMappedPointer( (void **)&_buffer,
+                                                           &size,
+                                                           _pboResource));
+    checkCudaErrors( cudaMemset( _buffer, 0,  size ));
 }
 
 void PixelBufferObject::unmapBuffer()
 {
-    cudaGLUnmapBufferObject( _pbo );
+    checkCudaErrors( cudaGraphicsUnmapResources(1, &_pboResource, 0 ));
 }
 
 size_t PixelBufferObject::getBufferSize() const
 {
-    return _width * _height * _nComponent * sizeof( float );
+    return _width * _height * sizeof( float4 );
 }
 }
 }

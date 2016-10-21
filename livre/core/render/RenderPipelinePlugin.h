@@ -23,7 +23,7 @@
 #include <livre/core/api.h>
 #include <livre/core/types.h>
 
-#include <lunchbox/plugin.h>
+#include <servus/uri.h>
 
 namespace livre
 {
@@ -38,7 +38,7 @@ public:
     /** Needed by the PluginRegisterer. */
     typedef std::string InitDataT;
 
-    LIVRECORE_API RenderPipelinePlugin( const std::string& name LB_UNUSED ) {}
+    LIVRECORE_API RenderPipelinePlugin( const std::string& name  LIVRE_UNUSED ) {}
     virtual ~RenderPipelinePlugin() {}
 
     /**

@@ -17,8 +17,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "GLRaycasterPipeline.h"
-#include "GLRenderUploadFilter.h"
+#include "CudaRaycastPipeline.h"
+#include "CudaRenderUploadFilter.h"
+#include "CudaRaycastRenderer.h"
+#include "CudaTexturePool.h"
+#include "CudaTextureObject.h"
 
 #include <livre/lib/pipeline/RenderingSetGeneratorFilter.h>
 #include <livre/lib/pipeline/VisibleSetGeneratorFilter.h>
@@ -38,6 +41,8 @@
 #include <livre/core/settings/RenderSettings.h>
 
 #include <lunchbox/pluginRegisterer.h>
+#include <lunchbox/debug.h>
+
 #include <boost/progress.hpp>
 
 #include <livre/core/version.h>
@@ -53,12 +58,12 @@ namespace livre
 namespace
 {
 const size_t nRenderThreads = 2;
-const size_t nUploadThreads = 2;
+const size_t nUploadThreads = 4;
 const size_t nComputeThreads = 2;
-lunchbox::PluginRegisterer< GLRaycasterPipeline > registerer;
+lunchbox::PluginRegisterer< CudaRaycastPipeline > registerer;
 }
 
-struct GLRaycasterPipeline::Impl
+struct CudaRaycastPipeline::Impl
 {
     Impl()
         : _renderExecutor( nRenderThreads, "Render Executor", GLContext::getCurrent()->clone( ))
@@ -122,15 +127,11 @@ struct GLRaycasterPipeline::Impl
         DistanceOperator distanceOp( renderInputs.dataSource, renderInputs.frameInfo.frustum );
         std::sort( nodeIdsCopy.begin(), nodeIdsCopy.end(), distanceOp );
 
-        const VolumeInformation& volInfo = renderInputs.dataSource.getVolumeInfo();
-        const size_t blockMemSize = volInfo.maximumBlockSize.product() *
-                                    volInfo.getBytesPerVoxel() *
-                                    volInfo.compCount;
-
         const uint32_t maxNodesPerPass =
-                renderInputs.vrParameters.getMaxGPUCacheMemoryMB() * LB_1MB / blockMemSize;
+                _texturePool->getTextureMem() / _texturePool->getSlotMemSize();
 
-        const uint32_t numberOfPasses = std::ceil( (float)nodeIdsCopy.size() / (float)maxNodesPerPass );
+        const uint32_t numberOfPasses =
+                std::ceil( (float)nodeIdsCopy.size() / (float)maxNodesPerPass );
 
         std::unique_ptr< boost::progress_display > showProgress;
         if( numberOfPasses > 1 )
@@ -145,6 +146,7 @@ struct GLRaycasterPipeline::Impl
         for( uint32_t i = 0; i < numberOfPasses; ++i )
         {
             uint32_t renderStages = RENDER_FRAME;
+
             if( i == 0 )
                 renderStages |= RENDER_BEGIN;
 
@@ -162,6 +164,8 @@ struct GLRaycasterPipeline::Impl
                                       sendHistogramFilter,
                                       renderer,
                                       renderStages );
+
+            _cudaCache->purge();
             if( numberOfPasses > 1 )
                 ++(*showProgress);
         }
@@ -206,7 +210,7 @@ struct GLRaycasterPipeline::Impl
 
         PipeFilter renderingSetGenerator =
                 renderPipeline.add< RenderingSetGeneratorFilter >(
-                    "RenderingSetGenerator", *_textureCache );
+                    "RenderingSetGenerator", *_cudaCache );
 
         visibleSetGenerator.connect( "VisibleNodes", renderingSetGenerator, "VisibleNodes" );
         renderingSetGenerator.connect( "CacheObjects", renderFilter, "CacheObjects" );
@@ -214,11 +218,11 @@ struct GLRaycasterPipeline::Impl
         renderingSetGenerator.connect( "RenderingDone", redrawFilter, "RenderingDone" );
         visibleSetGenerator.connect( "VisibleNodes", preRenderFilter, "VisibleNodes" );
 
-        PipeFilter renderUploader = uploadPipeline.add< GLRenderUploadFilter >( "RenderUploader",
-                                                                                *_textureCache,
-                                                                                *_texturePool,
-                                                                                nUploadThreads,
-                                                                                _uploadExecutor );
+        PipeFilter renderUploader = uploadPipeline.add< CudaRenderUploadFilter >( "RenderUploader",
+                                                                                  *_cudaCache,
+                                                                                  *_texturePool,
+                                                                                  nUploadThreads,
+                                                                                  _uploadExecutor );
 
         renderUploader.getPromise( "RenderInputs" ).set( renderInputs );
         visibleSetGenerator.connect( "VisibleNodes", renderUploader, "NodeIds" );
@@ -238,7 +242,7 @@ struct GLRaycasterPipeline::Impl
         statistics = futures.get< RenderStatistics >( "RenderStatistics" );
     }
 
-    void createAndExecuteSyncPass( NodeIds nodeIds,
+    void createAndExecuteSyncPass( const NodeIds& nodeIds,
                                    const RenderInputs& renderInputs,
                                    PipeFilter& sendHistogramFilter,
                                    Renderer& renderer,
@@ -262,16 +266,16 @@ struct GLRaycasterPipeline::Impl
         renderFilter.getPromise( "RenderInputs" ).set( renderInputs );
         renderFilter.getPromise( "RenderStages" ).set( renderStages );
 
-        PipeFilter renderUploader = uploadPipeline.add< GLRenderUploadFilter >( "RenderUploader",
-                                                                                *_textureCache,
-                                                                                *_texturePool,
-                                                                                nUploadThreads,
-                                                                                _uploadExecutor );
+        PipeFilter renderUploader = uploadPipeline.add< CudaRenderUploadFilter >( "RenderUploader",
+                                                                                  *_cudaCache,
+                                                                                  *_texturePool,
+                                                                                  nUploadThreads,
+                                                                                  _uploadExecutor );
 
         renderUploader.getPromise( "RenderInputs" ).set( renderInputs );
         renderUploader.getPromise( "NodeIds" ).set( nodeIds );
-        renderUploader.connect( "TextureCacheObjects", renderFilter, "CacheObjects" );
-        renderUploader.connect( "TextureCacheObjects", histogramFilter, "CacheObjects" );
+        renderUploader.connect( "CudaTextureCacheObjects", renderFilter, "CacheObjects" );
+        renderUploader.connect( "CudaTextureCacheObjects", histogramFilter, "CacheObjects" );
 
         renderPipeline.schedule( _renderExecutor );
         uploadPipeline.schedule( _uploadExecutor );
@@ -279,22 +283,22 @@ struct GLRaycasterPipeline::Impl
         renderFilter.execute();
     }
 
-    void initTextureCache( const RenderInputs& renderInputs )
+    void init( const RenderInputs& renderInputs )
     {
-        if( _textureCache )
+        if( _cudaCache )
             return;
 
         const RendererParameters& vrParams = renderInputs.vrParameters;
         const size_t gpuMem = vrParams.getMaxGPUCacheMemoryMB() * LB_1MB;
-        _textureCache.reset( new CacheT< TextureObject >( "TextureCache", gpuMem ));
-        _texturePool.reset( new TexturePool( renderInputs.dataSource ));
+        _cudaCache.reset( new CacheT< CudaTextureObject >( "CudaTextureCache", gpuMem ));
+        _texturePool.reset( new CudaTexturePool( renderInputs.dataSource, gpuMem ));
     }
 
     void render( RenderStatistics& statistics,
                  Renderer& renderer,
                  const RenderInputs& renderInputs )
     {
-        initTextureCache( renderInputs );
+        init( renderInputs );
         if( renderInputs.vrParameters.getSynchronousMode( ))
             renderSync( statistics, renderer, renderInputs );
         else
@@ -304,19 +308,19 @@ struct GLRaycasterPipeline::Impl
     SimpleExecutor _renderExecutor;
     SimpleExecutor _computeExecutor;
     SimpleExecutor _uploadExecutor;
-    mutable std::unique_ptr< Cache > _textureCache;
-    mutable std::unique_ptr< TexturePool > _texturePool;
+    mutable std::unique_ptr< Cache > _cudaCache;
+    mutable std::unique_ptr< CudaTexturePool > _texturePool;
 };
 
-GLRaycasterPipeline::GLRaycasterPipeline( const std::string& name )
+CudaRaycastPipeline::CudaRaycastPipeline( const std::string& name )
     : RenderPipelinePlugin( name )
-    , _impl( new GLRaycasterPipeline::Impl())
+    , _impl( new CudaRaycastPipeline::Impl())
 {}
 
-GLRaycasterPipeline::~GLRaycasterPipeline()
+CudaRaycastPipeline::~CudaRaycastPipeline()
 {}
 
-RenderStatistics GLRaycasterPipeline::render( Renderer& renderer, const RenderInputs& renderInputs )
+RenderStatistics CudaRaycastPipeline::render( Renderer& renderer, const RenderInputs& renderInputs )
 {
     RenderStatistics statistics;
     _impl->render( statistics, renderer, renderInputs );

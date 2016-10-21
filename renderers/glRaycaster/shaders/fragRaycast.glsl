@@ -104,9 +104,9 @@ bool intersectBox( Ray r, AABB aabb, out float t0, out float t1 )
 vec4 composite( vec4 src, vec4 dst, float alphaCorrection )
 {
     // The alpha correction function behaves badly around maximum alpha
-    float alpha = 1.0 - pow( 1.0 - min( src.a, 1.0 - 1.0 / 256.0), alphaCorrection );
+    float alpha = 1.0f - pow( 1.0f - min( src.a, 1.0 - 1.0 / 256.0), alphaCorrection );
     dst.rgb += src.rgb * alpha * ( 1.0 - dst.a );
-    dst.a += alpha * ( 1.0 - dst.a );
+    dst.a += alpha * ( 1.0f - dst.a );
     return dst;
 }
 

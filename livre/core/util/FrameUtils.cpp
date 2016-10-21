@@ -19,6 +19,8 @@
 
 #include <livre/core/util/FrameUtils.h>
 
+#include <lunchbox/debug.h>
+
 namespace livre
 {
 

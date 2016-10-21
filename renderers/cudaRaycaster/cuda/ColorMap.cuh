@@ -16,38 +16,33 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "ColorMap.cuh"
+#ifndef _Cuda_ColorMap_h_
+#define _Cuda_ColorMap_h_
+
+#include "cuda.h"
+
+#include <lexis/render/ColorMap.h>
+#include <cuda_runtime.h>
+#include <cuda_texture_types.h>
+#include <memory>
 
 namespace livre
 {
 namespace cuda
 {
-ColorMap::ColorMap()
+class ColorMap
 {
-    cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc< float4 >();
-    cudaMallocArray( &_array, &channelDesc, 256, 1);
+public:
+    ColorMap();
+    ~ColorMap();
+    void upload( const lexis::render::ColorMap& colorMap );
+    cudaTextureObject_t getTexture() const  { return _texture; }
 
-    upload( lexis::render::ColorMap::getDefaultColorMap( 0.0f, 256.0f ));
-    _texture.filterMode = cudaFilterModeLinear;
-    _texture.normalized = true;
-    _texture.addressMode[0] = cudaAddressModeClamp;
-    cudaBindTextureToArray( _texture, _array, channelDesc );
+private:
+    cudaTextureObject_t _texture;
+    cudaArray_t _array;
+};
 }
+}
+#endif // _Cuda_ColorMap_h_
 
-ColorMap::~ColorMap()
-{
-    cudaFreeArray( _array );
-}
-
-void ColorMap::upload( const lexis::render::ColorMap& colorMap )
-{
-    const auto& colors =
-            colorMap.sampleColors< float >( 256, 0.0f, 256.0f, 0 );
-
-    cudaMemcpyToArray( _array, 0, 0,
-                       colors.data(),
-                       colors.size() * sizeof(float4),
-                       cudaMemcpyHostToDevice );
-}
-}
-}

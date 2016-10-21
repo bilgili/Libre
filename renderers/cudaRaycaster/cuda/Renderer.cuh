@@ -29,13 +29,14 @@ namespace livre
 {
 namespace cuda
 {
+class TexturePool;
+
 struct NodeData
 {
-    unsigned char* data;
-    size_t size;
-    Vector3ui blockSize;
+    Vector3f textureMin;
+    Vector3f textureSize;
     Vector3f aabbMin;
-    Vector3f aabbMax;
+    Vector3f aabbSize;
 };
 
 typedef std::vector< NodeData > NodeDatas;
@@ -45,12 +46,12 @@ struct ViewData
     const Vector3f eyePosition;
     const Vector4ui glViewport;
     const Matrix4f invProjMatrix;
+    const Matrix4f modelViewMatrix;
     const Matrix4f invViewMatrix;
     const Vector3f aabbMin;
     const Vector3f aabbMax;
     const float nearPlane;
 };
-
 
 struct RenderData
 {
@@ -59,9 +60,7 @@ struct RenderData
     const unsigned int maxSamplesPerRay;
     const unsigned int datatype;
     const Vector2f dataSourceRange;
-    const Vector3ui overlap;
 };
-
 
 class Renderer
 {
@@ -69,13 +68,14 @@ public:
     Renderer();
     ~Renderer();
 
-    void update( const lexis::render::ColorMap& colorMap );
+    void update( const lexis::render::ClipPlanes& clipPlanes,
+                 const lexis::render::ColorMap& colorMap );
 
     void preRender( const ViewData& viewData );
-    void render( const lexis::render::ClipPlanes& clipPlanes,
-                 const ViewData& viewData,
+    void render( const ViewData& viewData,
                  const NodeDatas& nodeData,
-                 const RenderData& renderData );
+                 const RenderData& renderData,
+                 const cuda::TexturePool& texturePool );
     void postRender();
 
 private:
@@ -84,6 +84,5 @@ private:
 };
 }
 }
-
 #endif // _Cuda_Renderer_h
 

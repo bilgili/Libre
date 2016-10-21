@@ -40,6 +40,7 @@ common_find_package(Boost REQUIRED COMPONENTS filesystem
                                               system
                                               unit_test_framework)
 common_find_package(Collage REQUIRED)
+common_find_package(CUDA)
 common_find_package(Equalizer REQUIRED)
 common_find_package(GLEW REQUIRED)
 common_find_package(Lexis REQUIRED)

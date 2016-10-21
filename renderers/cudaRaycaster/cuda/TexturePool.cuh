@@ -16,34 +16,41 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _Cuda_ColorMap_h_
-#define _Cuda_ColorMap_h_
+#ifndef _Cuda_TexturePool_h
+#define _Cuda_TexturePool_h
 
-#include <lexis/render/ColorMap.h>
-#include <cuda_gl_interop.h>
+#include <livre/core/mathTypes.h>
 #include <cuda_runtime.h>
-#include <cuda_texture_types.h>
-#include <memory>
+#include <memory.h>
 
 namespace livre
 {
 namespace cuda
 {
-class ColorMap
+class TexturePool
 {
 public:
-    ColorMap();
-    ~ColorMap();
-    void upload( const lexis::render::ColorMap& colorMap );
+    TexturePool( size_t dataTypeSize,
+                 bool isSigned,
+                 bool isFloat,
+                 size_t nComponents,
+                 const Vector3ui& maxBlockSize,
+                 size_t maxGpuMemory );
+    ~TexturePool();
 
-    __host__ __device__ texture< float4, 1, cudaReadModeElementType > getTexture() const
-        { return _texture; }
+    Vector3f copyToSlot( const unsigned char* ptr, const Vector3ui& size );
+    void releaseSlot( const Vector3f& pos );
+    size_t getSlotMemSize() const;
+    Vector3ui getTextureSize() const;
+    size_t getTextureMem() const;
+    cudaTextureObject_t getTexture() const;
 
 private:
-    texture< float4, 1, cudaReadModeElementType > _texture;
-    cudaArray_t _array;
+
+    struct Impl;
+    std::unique_ptr<Impl> _impl;
 };
 }
 }
-#endif // _Cuda_ColorMap_h_
+#endif // _Cuda_TexturePool_h
 

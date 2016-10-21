@@ -64,7 +64,7 @@ public:
     void configInit()
     {
         shareGLContexts();
-        _renderPipeline.reset( new RenderPipeline( "gl" ));
+        _renderPipeline.reset( new RenderPipeline( "cuda" ));
     }
 
     void shareGLContexts()

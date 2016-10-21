@@ -4,4 +4,5 @@
 #
 
 add_subdirectory(glRaycaster)
+add_subdirectory(cudaRaycaster)
 

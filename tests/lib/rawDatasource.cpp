@@ -29,7 +29,7 @@ const uint32_t VOXEL_SIZE_X = 41;
 const uint32_t VOXEL_SIZE_Y = 41;
 const uint32_t VOXEL_SIZE_Z = 41;
 
-void createAndCheckDataSource( const lunchbox::URI& uri)
+void createAndCheckDataSource( const servus::URI& uri)
 {
     livre::DataSource source( uri );
     const livre::VolumeInformation& info = source.getVolumeInfo();
@@ -69,7 +69,7 @@ void createAndCheckDataSource( const lunchbox::URI& uri)
 
 BOOST_AUTO_TEST_CASE( NRRDDataSource )
 {
-    const lunchbox::URI uri( "raw://" NRRD_DATA_FILE );
+    const servus::URI uri( "raw://" NRRD_DATA_FILE );
     createAndCheckDataSource( uri );
 }
 
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE( RawDataSource )
     std::stringstream volumeName;
     volumeName << "raw://" RAW_DATA_FILE "#" << VOXEL_SIZE_X << "," << VOXEL_SIZE_Y << ","
                << VOXEL_SIZE_Z << "," << "uint8";
-    const lunchbox::URI uri( volumeName.str( ));
+    const servus::URI uri( volumeName.str( ));
     createAndCheckDataSource( uri );
 }
 

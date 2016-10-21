@@ -26,6 +26,8 @@
 #include <livre/core/pipeline/FuturePromise.h>
 #include <livre/core/pipeline/Filter.h>
 
+#include <lunchbox/debug.h>
+
 namespace livre
 {
 

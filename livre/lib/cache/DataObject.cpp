@@ -25,6 +25,8 @@
 #include <livre/core/data/MemoryUnit.h>
 #include <livre/core/data/DataSource.h>
 
+#include <lunchbox/debug.h>
+
 namespace livre
 {
 struct DataObject::Impl

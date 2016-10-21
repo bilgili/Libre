@@ -1,8 +1,6 @@
-/* Copyright (c) 2011-2015, EPFL/Blue Brain Project
- *                          Ahmet Bilgili <ahmet.bilgili@epfl.ch>
- *                          Maxim Makhinya <maxmah@gmail.com>
+/* Copyright (c) 2011-2016  Ahmet Bilgili <ahmetbilgili@gmail.com>
  *
- * This file is part of Livre <https://github.com/BlueBrain/Livre>
+ * This file is part of Livre <https://github.com/bilgili/Livre>
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3.0 as published
@@ -18,24 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _AppSettings_h_
-#define _AppSettings_h_
 
-#include <QtCore/QCoreApplication>
+#ifndef _Cuda_Types_h_
+#define _Cuda_Types_h_
 
-namespace livre
-{
 
-/**
- * settings for QSettings initialization, company and product names.
- */
 
-static void setCoreSettingsNames()
-{
-    QCoreApplication::setOrganizationName( "Blue Brain Project" );
-    QCoreApplication::setApplicationName( "Livre Controller" );
-}
-
-}
-
-#endif // _AppSettings_h_
+#endif // _Cuda_Types_h_

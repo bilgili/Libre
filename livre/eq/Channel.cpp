@@ -56,6 +56,7 @@
 #  include <zeroeq/publisher.h>
 #endif
 #include <lexis/data/Progress.h>
+
 #include <eq/eq.h>
 #include <eq/gl.h>
 
@@ -639,7 +640,7 @@ void Channel::frameDraw( const lunchbox::uint128_t& frameId )
     _impl->frameDraw();
 }
 
-void Channel::frameViewStart( const uint128_t& frameId )
+void Channel::frameViewStart( const eq::uint128_t& frameId )
 {
     eq::Channel::frameViewStart( frameId );
     _impl->addImageListener();

@@ -19,6 +19,8 @@
 
 #include <livre/core/pipeline/PromiseMap.h>
 
+#include <lunchbox/debug.h>
+
 namespace livre
 {
 

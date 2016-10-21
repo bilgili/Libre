@@ -16,34 +16,40 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _Cuda_ClipPlanes_h_
-#define _Cuda_ClipPlanes_h_
+#ifndef _CudaTexturePool_h_
+#define _CudaTexturePool_h_
 
-#include <lexis/render/clipPlanes.h>
-
-#include <cuda_gl_interop.h>
-#include <cuda_runtime.h>
-
-#include <memory>
+#include "types.h"
+#include <livre/core/types.h>
+#include <livre/core/mathTypes.h>
 
 namespace livre
 {
 namespace cuda
 {
-class ClipPlanes
-{
-public:
-    ClipPlanes();
-    ~ClipPlanes();
-    void upload( const lexis::render::ClipPlanes& clipPlanes );
+class TexturePool;
+}
 
-    __host__ __device__ const float4* getClipPlanes() const { return _clipPlanes; }
-    __host__ __device__ unsigned int getNPlanes() const { return _nPlanes; };
+class CudaTexturePool
+{
+
+public:
+    CudaTexturePool( const DataSource& dataSource, const size_t textureMemory );
+    ~CudaTexturePool();
+
+    Vector3f copyToSlot( const unsigned char* ptr, const Vector3ui& size );
+    void releaseSlot( const Vector3f& pos );
+    size_t getSlotMemSize() const;
+    Vector3ui getTextureSize() const;
+    size_t getTextureMem() const;
+    cuda::TexturePool& getCudaTexturePool() const;
 
 private:
-    float4 _clipPlanes[ 6 ];
-    unsigned int _nPlanes;
+    struct Impl;
+    std::unique_ptr<Impl> _impl;
 };
 }
-}
-#endif // _Cuda_ColorMap_h_
+
+
+#endif // _CudaTexturePool_h_
+

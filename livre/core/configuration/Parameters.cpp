@@ -19,6 +19,8 @@
 
 #include <livre/core/configuration/Parameters.h>
 
+#include <lunchbox/debug.h>
+
 namespace livre
 {
 

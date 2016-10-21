@@ -20,11 +20,6 @@
 #ifndef _coreTypes_h_
 #define _coreTypes_h_
 
-#include <lunchbox/debug.h>
-#include <lunchbox/log.h>
-#include <lunchbox/uri.h>
-#include <servus/uint128_t.h>
-
 #include <boost/program_options.hpp>
 #include <boost/program_options/options_description.hpp>
 
@@ -108,9 +103,6 @@ struct RenderStatistics;
 struct RenderInputs;
 struct VolumeInformation;
 
-using servus::uint128_t;
-using lunchbox::Strings;
-
 typedef uint64_t Identifier;
 typedef Identifier CacheId;
 typedef std::array< float, 2 > Range;
@@ -118,7 +110,6 @@ typedef std::array< float, 2 > Range;
 /**
  * SmartPtr definitions
  */
-
 typedef std::shared_ptr< AllocMemoryUnit > AllocMemoryUnitPtr;
 typedef std::shared_ptr< GLContext > GLContextPtr;
 typedef std::shared_ptr< const GLContext > ConstGLContextPtr;
@@ -184,7 +175,7 @@ typedef std::vector< CacheId > CacheIds;
  */
 typedef std::vector< CacheObjectPtr > CacheObjects;
 typedef std::vector< ConstCacheObjectPtr > ConstCacheObjects;
-
+typedef std::vector< std::string > Strings;
 
 /**
  * List definitions for complex types
@@ -257,6 +248,10 @@ typedef std::map< std::string,
 // Const definitions
 static const std::string HIDDEN_PROGRAMDESCRIPTION_STR("_HIDDEN_");
 static const std::string NO_PREFIX = "";
+
+#if defined (__GNUC__)
+#  define  LIVRE_UNUSED __attribute__((unused))
+#endif
 
 }
 

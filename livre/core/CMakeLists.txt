@@ -25,7 +25,6 @@ set(LIVRECORE_PUBLIC_HEADERS
   render/RenderPipelinePlugin.h
   render/GLContext.h
   render/GLSLShaders.h
-  lunchboxTypes.h
   mathTypes.h
   types.h
 )

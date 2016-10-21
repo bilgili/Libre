@@ -6,10 +6,14 @@
 
 set(LIVRE_SOURCES livre.cpp)
 set(LIVRE_LINK_LIBRARIES LivreLib LivreEq LivreMemoryDataSource LivreRAWDataSource)
-set(LIVRE_OPTIONAL_LIBRARIES LivreBBPSDKVox LivreRemote LivreBBIC)
+set(LIVRE_OPTIONAL_LIBRARIES LivreBBPSDKVox LivreRemote LivreBBIC )
 
 if(TUVOK_FOUND)
   list(APPEND LIVRE_LINK_LIBRARIES LivreUVFDataSource)
+endif()
+
+if(CUDA_FOUND)
+  list(APPEND LIVRE_LINK_LIBRARIES LivreCUDARaycast)
 endif()
 
 foreach(LIVRE_OPTIONAL_LIBRARY ${LIVRE_OPTIONAL_LIBRARIES})
