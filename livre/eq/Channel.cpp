@@ -36,10 +36,7 @@
 #include <livre/eq/settings/EqVolumeSettings.h>
 #include <livre/eq/Window.h>
 
-#include <livre/lib/render/RayCastRenderer.h>
 #include <livre/lib/cache/TextureObject.h>
-#include <livre/lib/configuration/VolumeRendererParameters.h>
-#include <livre/lib/pipeline/RenderPipeline.h>
 
 #include <livre/core/cache/Cache.h>
 #include <livre/core/cache/CacheStatistics.h>
@@ -47,9 +44,10 @@
 #include <livre/core/data/Histogram.h>
 #include <livre/core/render/FrameInfo.h>
 #include <livre/core/render/Frustum.h>
+#include <livre/core/render/RenderPipeline.h>
+#include <livre/core/render/RenderInputs.h>
 #include <livre/core/settings/ApplicationSettings.h>
 #include <livre/core/visitor/DFSTraversal.h>
-
 #include <livre/core/pipeline/PipeFilter.h>
 #include <livre/core/pipeline/FutureMap.h>
 #include <livre/core/pipeline/Filter.h>
@@ -73,8 +71,7 @@ struct RedrawFilter : public Filter
     {}
 
     ~RedrawFilter() {}
-    void execute( const FutureMap& input,
-                  PromiseMap& ) const final
+    void execute( const FutureMap& input, PromiseMap& ) const final
     {
         waitForAny( input.getFutures( ));
 
@@ -94,7 +91,6 @@ struct RedrawFilter : public Filter
 
     Channel* _channel;
 };
-
 
 struct SendHistogramFilter : public Filter
 {
@@ -131,31 +127,6 @@ struct SendHistogramFilter : public Filter
     Channel* _channel;
 };
 
-struct EqRaycastRenderer : public RayCastRenderer
-{
-    EqRaycastRenderer( Channel::Impl& channel,
-                       const Strings& resourceFolders,
-                       const DataSource& dataSource,
-                       const Cache& textureCache,
-                       uint32_t samplesPerRay,
-                       uint32_t samplesPerPixel )
-        : RayCastRenderer( resourceFolders,
-                           dataSource,
-                           textureCache,
-                           samplesPerRay,
-                           samplesPerPixel )
-        , _channel( channel )
-    {}
-
-    void _onFrameStart( const Frustum& frustum,
-                        const ClipPlanes& planes,
-                        const PixelViewport& view,
-                        const NodeIds& renderBricks ) final;
-
-    Channel::Impl& _channel;
-};
-
-
 struct Channel::Impl
 {
 public:
@@ -178,24 +149,6 @@ public:
     {
         const livre::Pipe* pipe = static_cast< const livre::Pipe* >( _channel->getPipe( ));
         return pipe->getFrameData();
-    }
-
-    void initializeRenderer()
-    {
-        const uint32_t nSamplesPerRay = getFrameData()->getVRParameters().getSamplesPerRay();
-        const uint32_t nSamplesPerPixel = getFrameData()->getVRParameters().getSamplesPerPixel();
-
-        const Window* window = static_cast< const Window* >( _channel->getWindow( ));
-        const Node* node = static_cast< const Node* >( _channel->getNode( ));
-        const Strings& resourceFolders =
-                getFrameData()->getApplicationSettings().getResourceFolders();
-
-        _renderer.reset( new EqRaycastRenderer( *this,
-                                                resourceFolders,
-                                                node->getDataSource(),
-                                                window->getTextureCache(),
-                                                nSamplesPerRay,
-                                                nSamplesPerPixel ));
     }
 
     Frustum setupFrustum() const
@@ -279,6 +232,33 @@ public:
 #endif
     }
 
+    struct PreRenderFilter : public Filter
+    {
+        explicit PreRenderFilter( Channel::Impl* channel )
+            : _channel( channel )
+        {}
+
+        ~PreRenderFilter() {}
+        void execute( const FutureMap& input, PromiseMap& ) const final
+        {
+            const UniqueFutureMap uniqueInputs( input.getFutures( ));
+            const auto& nodeIds = uniqueInputs.get< NodeIds >( "VisibleNodes" );
+            const auto& frustum = uniqueInputs.get< Frustum >( "Frustum" );
+            _channel->updateRegions( nodeIds, frustum );
+        }
+
+        DataInfos getInputDataInfos() const final
+        {
+            return
+            {
+                { "VisibleNodes", getType< NodeIds >() },
+                { "Frustum", getType< Frustum >() }
+            };
+        }
+
+        Channel::Impl* _channel;
+    };
+
     void frameDraw()
     {
         const Pipe* pipe = static_cast< Pipe* >( _channel->getPipe( ));
@@ -298,23 +278,38 @@ public:
         const eq::Viewport& vp = _channel->getViewport();
         _drawRange = _channel->getRange();
 
-        const livre::Window* window = static_cast< const livre::Window* >( _channel->getWindow( ));
-        const RenderPipeline& renderPipeline = window->getRenderPipeline();
+        livre::Window* window = static_cast< livre::Window* >( _channel->getWindow( ));
+        RenderPipeline& renderPipeline = window->getRenderPipeline();
 
+        livre::Node* node = static_cast< livre::Node* >( _channel->getNode( ));
         const FrameData& frameData = *pipe->getFrameData();
-        _renderer->update( frameData.getRenderSettings(), frameData.getVRParameters( ));
-        renderPipeline.render( { frameData.getVRParameters(),
-                                 _frameInfo,
-                                 {{ _drawRange.start, _drawRange.end }},
-                                 pipe->getFrameData()->getVolumeSettings().getDataSourceRange(),
-                                 PixelViewport( pixVp.x, pixVp.y, pixVp.w, pixVp.h ),
-                                 Viewport( vp.x, vp.y, vp.w, vp.h ),
-                                 frameData.getRenderSettings().getClipPlanes(),
-                               },
-                               PipeFilterT< RedrawFilter >( "RedrawFilter", _channel ),
-                               PipeFilterT< SendHistogramFilter >( "SendHistogramFilter", _channel ),
-                               *_renderer,
-                               _availability );
+        Vector2f dataSourceRange = frameData.getVolumeSettings().getDataSourceRange();
+        dataSourceRange = Vector2f( 0.0f, 255.0f );
+        const RenderInputs inputs= {
+                                        _frameInfo,
+                                        {{ _drawRange.start, _drawRange.end }},
+                                        dataSourceRange,
+                                        PixelViewport( pixVp.x, pixVp.y, pixVp.w, pixVp.h ),
+                                        Viewport( vp.x, vp.y, vp.w, vp.h ),
+                                        frameData.getApplicationSettings(),
+                                        frameData.getRenderSettings(),
+                                        frameData.getVRParameters(),
+                                        {{ "SendHistogramFilter",
+                                           PipeFilterT< SendHistogramFilter >(
+                                           "SendHistogramFilter", _channel )},
+                                         { "RedrawFilter",
+                                           PipeFilterT< RedrawFilter >(
+                                           "RedrawFilter", _channel )},
+                                         { "PreRenderFilter",
+                                           PipeFilterT< PreRenderFilter >(
+                                           "PreRenderFilter", this )}
+                                        },
+                                        node->getDataSource(),
+                                        node->getDataCache(),
+                                        node->getHistogramCache()
+                                    };
+
+        _statistics = renderPipeline.render( inputs );
     }
 
     void applyCamera()
@@ -326,7 +321,6 @@ public:
     void configInit()
     {
         initializeFrame();
-        initializeRenderer();
     }
 
     void configExit()
@@ -357,22 +351,23 @@ public:
             drawCacheStatistics();
         }
         if( frameSettings.getShowInfo( ))
-            drawVolumeInfo( _availability.nRenderAvailable );
+            drawVolumeInfo();
 
 #ifdef LIVRE_USE_ZEROEQ
-        const size_t all = _availability.nAvailable + _availability.nNotAvailable;
+        const size_t all = _statistics.nAvailable + _statistics.nNotAvailable;
         if( all > 0 )
         {
             _progress.restart( all );
-            _progress += _availability.nAvailable;
+            _progress += _statistics.nAvailable;
             _publisher.publish( _progress );
         }
 #endif
         _channel->resetOverlayState();
     }
 
-    void drawVolumeInfo( const size_t nBricks )
+    void drawVolumeInfo()
     {
+        const size_t nBricks = _statistics.nAvailable;
         livre::Node* node = static_cast< livre::Node* >( _channel->getNode( ));
         const VolumeInformation& info = node->getDataSource().getVolumeInfo();
 
@@ -421,15 +416,13 @@ public:
     void drawCacheStatistics()
     {
         livre::Node* node = static_cast< livre::Node* >( _channel->getNode( ));
-        const size_t all = _availability.nAvailable + _availability.nNotAvailable;
-        const size_t missing = _availability.nNotAvailable;
+        const size_t all = _statistics.nAvailable + _statistics.nNotAvailable;
+        const size_t missing = _statistics.nNotAvailable;
         const float done = all > 0 ? float( all - missing ) / float( all ) : 0;
-        const Window* window = static_cast< Window* >( _channel->getWindow( ));
 
         std::ostringstream os;
         os << node->getDataCache().getStatistics() << "  "
-           << int( 100.f * done + .5f ) << "% loaded" << std::endl
-           << window->getTextureCache().getStatistics();
+           << int( 100.f * done + .5f ) << "% loaded" << std::endl;
 
         float y = 260.f;
         std::string text = os.str();
@@ -603,32 +596,20 @@ public:
     eq::Frame _frame;
     FrameGrabber _frameGrabber;
     FrameInfo _frameInfo;
-    NodeAvailability _availability;
-    std::unique_ptr< RayCastRenderer > _renderer;
+    RenderStatistics _statistics;
     ::lexis::data::Progress _progress;
 #ifdef LIVRE_USE_ZEROEQ
     zeroeq::Publisher _publisher;
 #endif
 };
 
-void EqRaycastRenderer::_onFrameStart( const Frustum& frustum,
-                                       const ClipPlanes& planes,
-                                       const PixelViewport& view,
-                                       const NodeIds& renderBricks )
-{
-    _channel.updateRegions( renderBricks, frustum );
-    RayCastRenderer::_onFrameStart( frustum, planes, view, renderBricks );
-}
-
 Channel::Channel( eq::Window* parent )
         : eq::Channel( parent )
         , _impl( new Impl( this ))
-{
-}
+{}
 
 Channel::~Channel()
-{
-}
+{}
 
 bool Channel::configInit( const eq::uint128_t& initId )
 {

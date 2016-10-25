@@ -2,6 +2,12 @@ Changelog {#Changelog}
 =========
 
 # master {#master}
+* [#9](https://github.com/bilgili/Livre/pull/9):
+  * Plugin-based rendering system. Re-organized folder structure
+  * Re-organized data sources
+
+==================
+# master {#master}
 * [#331](https://github.com/BlueBrain/Livre/pull/331):
   Multiple pass mode added for high quality images for data that does not fit into GPU cache
 * [#333](https://github.com/BlueBrain/Livre/pull/333):
