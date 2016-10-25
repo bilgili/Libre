@@ -40,19 +40,22 @@ public:
      * @param dataSource the data source
      * @param renderer the renderer ( RayCaster, etc )
      */
-    RenderFilter( const DataSource& dataSource,
-                  Renderer& renderer );
+    RenderFilter( const DataSource& dataSource, Renderer& renderer );
     ~RenderFilter();
 
-    /**
-     * @copydoc Filter::execute
-     */
+    /** @copydoc Filter::execute */
     void execute( const FutureMap& input, PromiseMap& output ) const final;
 
-    /**
-     * @copydoc Filter::getInputDataInfos
-     */
-    DataInfos getInputDataInfos() const final;
+    /** @copydoc Filter::getInputDataInfos */
+    DataInfos getInputDataInfos() const final
+    {
+        return
+        {
+            { "CacheObjects", getType< ConstCacheObjects >() },
+            { "RenderInputs", getType< RenderInputs >() },
+            { "RenderStages", getType< uint32_t >() },
+        };
+    }
 
 private:
 

@@ -15,6 +15,8 @@ is not meant to be alternative to original Livre that is developed by
 the Blue Brain team.
 
 It provides the following major features to facilitate rendering of large volumetric data sets:
+* Plugin-based data sources
+* Plugin-based renderers
 * Visualisation of pre-processed UVF format
   ([source code](https://github.com/SCIInstitute/Tuvok.git)) volume data sets.
 * Multi-node, multi-gpu rendering (Currently only sort-first rendering)
@@ -34,5 +36,5 @@ please update the corresponding issue with your inputs and outputs.
 
 The following platforms and build environments are tested:
 
-* Linux: Ubuntu 14.04, RHEL 6.5 (Makefile, x64)
+* Linux: Ubuntu 16.04 (Makefile, x64)
 
