@@ -43,35 +43,6 @@ const uint8_t* ConstMemoryUnit::_getData() const
     return ptr_;
 }
 
-size_t AllocMemoryUnit::getMemSize() const
-{
-    return _rawData.getSize();
-}
 
-size_t AllocMemoryUnit::getAllocSize() const
-{
-    return _rawData.getMaxSize();
-}
-
-AllocMemoryUnit::~AllocMemoryUnit()
-{
-    _rawData.clear();
-}
-
-void AllocMemoryUnit::_alloc( const size_t nBytes )
-{
-    LB_TS_THREAD( thread_ );
-    _rawData.reset( nBytes );
-}
-
-const uint8_t* AllocMemoryUnit::_getData() const
-{
-    return _rawData.getData();
-}
-
-uint8_t* AllocMemoryUnit::_getData()
-{
-    return _rawData.getData();
-}
 
 }

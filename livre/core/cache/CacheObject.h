@@ -36,9 +36,6 @@ public:
 
     LIVRECORE_API virtual ~CacheObject();
 
-    /** @return The memory size of the object in bytes. */
-    virtual size_t getSize() const = 0;
-
     /** @return The unique cache id. */
     LIVRECORE_API CacheId getId() const;
 

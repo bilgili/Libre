@@ -31,7 +31,7 @@ namespace livre
 /**
  * The TextureObject class holds the informarmation for the data which is on the GPU.
   */
-class TextureObject : public CacheObject
+class TextureObject
 {
 public:
 
@@ -50,7 +50,7 @@ public:
     LIVRE_API virtual ~TextureObject();
 
     /** @copydoc livre::CacheObject::getSize */
-    LIVRE_API size_t getSize() const final;
+    LIVRE_API size_t getSize() const;
 
     /** @return The texture state ( const ).*/
     LIVRE_API const TextureState& getTextureState() const;

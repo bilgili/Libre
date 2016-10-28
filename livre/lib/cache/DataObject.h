@@ -24,7 +24,9 @@
 #include <livre/lib/api.h>
 #include <livre/lib/types.h>
 
-#include <livre/core/cache/CacheObject.h> // base class
+#include <livre/core/data/LODNode.h>
+#include <livre/core/data/MemoryUnit.h>
+#include <livre/core/data/DataSource.h>
 
 namespace livre
 {
@@ -32,7 +34,8 @@ namespace livre
 /**
  * The DataObject class stores raw data from the volume data source.
  */
-class DataObject : public CacheObject
+template < class Allocator >
+class DataObject
 {
 public:
 
@@ -42,23 +45,19 @@ public:
      * @param dataSource the data source cache object is created from
      * @throws CacheLoadException when the data cache does not have the data for cache id
      */
-    LIVRE_API DataObject( const CacheId& cacheId, DataSource& dataSource );
-
+    LIVRE_API DataObject( const CacheId& cacheId, Allocator& allocator, DataSource& dataSource );
     LIVRE_API ~DataObject();
 
     /** @return A pointer to the data or 0 if no data is loaded. */
     LIVRE_API const void* getDataPtr() const;
 
     /** @copydoc livre::CacheObject::getSize */
-    LIVRE_API size_t getSize() const final;
+    LIVRE_API size_t getSize() const;
 
-private:
-
-    struct Impl;
-    std::unique_ptr<Impl> _impl;
-
+    ConstMemoryUnitPtr< Allocator > _data;
 };
 
+#include "DataObject.ipp"
 }
 
 #endif // _DataObject_h_

@@ -22,7 +22,6 @@ set(LIVRELIB_PUBLIC_HEADERS
 set(LIVRELIB_SOURCES
   ${ZEROBUF_GENERATED_SOURCES}
   animation/CameraPath.cpp
-  cache/DataObject.cpp
   cache/HistogramObject.cpp
   cache/TextureObject.cpp
   configuration/ApplicationParameters.cpp

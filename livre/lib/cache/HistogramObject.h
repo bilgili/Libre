@@ -32,7 +32,7 @@ namespace livre
 /**
  * The HistogramObject class holds the histogram per texture raw data.
  */
-class HistogramObject : public CacheObject
+class HistogramObject
 {
 public:
 
@@ -46,14 +46,14 @@ public:
      * @throws CacheLoadException when the data cache does not have the data for cache id
      */
     LIVRE_API HistogramObject( const CacheId& cacheId,
-                               const Cache& dataCache,
+                               const Cache< DataObject >& dataCache,
                                const DataSource& dataSource,
                                const Vector2f& dataSourceRange );
 
     LIVRE_API ~HistogramObject();
 
     /** @copydoc livre::CacheObject::getSize */
-    LIVRE_API size_t getSize() const final;
+    LIVRE_API size_t getSize() const;
 
     /** @return the histogram */
     LIVRE_API const Histogram& getHistogram() const;

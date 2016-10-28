@@ -51,7 +51,10 @@ namespace livre
 
 class AllocMemoryUnit;
 class ApplicationSettings;
+
+template< class CacheObjectT, class Allocator >
 class Cache;
+
 class CacheObject;
 class CacheStatistics;
 class ClipPlanes;
@@ -199,8 +202,6 @@ typedef std::list< Promise > Promises;
 /**
  * Map definitions
  */
-typedef std::unordered_map< CacheId, CacheObjectPtr > CacheMap;
-typedef std::unordered_map< CacheId, ConstCacheObjectPtr > ConstCacheMap;
 typedef std::unordered_map< uint32_t, EventHandlerPtr > EventHandlerMap;
 
 template < class T >

@@ -18,37 +18,37 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <livre/core/cache/CacheStatistics.h>
-#include <livre/core/cache/CacheObject.h>
-
-namespace livre
+template< class Allocator >
+DataObject< Allocator >::DataObject( const CacheId& cacheId,
+                                     Allocator& allocator,
+                                     DataSource& dataSource )
+    : _data( allocator )
 {
+    const DataType dataType = dataSource.getVolumeInfo().dataType;
+    if( dataType == DT_UNDEFINED )
+        LBTHROW( std::runtime_error( "Undefined data type" ));
 
-CacheStatistics::CacheStatistics( const std::string& name )
-    : _name( name )
-    , _objCount( 0 )
-    , _cacheHit( 0 )
-    , _cacheMiss( 0 )
-{
+    const NodeId nodeId( cacheId );
+    _dataSource.getData( nodeId, _data );
+    if( !_data )
+        return false;
+    return true;
 }
 
-std::ostream& operator<<( std::ostream& stream, const CacheStatistics& statistics )
+template< class Allocator >
+const void* DataObject< Allocator >::getDataPtr() const
 {
-    const int hits = int(
-        100.f * float( statistics._cacheHit ) /
-        float( statistics._cacheHit + statistics._cacheMiss ));
-    stream << statistics._name << std::endl;
-    stream << "  Block Count: "
-           << statistics._objCount << std::endl;
-    stream << "  Cache hits: "
-           << statistics._cacheHit << " (" << hits << "%)" << std::endl;
-    stream << "  Cache misses: "
-           << statistics._cacheMiss << std::endl;
-
-    return stream;
+    return _data->getData< void >();
 }
 
-CacheStatistics::~CacheStatistics()
-{}
+size_t DataObject< Allocator >::getSize() const
+{
+    return _impl->_data->getAllocSize();
+}
+
+const void* DataObject< Allocator >::getDataPtr() const
+{
+    return _impl->getDataPtr();
+}
 
 }

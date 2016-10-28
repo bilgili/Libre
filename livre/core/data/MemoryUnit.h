@@ -61,19 +61,6 @@ protected:
     virtual uint8_t* _getData() = 0;
 };
 
-/** MemoryUnit holding no data at all */
-class NoMemoryUnit : public MemoryUnit
-{
-public:
-    ~NoMemoryUnit() {}
-    size_t getMemSize() const final { return 0; }
-    size_t getAllocSize() const final { return 0; }
-
-private:
-    const uint8_t* _getData() const final { LBDONTCALL; return 0; }
-    uint8_t* _getData() final { LBDONTCALL; return 0; }
-};
-
 /**
  * The ConstMemoryUnit class shows a arbitrary memory pointer. No allocation is preformed.
  * i.e: Memory mapped files are managed by the OS and only a handle to the memory is kept.
@@ -96,6 +83,7 @@ protected:
  * The AllocMemoryUnit class shows an allocated memory pointer to keep track of memory consumption.
  * Memory is cleaned on destruction.
  */
+template< class Allocator >
 class AllocMemoryUnit : public MemoryUnit
 {
 public:
@@ -105,16 +93,9 @@ public:
      * @param sourceData Source data ptr.
      * @param size Number of the elements in the source data ptr.
      */
-    template< typename T >
-    AllocMemoryUnit( const T* sourceData, const size_t size )
+    AllocMemoryUnit( Allocator& allocator, const size_t size )
+        : _data( allocator, size )
     {
-        _allocAndSetData( sourceData, size );
-    }
-
-    /** "void" specialization of the constructor */
-    LIVRECORE_API AllocMemoryUnit( const void* sourceData, const size_t size )
-    {
-        _allocAndSetData( static_cast< const uint8_t* >( sourceData ), size );
     }
 
     /**
@@ -131,14 +112,20 @@ public:
      * Allocates memory in bytes in given size
      * @param size memory size
      */
-    LIVRECORE_API explicit AllocMemoryUnit( const size_t size )
+    explicit AllocMemoryUnit( const size_t size )
     {
         _alloc( size );
     }
 
-    LIVRECORE_API ~AllocMemoryUnit();
-    LIVRECORE_API size_t getMemSize() const final;
-    LIVRECORE_API size_t getAllocSize() const final;
+    size_t AllocMemoryUnit::getMemSize() const
+    {
+        return _rawData.getSize();
+    }
+
+    size_t AllocMemoryUnit::getAllocSize() const
+    {
+        return _rawData.getMaxSize();
+    }
 
 private:
 
@@ -148,8 +135,7 @@ private:
     template< class T >
     void _allocAndSetData( const T* sourceData, const size_t size )
     {
-        _alloc( sizeof( T ) * size );
-        ::memcpy( _rawData.getData(), sourceData, size * sizeof( T ) );
+         ::memcpy( _rawData.getData(), sourceData, size * sizeof( T ) );
     }
 
     void _alloc( size_t nBytes );
@@ -157,9 +143,34 @@ private:
     const uint8_t* _getData() const final;
     uint8_t* _getData() final;
 
-    lunchbox::Bufferb _rawData;
+    Allocator& _allocator;
+    std::vector< uint8_t, Allocator > _rawData;
     LB_TS_VAR( thread_ );
 };
+
+
+
+AllocMemoryUnit::~AllocMemoryUnit()
+{
+    _rawData.clear();
+}
+
+void AllocMemoryUnit::_alloc( const size_t nBytes )
+{
+    LB_TS_THREAD( thread_ );
+    _rawData.reset( nBytes );
+}
+
+const uint8_t* AllocMemoryUnit::_getData() const
+{
+    return _rawData.getData();
+}
+
+uint8_t* AllocMemoryUnit::_getData()
+{
+    return _rawData.getData();
+}
+
 
 }
 

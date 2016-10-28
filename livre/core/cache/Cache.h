@@ -21,8 +21,11 @@
 #define _Cache_h_
 
 #include <livre/core/api.h>
+#include <livre/core/defines.h>
 #include <livre/core/types.h>
 #include <livre/core/lunchboxTypes.h>
+
+#include "CacheStatistics.h"
 
 namespace livre
 {
@@ -46,19 +49,19 @@ private:
  * The Cache class manages the \see CacheObjects according to LRU Policy, methods
  * are thread safe inserting/querying nodes. The type safety check is done in runtime.
  */
+template< class CacheObjectT, class Allocator = std::allocator< CacheObjectT >>
 class Cache
 {
 public:
 
-    LIVRECORE_API virtual ~Cache();
+    typedef std::shared_ptr< const CacheObjectT > ConstCacheObjectPtrT;
 
     /**
-     * Gets the cached object from the cache.
-     * @param cacheId The object cache id to be queried.
-     * @return The cache object from cache, if object is not in the list an empty cache
-     * object is returned.
+     * @param name is the name of the cache.
+     * @param maxMemBytes maximum memory.
      */
-    LIVRECORE_API ConstCacheObjectPtr get( const CacheId& cacheId ) const;
+    LIVRECORE_API Cache( const std::string& name, const Allocator& allocator = Allocator( ));
+    LIVRECORE_API virtual ~Cache();
 
     /**
      * Gets the cached object from the cache with a given type and d
@@ -67,18 +70,7 @@ public:
      * object is returned.
      * @throw std::runtime_error if cached object is not CacheObjectT type
      */
-    template< class CacheObjectT >
-    LIVRECORE_API std::shared_ptr< const CacheObjectT > get( const CacheId& cacheId ) const
-    {
-        if( _getCacheObjectType() != getType< CacheObjectT >( ))
-            LBTHROW( std::runtime_error( "The cache type casting failed for cached object" ));
-
-        ConstCacheObjectPtr obj = get( cacheId );
-        if( !obj )
-            return std::shared_ptr< const CacheObjectT >();
-
-        return std::static_pointer_cast< const CacheObjectT >( obj );
-    }
+    LIVRECORE_API ConstCacheObjectPtrT get( const CacheId& cacheId ) const;
 
     /**
      * Unloads the object from the memory, if there are not any references. The
@@ -101,39 +93,10 @@ public:
      * @return the loaded or previously loaded cache object. Return empty pointer
      * if cache id is invalid or object cannot be loaded.
      */
-    template< class CacheObjectT, class... Args >
-    LIVRECORE_API std::shared_ptr< const CacheObjectT > load( const CacheId& cacheId,
-                                                              Args&&... args )
-    {
-        if( _getCacheObjectType() != getType< CacheObjectT >( ))
-            LBTHROW( std::runtime_error( "The cache does not support the type" ));
+    template< class... Args >
+    LIVRECORE_API ConstCacheObjectPtrT load( const CacheId& cacheId, Args&&... args );
 
-        std::shared_ptr< const CacheObjectT > obj = get< CacheObjectT >( cacheId );
-        if( obj )
-            return obj;
-
-        try
-        {
-            ConstCacheObjectPtr cacheObject
-                    = _load( ConstCacheObjectPtr( new CacheObjectT( cacheId, args... )));
-
-            std::shared_ptr< const CacheObjectT > typedObj =
-                    std::dynamic_pointer_cast< const CacheObjectT >( cacheObject );
-
-            if( !typedObj )
-                LBTHROW( std::runtime_error( "The cache type casting failed for cached object" ));
-
-            return typedObj;
-        }
-        catch( const CacheLoadException& )
-        {}
-
-        return obj;
-    }
-
-    /**
-     * @return Statistics.
-     */
+    /** @return Statistics. */
     LIVRECORE_API const CacheStatistics& getStatistics() const;
 
     /**
@@ -151,35 +114,11 @@ public:
 
 protected:
 
-    /**
-     * @param name is the name of the cache.
-     * @param maxMemBytes maximum memory.
-     * @param cacheObjectType type info for the cached object.
-     */
-    LIVRECORE_API Cache( const std::string& name,
-                         size_t maxMemBytes,
-                         const std::type_index& cacheObjectType );
-
-private:
-
-    ConstCacheObjectPtr _load( ConstCacheObjectPtr cacheObject );
-    const std::type_index& _getCacheObjectType() const;
-
     struct Impl;
     std::unique_ptr<Impl> _impl;
 };
 
-/** Helper class for enabling cache to be constructed for CacheObjects */
-template< class CacheObjectT >
-class CacheT : public Cache
-{
-public:
-    template< class Q = CacheObjectT >
-    LIVRECORE_API CacheT( const std::string& name, size_t maxMemBytes,
-            typename std::enable_if< std::is_base_of< CacheObject, Q >::value, Q >::type* = 0 )
-        : Cache( name, maxMemBytes, getType< CacheObjectT >( ))
-    {}
-};
+#include "Cache.ipp"
 
 }
 
