@@ -23,8 +23,6 @@
 #include <livre/core/cache/Cache.h>
 #include <livre/core/data/LODNode.h>
 #include <livre/core/data/DataSource.h>
-#include <livre/core/render/GLContext.h>
-#include <livre/core/render/Renderer.h>
 #include <livre/core/render/TexturePool.h>
 
 #include <GL/glew.h>
@@ -50,16 +48,18 @@ struct TextureObject::Impl
           const Cache& dataCache,
           const DataSource& dataSource,
           TexturePool& texturePool )
-       : _textureState( texturePool )
-       , _textureSize( getTextureSize( dataSource ))
+       : _texturePool( texturePool )
+       , _texture( texturePool.generate( ))
+       , _size( getTextureSize( dataSource ))
    {
-        LBASSERT( _textureState.textureId );
         if( !load( cacheId, dataCache, dataSource, texturePool ))
             LBTHROW( CacheLoadException( cacheId, "Unable to construct texture cache object" ));
     }
 
     ~Impl()
-    {}
+    {
+        _texturePool.release( _texture );
+    }
 
     bool load( const CacheId& cacheId,
                const Cache& dataCache,
@@ -85,12 +85,15 @@ struct TextureObject::Impl
         const Vector3f& size = lodNode.getVoxelBox().getSize();
         const Vector3f& maxSize = dataSource.getVolumeInfo().maximumBlockSize;
         const Vector3f& overlapf = overlap / maxSize;
-        _textureState.textureCoordsMax = overlapf + size / maxSize;
-        _textureState.textureCoordsMin = overlapf;
-        _textureState.textureSize = _textureState.textureCoordsMax -
-                                    _textureState.textureCoordsMin;
+        _texturePos = overlapf;
+        _textureSize = ( overlapf + size / maxSize ) - _texturePos;
 
         loadTextureToGPU( lodNode, dataSource, texturePool, data );
+    }
+
+    void bind() const
+    {
+        glBindTexture( GL_TEXTURE_3D, _texture );
     }
 
     bool loadTextureToGPU( const LODNode& lodNode,
@@ -101,12 +104,11 @@ struct TextureObject::Impl
     #ifdef LIVRE_DEBUG_RENDERING
         std::cout << "Upload "  << lodNode.getNodeId().getLevel() << ' '
                   << lodNode.getRelativePosition() << " to "
-                  << _textureState.textureId << std::endl;
+                  << _texture << std::endl;
     #endif
         const Vector3ui& overlap = dataSource.getVolumeInfo().overlap;
         const Vector3ui& voxSizeVec = lodNode.getBlockSize() + overlap * 2;
-        _textureState.bind();
-
+        bind();
         glTexSubImage3D( GL_TEXTURE_3D, 0, 0, 0, 0,
                          voxSizeVec[0], voxSizeVec[1], voxSizeVec[2],
                          texturePool.getFormat() ,
@@ -123,8 +125,12 @@ struct TextureObject::Impl
         return true;
     }
 
-    TextureState _textureState;
-    size_t _textureSize;
+
+    TexturePool& _texturePool;
+    Vector3f _texturePos; //!< Minimum texture coordinates in the maximum texture block.
+    Vector3f _textureSize; //!< The texture size.
+    GLuint _texture; //!< The OpenGL texture id.
+    size_t _size;
 };
 
 TextureObject::TextureObject( const CacheId& cacheId,
@@ -138,14 +144,28 @@ TextureObject::TextureObject( const CacheId& cacheId,
 TextureObject::~TextureObject()
 {}
 
-const TextureState& TextureObject::getTextureState() const
-{
-    return _impl->_textureState;
-}
-
 size_t TextureObject::getSize() const
 {
+    return _impl->_size;
+}
+
+
+/** @return The texture position in normalized space.*/
+Vector3f TextureObject::getTexPosition() const
+{
+    return _impl->_texturePos;
+}
+
+/** @return The texture size in normalized space.*/
+Vector3f TextureObject::getTexSize() const
+{
     return _impl->_textureSize;
+}
+
+/** OpenGL bind() the texture. */
+void TextureObject::bind() const
+{
+    _impl->bind();
 }
 
 }

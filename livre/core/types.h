@@ -106,7 +106,6 @@ class Workers;
 struct FrameInfo;
 struct RenderStatistics;
 struct RenderInputs;
-struct TextureState;
 struct VolumeInformation;
 
 using servus::uint128_t;
@@ -123,8 +122,6 @@ typedef std::array< float, 2 > Range;
 typedef std::shared_ptr< AllocMemoryUnit > AllocMemoryUnitPtr;
 typedef std::shared_ptr< GLContext > GLContextPtr;
 typedef std::shared_ptr< const GLContext > ConstGLContextPtr;
-typedef std::shared_ptr< TextureState > TextureStatePtr;
-typedef std::shared_ptr< const TextureState > ConstTextureStatePtr;
 typedef std::shared_ptr< DataSource > DataSourcePtr;
 typedef std::shared_ptr< const DataSource > ConstDataSourcePtr;
 typedef std::shared_ptr< EventHandler > EventHandlerPtr;

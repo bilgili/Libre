@@ -32,7 +32,6 @@
 #include <livre/core/render/Frustum.h>
 #include <livre/core/render/GLContext.h>
 #include <livre/core/render/FrameInfo.h>
-#include <livre/core/render/TextureState.h>
 #include <livre/core/data/LODNode.h>
 
 
@@ -480,15 +479,7 @@ struct GLRaycastRenderer::Impl
 
         const ConstTextureObjectPtr textureObj =
                 std::static_pointer_cast< const TextureObject >( rb );
-        const TextureState& texState = textureObj->getTextureState();
         const LODNode& lodNode = dataSource.getNode( NodeId( rb ->getId( )));
-
-        if( texState.textureId == INVALID_TEXTURE_ID )
-        {
-            LBERROR << "Invalid texture for node : "
-                    << lodNode.getNodeId() << std::endl;
-            return;
-        }
 
         GLint tParamNameGL = glGetUniformLocation( program, "aabbMin" );
         glUniform3fv( tParamNameGL, 1, lodNode.getWorldBox().getMin().array );
@@ -497,13 +488,14 @@ struct GLRaycastRenderer::Impl
         glUniform3fv( tParamNameGL, 1, lodNode.getWorldBox().getMax().array );
 
         tParamNameGL = glGetUniformLocation( program, "textureMin" );
-        glUniform3fv( tParamNameGL, 1, texState.textureCoordsMin.array );
+        glUniform3fv( tParamNameGL, 1, textureObj->getTexPosition().array );
 
         tParamNameGL = glGetUniformLocation( program, "textureMax" );
-        glUniform3fv( tParamNameGL, 1, texState.textureCoordsMax.array );
+        glUniform3fv( tParamNameGL, 1, ( textureObj->getTexPosition() +
+                                         textureObj->getTexSize( )).array );
 
         glActiveTexture( GL_TEXTURE0 );
-        texState.bind();
+        textureObj->bind();
         tParamNameGL = glGetUniformLocation( program, "volumeTexUint8" );
         glUniform1i( tParamNameGL, 0 );
 
@@ -550,7 +542,7 @@ struct GLRaycastRenderer::Impl
 
     RenderTexture _renderTexture;
     uint32_t _computedSamplesPerRay;
-    uint32_t _colorMapTexture;
+    GLuint _colorMapTexture;
     GLuint _quadVBO;
     GLint _drawBuffer;
     lexis::render::Colors< uint8_t > _colors;

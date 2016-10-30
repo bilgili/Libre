@@ -52,8 +52,14 @@ public:
     /** @copydoc livre::CacheObject::getSize */
     LIVRE_API size_t getSize() const final;
 
-    /** @return The texture state ( const ).*/
-    LIVRE_API const TextureState& getTextureState() const;
+    /** @return The texture position in normalized space.*/
+    LIVRE_API Vector3f getTexPosition() const;
+
+    /** @return The texture size in normalized space.*/
+    LIVRE_API Vector3f getTexSize() const;
+
+    /** OpenGL bind() the texture. */
+    LIVRECORE_API void bind() const;
 
 private:
 

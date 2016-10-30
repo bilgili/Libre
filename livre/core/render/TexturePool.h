@@ -21,8 +21,10 @@
 #define _TexturePool_h_
 
 #include <livre/core/api.h>
-#include <livre/core/render/TextureState.h>
 #include <livre/core/types.h>
+#include <livre/core/mathTypes.h>
+
+#include <GL/glew.h>
 
 namespace livre
 {
@@ -38,10 +40,9 @@ public:
     /**
      * Constructor. Preallocates texture blocks
      * @param dataSource the data source
-     * @param gpuCacheSize the size of the GPU cache
      * @throws std::runtime_error if data has multiple channels
      */
-    LIVRECORE_API TexturePool( const DataSource& dataSource, size_t gpuCacheSize );
+    LIVRECORE_API TexturePool( const DataSource& dataSource );
     LIVRECORE_API ~TexturePool();
 
     /** @return The OpenGL GPU internal format of the texture data. */
@@ -55,15 +56,15 @@ public:
 
     /**
      * Generates / uses a preallocated a 3D OpenGL texture based on OpenGL parameters.
-     * @param textureState The destination state is filled with needed information.
+     * @return open gl texture id
      */
-    LIVRECORE_API void generateTexture( TextureState& textureState );
+    LIVRECORE_API GLuint generate();
 
     /**
      * Releases a texture slot.
-     * @param textureState The destination state is filled with needed information.
+     * @param texture the given open gl texture id.
      */
-    LIVRECORE_API void releaseTexture( TextureState& textureState );
+    LIVRECORE_API void release( GLuint texture );
 
 private:
 
