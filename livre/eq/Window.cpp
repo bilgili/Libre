@@ -36,7 +36,6 @@
 #include <livre/lib/cache/TextureObject.h>
 
 #include <livre/core/cache/Cache.h>
-#include <livre/core/render/TexturePool.h>
 
 #include <eq/gl.h>
 
@@ -59,7 +58,6 @@ public:
     {
         _glContext->doneCurrent();
         _glContext.reset();
-        _textureCache->purge();
         return true;
     }
 
@@ -83,8 +81,6 @@ public:
 
     Window* const _window;
     GLContextPtr _glContext;
-    std::unique_ptr< TexturePool > _texturePool;
-    std::unique_ptr< Cache > _textureCache;
     std::unique_ptr< RenderPipeline > _renderPipeline;
 };
 

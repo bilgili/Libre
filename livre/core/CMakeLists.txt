@@ -61,7 +61,6 @@ set(LIVRECORE_HEADERS
   render/Frustum.h
   render/SelectVisibles.h
   render/TexturePool.h
-  render/TextureState.h
   settings/ApplicationSettings.h
   settings/CameraSettings.h
   settings/FrameSettings.h
@@ -109,7 +108,6 @@ set(LIVRECORE_SOURCES
   render/RenderPipeline.cpp
   render/SelectVisibles.cpp
   render/TexturePool.cpp
-  render/TextureState.cpp
   settings/ApplicationSettings.cpp
   settings/CameraSettings.cpp
   settings/FrameSettings.cpp

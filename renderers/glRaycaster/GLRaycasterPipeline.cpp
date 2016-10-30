@@ -287,7 +287,7 @@ struct GLRaycasterPipeline::Impl
         const RendererParameters& vrParams = renderInputs.vrParameters;
         const size_t gpuMem = vrParams.getMaxGPUCacheMemoryMB() * LB_1MB;
         _textureCache.reset( new CacheT< TextureObject >( "TextureCache", gpuMem ));
-        _texturePool.reset( new TexturePool( renderInputs.dataSource, gpuMem ));
+        _texturePool.reset( new TexturePool( renderInputs.dataSource ));
     }
 
     void render( RenderStatistics& statistics,

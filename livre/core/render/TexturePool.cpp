@@ -29,7 +29,7 @@
 namespace livre
 {
 
-TexturePool::TexturePool( const DataSource& dataSource, const size_t gpuCacheSize )
+TexturePool::TexturePool( const DataSource& dataSource )
     : _maxBlockSize( dataSource.getVolumeInfo().maximumBlockSize )
     , _internalTextureFormat( 0 )
     , _format( 0 )
@@ -80,36 +80,25 @@ TexturePool::TexturePool( const DataSource& dataSource, const size_t gpuCacheSiz
        LBTHROW( std::runtime_error( "Undefined data type" ));
     break;
     }
-
-    const size_t blockMemSize = _maxBlockSize.product() *
-                                dataSource.getVolumeInfo().getBytesPerVoxel() *
-                                dataSource.getVolumeInfo().compCount;
-
-    const size_t nBlockCount = gpuCacheSize / blockMemSize;
-
-    std::vector< std::unique_ptr <TextureState > > states;
-    for( size_t i = 0; i < nBlockCount; ++i )
-        states.emplace_back( new TextureState( *this ));
-    states.clear();
 }
 
 TexturePool::~TexturePool()
 {}
 
-void TexturePool::generateTexture( TextureState& textureState )
+GLuint TexturePool::generate()
 {
     ScopedLock lock( _mutex );
-    LBASSERT( textureState.textureId == INVALID_TEXTURE_ID );
+    GLuint texture;
     if( !_textureStack.empty() )
     {
-        textureState.textureId = _textureStack.back();
+         texture = _textureStack.back();
         _textureStack.pop_back();
     }
     else
     {
-        glGenTextures( 1, &textureState.textureId );
+        glGenTextures( 1, &texture );
         glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
-        textureState.bind();
+        glBindTexture( GL_TEXTURE_3D, texture );
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -126,13 +115,13 @@ void TexturePool::generateTexture( TextureState& textureState )
             LBERROR << "Error loading the texture into GPU, error number: " << glErr << std::endl;
 
     }
+    return texture;
 }
 
-void TexturePool::releaseTexture( TextureState& textureState )
+void TexturePool::release( const GLuint texture )
 {
     ScopedLock lock( _mutex );
-    LBASSERT( textureState.textureId );
-    _textureStack.push_back( textureState.textureId );
+    _textureStack.push_back( texture );
 }
 
 }
