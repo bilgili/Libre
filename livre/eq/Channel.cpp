@@ -36,10 +36,6 @@
 #include <livre/eq/settings/EqVolumeSettings.h>
 #include <livre/eq/Window.h>
 
-#include <livre/lib/cache/TextureObject.h>
-
-#include <livre/core/cache/Cache.h>
-#include <livre/core/cache/CacheStatistics.h>
 #include <livre/core/data/DataSource.h>
 #include <livre/core/data/Histogram.h>
 #include <livre/core/render/FrameInfo.h>
@@ -305,9 +301,7 @@ public:
                                            PipeFilterT< PreRenderFilter >(
                                            "PreRenderFilter", this )}
                                         },
-                                        node->getDataSource(),
-                                        node->getDataCache(),
-                                        node->getHistogramCache()
+                                        node->getDataSource()
                                     };
 
         _statistics = renderPipeline.render( inputs );
@@ -416,13 +410,12 @@ public:
 
     void drawCacheStatistics()
     {
-        livre::Node* node = static_cast< livre::Node* >( _channel->getNode( ));
         const size_t all = _statistics.nAvailable + _statistics.nNotAvailable;
         const size_t missing = _statistics.nNotAvailable;
         const float done = all > 0 ? float( all - missing ) / float( all ) : 0;
 
         std::ostringstream os;
-        os << node->getDataCache().getStatistics() << "  "
+        os << "All nodes: " << all << "\n"
            << int( 100.f * done + .5f ) << "% loaded" << std::endl;
 
         float y = 260.f;

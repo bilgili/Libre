@@ -33,8 +33,8 @@ const float infinite = std::numeric_limits< float >::max();
 
 struct HistogramFilter::Impl
 {
-    Impl( Cache& histogramCache,
-          const Cache& dataCache,
+    Impl( HistogramCache& histogramCache,
+          const DataCache& dataCache,
           const DataSource& dataSource )
         : _histogramCache( histogramCache )
         , _dataCache( dataCache )
@@ -91,10 +91,7 @@ struct HistogramFilter::Impl
 
                 // Hist cache object expands the data source range if data has larger values
                 ConstHistogramObjectPtr histCacheObject =
-                        _histogramCache.load< HistogramObject >( cacheId,
-                                                                 _dataCache,
-                                                                 _dataSource,
-                                                                 dataSourceRange );
+                        _histogramCache.load( cacheId, _dataCache, _dataSource, dataSourceRange );
                 if( !histCacheObject )
                     continue;
 
@@ -135,13 +132,13 @@ struct HistogramFilter::Impl
         output.set( "Histogram", histogramAccumulated );
     }
 
-    Cache& _histogramCache;
-    const Cache& _dataCache;
+    HistogramCache& _histogramCache;
+    const DataCache& _dataCache;
     const DataSource& _dataSource;
 };
 
-HistogramFilter::HistogramFilter( Cache& histogramCache,
-                                  const Cache& dataCache,
+HistogramFilter::HistogramFilter( HistogramCache& histogramCache,
+                                  const DataCache& dataCache,
                                   const DataSource& dataSource )
     : _impl( new HistogramFilter::Impl( histogramCache,
                                         dataCache,

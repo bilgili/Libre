@@ -30,12 +30,7 @@
 #include <livre/eq/Pipe.h>
 #include <livre/eq/render/EqContext.h>
 #include <livre/eq/settings/EqFrameSettings.h>
-
-#include <livre/core/configuration/RendererParameters.h>
 #include <livre/core/render/RenderPipeline.h>
-#include <livre/lib/cache/TextureObject.h>
-
-#include <livre/core/cache/Cache.h>
 
 #include <eq/gl.h>
 

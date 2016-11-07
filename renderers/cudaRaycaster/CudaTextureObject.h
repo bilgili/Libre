@@ -45,7 +45,7 @@ public:
      * @throws CacheLoadException when the data cache does not have the data for cache id
      */
     CudaTextureObject( const CacheId& cacheId,
-                       const Cache& dataCache,
+                       const DataCache& dataCache,
                        const DataSource& dataSource,
                        CudaTexturePool& pool );
 

@@ -46,7 +46,9 @@ public:
      * @param dataCache data cache
      * @param dataSource data source
      */
-    HistogramFilter( Cache& histogramCache, const Cache& dataCache, const DataSource& dataSource );
+    HistogramFilter( HistogramCache& histogramCache,
+                     const DataCache& dataCache,
+                     const DataSource& dataSource );
     ~HistogramFilter();
 
     /** @copydoc Filter::execute */

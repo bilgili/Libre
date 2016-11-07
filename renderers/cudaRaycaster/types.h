@@ -20,7 +20,7 @@
 #ifndef _CudaRaycaster_Types_h_
 #define _CudaRaycaster_Types_h_
 
-#include <memory>
+#include <livre/core/types.h>
 
 namespace livre
 {
@@ -28,6 +28,7 @@ namespace livre
 class CudaTexturePool;
 class CudaTextureObject;
 
+typedef Cache< CudaTextureObject > CudaTextureCache;
 typedef std::shared_ptr< const CudaTextureObject > ConstCudaTextureObjectPtr;
 
 }

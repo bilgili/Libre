@@ -17,22 +17,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <livre/lib/pipeline/RenderingSetGeneratorFilter.h>
-
-#include <livre/core/cache/Cache.h>
-#include <livre/core/pipeline/PipeFilter.h>
-#include <livre/core/pipeline/InputPort.h>
-#include <livre/core/pipeline/Workers.h>
-#include <livre/core/pipeline/PortData.h>
-
-#include <livre/core/render/FrameInfo.h>
-
-namespace livre
-{
-
+template< class CacheObjectT >
 struct RenderingSetGenerator
 {
-    explicit RenderingSetGenerator( const Cache& cache )
+    explicit RenderingSetGenerator( const Cache< CacheObjectT >& cache )
         : _cache( cache )
     {}
 
@@ -48,8 +36,7 @@ struct RenderingSetGenerator
         return false;
     }
 
-    void collectLoadedData( const NodeId& nodeId,
-                                ConstCacheMap& cacheMap ) const
+    void collectLoadedData( const NodeId& nodeId, ConstCacheMap& cacheMap ) const
     {
         NodeId current = nodeId;
         while( current.isValid( ))
@@ -107,18 +94,19 @@ struct RenderingSetGenerator
         return cacheObjects;
     }
 
-    const Cache& _cache;
+    const Cache< CacheObjectT >& _cache;
 };
 
-struct RenderingSetGeneratorFilter::Impl
+template< class CacheObjectT >
+struct RenderingSetGeneratorFilter< CacheObjectT >::Impl
 {
-    explicit Impl( const Cache& cache )
+    explicit Impl( const Cache< CacheObjectT >& cache )
         : _cache( cache )
     {}
 
     void execute( const FutureMap& input, PromiseMap& output ) const
     {
-        RenderingSetGenerator renderSetGenerator( _cache );
+        RenderingSetGenerator< CacheObjectT > renderSetGenerator( _cache );
 
         ConstCacheObjects cacheObjects;
         size_t nVisible = 0;
@@ -138,21 +126,25 @@ struct RenderingSetGeneratorFilter::Impl
         output.set( "RenderStatistics", cumulativeAvailability );
     }
 
-    const Cache& _cache;
+    const Cache< CacheObjectT >& _cache;
 };
 
-RenderingSetGeneratorFilter::RenderingSetGeneratorFilter( const Cache& cache )
+template< class CacheObjectT >
+RenderingSetGeneratorFilter< CacheObjectT >::RenderingSetGeneratorFilter(
+        const Cache< CacheObjectT >& cache )
     : _impl( new RenderingSetGeneratorFilter::Impl( cache ))
 {
 }
 
-RenderingSetGeneratorFilter::~RenderingSetGeneratorFilter()
+template< class CacheObjectT >
+RenderingSetGeneratorFilter< CacheObjectT >::~RenderingSetGeneratorFilter()
 {
 }
 
-void RenderingSetGeneratorFilter::execute( const FutureMap& input,
+template< class CacheObjectT >
+void RenderingSetGeneratorFilter< CacheObjectT >::execute( const FutureMap& input,
                                            PromiseMap& output ) const
 {
     _impl->execute( input, output );
 }
-}
+

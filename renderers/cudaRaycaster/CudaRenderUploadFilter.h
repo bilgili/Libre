@@ -46,7 +46,8 @@ public:
      * @param nUploadThreads mumber of data upload thread
      * @param executor that runs the upload operations
      */
-    CudaRenderUploadFilter( Cache& cudaCache,
+    CudaRenderUploadFilter( DataCache& dataCache,
+                            CudaTextureCache& cudaCache,
                             CudaTexturePool& texturePool,
                             size_t nUploadThreads,
                             Executor& executor );

@@ -46,8 +46,6 @@ struct RenderInputs
     const RendererParameters vrParameters;
     const PipeFilterMap filters;
     DataSource& dataSource;
-    Cache& dataCache;
-    Cache& histogramCache;
 };
 
 }

@@ -45,7 +45,7 @@ struct CudaTextureObject::Impl
 {
 
     Impl( const CacheId& cacheId,
-          const Cache& dataCache,
+          const DataCache& dataCache,
           const DataSource& dataSource,
           CudaTexturePool& texturePool )
         : _size( 0 )
@@ -57,12 +57,13 @@ struct CudaTextureObject::Impl
 
     ~Impl()
     {
-        _texturePool.releaseSlot( _slotPosition );
+        if( _slotPosition != INVALID_SLOT_POSITION )
+            _texturePool.releaseSlot( _slotPosition );
     }
 
-    bool load( const CacheId& cacheId, const Cache& dataCache, const DataSource& dataSource )
+    bool load( const CacheId& cacheId, const DataCache& dataCache, const DataSource& dataSource )
     {
-        ConstDataObjectPtr data = dataCache.get< DataObject >( cacheId );
+        ConstDataObjectPtr data = dataCache.get( cacheId );
         if( !data )
             return false;
 
@@ -73,13 +74,17 @@ struct CudaTextureObject::Impl
         _slotPosition = _texturePool.copyToSlot( (const uint8_t *)data->getDataPtr(),
                                                  lodNode.getBlockSize() + ( volInfo.overlap * 2 ));
 
+        if( _slotPosition == INVALID_SLOT_POSITION )
+            return false;
+
         const Vector3f cacheTextureSize = _texturePool.getTextureSize();
         const Vector3f overlap = volInfo.overlap;
         const Vector3f size = lodNode.getVoxelBox().getSize();
         const Vector3f overlapf = overlap / cacheTextureSize;
         _texturePos = _slotPosition + overlapf;
         _textureSize = size / cacheTextureSize;
-        return _slotPosition != INVALID_SLOT_POSITION;
+        std::cout << cacheId << " loaded to " << _slotPosition << "\n";
+        return true;
     }
 
     size_t _size;
@@ -90,7 +95,7 @@ struct CudaTextureObject::Impl
 };
 
 CudaTextureObject::CudaTextureObject( const CacheId& cacheId,
-                                      const Cache& dataCache,
+                                      const DataCache& dataCache,
                                       const DataSource& dataSource,
                                       CudaTexturePool& texturePool )
    : CacheObject( cacheId )

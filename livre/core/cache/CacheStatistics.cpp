@@ -21,6 +21,8 @@
 #include <livre/core/cache/CacheStatistics.h>
 #include <livre/core/cache/CacheObject.h>
 
+#include <lunchbox/types.h>
+
 namespace livre
 {
 

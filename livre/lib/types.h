@@ -33,6 +33,10 @@ class RenderSettings;
 class TextureObject;
 class TexturePool;
 
+typedef Cache< DataObject > DataCache;
+typedef Cache< HistogramObject > HistogramCache;
+typedef Cache< TextureObject > TextureCache;
+
 struct ApplicationParameters;
 
 typedef std::shared_ptr< const DataObject > ConstDataObjectPtr;

@@ -32,9 +32,11 @@ struct CudaTextureUploadFilter::Impl
 {
 public:
 
-    Impl( Cache& cudaCache,
+    Impl( const DataCache& dataCache,
+          CudaTextureCache& cudaCache,
           CudaTexturePool& texturePool )
-        : _cudaCache( cudaCache )
+        : _dataCache( dataCache )
+        , _cudaCache( cudaCache )
         , _texturePool( texturePool )
     {}
 
@@ -45,13 +47,10 @@ public:
         for( const auto& dataCacheObjects: input.getFutures( "DataCacheObjects" ))
             for( const auto& dataCacheObject: dataCacheObjects.get< ConstCacheObjects >( ))
             {
-
-
-                const auto& cacheObj =
-                        _cudaCache.load< CudaTextureObject >( dataCacheObject->getId(),
-                                                              renderInputs.dataCache,
-                                                              renderInputs.dataSource,
-                                                              _texturePool );
+                const auto& cacheObj = _cudaCache.load( dataCacheObject->getId(),
+                                                        _dataCache,
+                                                        renderInputs.dataSource,
+                                                        _texturePool );
                 if( cacheObj )
                     cacheObjects.push_back( cacheObj );
 
@@ -60,14 +59,15 @@ public:
         output.set( "CudaTextureCacheObjects", cacheObjects );
     }
 
-    Cache& _cudaCache;
+    const DataCache& _dataCache;
+    CudaTextureCache& _cudaCache;
     CudaTexturePool& _texturePool;
 };
 
-CudaTextureUploadFilter::CudaTextureUploadFilter( Cache& cudaCache,
+CudaTextureUploadFilter::CudaTextureUploadFilter( const DataCache& dataCache,
+                                                  CudaTextureCache& cudaCache,
                                                   CudaTexturePool& texturePool )
-    : _impl( new CudaTextureUploadFilter::Impl( cudaCache,
-                                                texturePool ))
+    : _impl( new CudaTextureUploadFilter::Impl( dataCache, cudaCache, texturePool ))
 {
 }
 

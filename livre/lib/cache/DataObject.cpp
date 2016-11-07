@@ -19,8 +19,6 @@
  */
 
 #include <livre/lib/cache/DataObject.h>
-
-#include <livre/core/cache/Cache.h>
 #include <livre/core/data/LODNode.h>
 #include <livre/core/data/MemoryUnit.h>
 #include <livre/core/data/DataSource.h>

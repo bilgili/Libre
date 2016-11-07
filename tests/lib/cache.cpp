@@ -88,15 +88,13 @@ BOOST_AUTO_TEST_CASE( testCache )
     BOOST_CHECK( constData );
     BOOST_CHECK( dataCache.getCount() == 1 );
 
-    livre::ConstDataObjectPtr dataObject =
-            dataCache.get< livre::DataObject >( firstChildNodeId.getId( ));
+    livre::ConstDataObjectPtr dataObject = dataCache.get( firstChildNodeId.getId( ));
 
     BOOST_CHECK( dataObject );
     BOOST_CHECK( dataObject->getSize() == allocSize );
     BOOST_CHECK( dataCache.getStatistics().getUsedMemory() == allocSize );
 
-    BOOST_CHECK_THROW( dataCache.get< livre::HistogramObject >( firstChildNodeId.getId( )),
-                       std::runtime_error );
+    BOOST_CHECK_THROW( dataCache.get( firstChildNodeId.getId( )), std::runtime_error );
 
     const uint8_t* manual = memUnit->getData< const uint8_t >();
     const uint8_t* cached = static_cast< const uint8_t* >( dataObject->getDataPtr( ));
@@ -112,8 +110,7 @@ BOOST_AUTO_TEST_CASE( testCache )
                                                            livre::Vector2f( 0.0f, 255.f));
     BOOST_CHECK( histCacheObject );
 
-    livre::ConstHistogramObjectPtr histObject =
-            histogramCache.get< livre::HistogramObject >( firstChildNodeId.getId( ));
+    livre::ConstHistogramObjectPtr histObject = histogramCache.get( firstChildNodeId.getId( ));
 
     const livre::Histogram& histogram = histObject->getHistogram();
     const uint64_t* bins = histogram.getBins().data();

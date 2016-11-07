@@ -27,7 +27,6 @@ set(LIVRELIB_SOURCES
   pipeline/DataUploadFilter.cpp
   pipeline/HistogramFilter.cpp
   pipeline/RenderFilter.cpp
-  pipeline/RenderingSetGeneratorFilter.cpp
   pipeline/TextureUploadFilter.cpp
   pipeline/VisibleSetGeneratorFilter.cpp)
 

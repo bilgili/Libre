@@ -32,9 +32,11 @@ struct TextureUploadFilter::Impl
 {
 public:
 
-    Impl( Cache& textureCache,
+    Impl( const DataCache& dataCache,
+          TextureCache& textureCache,
           TexturePool& texturePool )
-        : _textureCache( textureCache )
+        : _dataCache( dataCache )
+        , _textureCache( textureCache )
         , _texturePool( texturePool )
     {}
 
@@ -46,10 +48,10 @@ public:
             for( const auto& dataCacheObject: dataCacheObjects.get< ConstCacheObjects >( ))
             {
                 const auto& cacheObj =
-                        _textureCache.load< TextureObject >( dataCacheObject->getId(),
-                                                             renderInputs.dataCache,
-                                                             renderInputs.dataSource,
-                                                             _texturePool );
+                        _textureCache.load( dataCacheObject->getId(),
+                                            _dataCache,
+                                            renderInputs.dataSource,
+                                            _texturePool );
                 if( cacheObj )
                     cacheObjects.push_back( cacheObj );
 
@@ -58,14 +60,15 @@ public:
         output.set( "TextureCacheObjects", cacheObjects );
     }
 
-    Cache& _textureCache;
+    const DataCache& _dataCache;
+    TextureCache& _textureCache;
     TexturePool& _texturePool;
 };
 
-TextureUploadFilter::TextureUploadFilter( Cache& textureCache,
+TextureUploadFilter::TextureUploadFilter( const DataCache& dataCache,
+                                          TextureCache& textureCache,
                                           TexturePool& texturePool )
-    : _impl( new TextureUploadFilter::Impl( textureCache,
-                                            texturePool ))
+    : _impl( new TextureUploadFilter::Impl( dataCache, textureCache, texturePool ))
 {
 }
 

@@ -74,7 +74,6 @@ set(LIVRECORE_HEADERS
 
 set(LIVRECORE_SOURCES
   ${ZEROBUF_GENERATED_SOURCES}
-  cache/Cache.cpp
   cache/CacheObject.cpp
   cache/CacheStatistics.cpp
   configuration/Configuration.cpp

@@ -78,8 +78,8 @@ struct CudaRaycastRenderer::Impl
     ~Impl()
     {}
 
-    void update( const lexis::render::ClipPlanes clipPlanes,
-                 const lexis::render::ColorMap colorMap )
+    void update( const lexis::render::ClipPlanes& clipPlanes,
+                 const lexis::render::ColorMap& colorMap )
     {
         _cudaRenderer.update( clipPlanes, colorMap );
     }
@@ -121,7 +121,6 @@ struct CudaRaycastRenderer::Impl
                     maxLOD = level;
             }
 
-
             const float maxVoxelDim = volInfo.voxels.find_max();
             const float maxVoxelsAtLOD = maxVoxelDim /
                     (float)( 1u << ( volInfo.rootNode.getDepth() - maxLOD - 1 ));
@@ -159,7 +158,8 @@ struct CudaRaycastRenderer::Impl
             return;
 
         auto renderDataCopy = renderData;
-        DistanceOperator distanceOp( renderInputs.dataSource, renderInputs.frameInfo.frustum );
+        const DistanceOperator distanceOp( renderInputs.dataSource,
+                                           renderInputs.frameInfo.frustum );
         std::sort( renderDataCopy.begin(), renderDataCopy.end(), distanceOp );
 
         const VolumeInformation& volInfo = renderInputs.dataSource.getVolumeInfo();
@@ -187,7 +187,8 @@ struct CudaRaycastRenderer::Impl
         glGetIntegerv( GL_VIEWPORT, glViewPort.array );
         const Frustum& frustum = renderInputs.frameInfo.frustum;
 
-        const cuda::ViewData viewData = { frustum.getEyePos(),
+        const cuda::ViewData viewData = {
+                                          frustum.getEyePos(),
                                           glViewPort,
                                           frustum.getInvProjMatrix(),
                                           frustum.getMVMatrix(),
@@ -196,7 +197,8 @@ struct CudaRaycastRenderer::Impl
                                           halfWorldSize,
                                           frustum.nearPlane()
                                         };
-        const cuda::RenderData rData = {  _computedSamplesPerRay,
+        const cuda::RenderData rData = {
+                                          _computedSamplesPerRay,
                                           renderInputs.vrParameters.getSamplesPerPixel(),
                                           maxSamplesPerRay,
                                           getShaderDataType( volInfo ),

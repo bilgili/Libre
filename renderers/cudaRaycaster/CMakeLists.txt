@@ -15,7 +15,7 @@ endforeach()
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_35,code=sm_35
                                       ;-gencode arch=compute_52,code=sm_52
                                       ;--std c++11
-                                      ;-O2
+                                      # ;-O2
                                       ;--use_fast_math
                                       ;--default-stream per-thread
                                       ;-Xcompiler "-fPIC")

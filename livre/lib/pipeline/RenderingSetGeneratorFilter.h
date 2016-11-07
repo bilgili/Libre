@@ -22,6 +22,8 @@
 
 #include <livre/lib/types.h>
 
+#include <livre/core/cache/Cache.h>
+#include <livre/core/render/FrameInfo.h>
 #include <livre/core/pipeline/Filter.h>
 #include <livre/core/render/FrameInfo.h>
 
@@ -31,16 +33,16 @@ namespace livre
 /**
  * RenderingSetGeneratorFilter class generates the rendering set given the visibles.
  */
+template< class CacheObjectT >
 class RenderingSetGeneratorFilter : public Filter
 {
-
 public:
 
     /**
      * Constructor
      * @param cache the cache that holds the rendering objects
      */
-    explicit RenderingSetGeneratorFilter( const Cache& cache );
+    explicit RenderingSetGeneratorFilter( const Cache< CacheObjectT >& cache );
     ~RenderingSetGeneratorFilter();
 
     /** @copydoc Filter::execute */
@@ -71,7 +73,7 @@ private:
     struct Impl;
     std::unique_ptr<Impl> _impl;
 };
-
+#include "RenderingSetGeneratorFilter.ipp"
 }
 
 #endif

@@ -41,6 +41,7 @@
 #include <lunchbox/debug.h>
 
 #include <boost/progress.hpp>
+#include <boost/thread/tss.hpp>
 
 #include <livre/core/version.h>
 
@@ -54,10 +55,15 @@ namespace livre
 {
 namespace
 {
-const size_t nRenderThreads = 2;
-const size_t nUploadThreads = 2;
+const size_t nRenderThreads = 1;
+const size_t nUploadThreads = 4;
 const size_t nComputeThreads = 2;
 lunchbox::PluginRegisterer< GLRaycastPipeline > registerer;
+
+boost::thread_specific_ptr< TextureCache > textureCache;
+boost::thread_specific_ptr< TexturePool > texturePool;
+std::unique_ptr< DataCache > dataCache;
+std::unique_ptr< HistogramCache > histogramCache;
 }
 
 struct GLRaycastPipeline::Impl
@@ -183,8 +189,8 @@ struct GLRaycastPipeline::Impl
         PipeFilter preRenderFilter = renderInputs.filters.find( "PreRenderFilter" )->second;
         PipeFilter redrawFilter = renderInputs.filters.find( "RedrawFilter" )->second;
         PipeFilterT< HistogramFilter > histogramFilter( "HistogramFilter",
-                                                        renderInputs.histogramCache,
-                                                        renderInputs.dataCache,
+                                                        *histogramCache,
+                                                        *dataCache,
                                                         renderInputs.dataSource );
         histogramFilter.getPromise( "Frustum" ).set( renderInputs.frameInfo.frustum );
         histogramFilter.connect( "Histogram", sendHistogramFilter, "Histogram" );
@@ -207,8 +213,8 @@ struct GLRaycastPipeline::Impl
         setupVisibleGeneratorFilter( visibleSetGenerator, renderInputs );
 
         PipeFilter renderingSetGenerator =
-                renderPipeline.add< RenderingSetGeneratorFilter >(
-                    "RenderingSetGenerator", *_textureCache );
+                renderPipeline.add< RenderingSetGeneratorFilter< TextureObject >>(
+                    "RenderingSetGenerator", *textureCache );
 
         visibleSetGenerator.connect( "VisibleNodes", renderingSetGenerator, "VisibleNodes" );
         renderingSetGenerator.connect( "CacheObjects", renderFilter, "CacheObjects" );
@@ -217,8 +223,9 @@ struct GLRaycastPipeline::Impl
         visibleSetGenerator.connect( "VisibleNodes", preRenderFilter, "VisibleNodes" );
 
         PipeFilter renderUploader = uploadPipeline.add< GLRenderUploadFilter >( "RenderUploader",
-                                                                                *_textureCache,
-                                                                                *_texturePool,
+                                                                                *dataCache,
+                                                                                *textureCache,
+                                                                                *texturePool,
                                                                                 nUploadThreads,
                                                                                 _uploadExecutor );
 
@@ -247,8 +254,8 @@ struct GLRaycastPipeline::Impl
                                    const uint32_t renderStages )
     {
         PipeFilterT< HistogramFilter > histogramFilter( "HistogramFilter",
-                                                        renderInputs.histogramCache,
-                                                        renderInputs.dataCache,
+                                                        *histogramCache,
+                                                        *dataCache,
                                                         renderInputs.dataSource );
         histogramFilter.getPromise( "Frustum" ).set( renderInputs.frameInfo.frustum );
         histogramFilter.connect( "Histogram", sendHistogramFilter, "Histogram" );
@@ -265,8 +272,9 @@ struct GLRaycastPipeline::Impl
         renderFilter.getPromise( "RenderStages" ).set( renderStages );
 
         PipeFilter renderUploader = uploadPipeline.add< GLRenderUploadFilter >( "RenderUploader",
-                                                                                *_textureCache,
-                                                                                *_texturePool,
+                                                                                *dataCache,
+                                                                                *textureCache,
+                                                                                *texturePool,
                                                                                 nUploadThreads,
                                                                                 _uploadExecutor );
 
@@ -283,13 +291,25 @@ struct GLRaycastPipeline::Impl
 
     void initTextureCache( const RenderInputs& renderInputs )
     {
-        if( _textureCache )
+        if( textureCache.get( ))
+            return;
+
+        ScopedLock lock( _initMutex );
+        if( textureCache.get( ))
             return;
 
         const RendererParameters& vrParams = renderInputs.vrParameters;
         const size_t gpuMem = vrParams.getMaxGPUCacheMemoryMB() * LB_1MB;
-        _textureCache.reset( new CacheT< TextureObject >( "TextureCache", gpuMem ));
-        _texturePool.reset( new TexturePool( renderInputs.dataSource ));
+        textureCache.reset( new TextureCache( "TextureCache", gpuMem ));
+        texturePool.reset( new TexturePool( renderInputs.dataSource ));
+
+        if( !dataCache )
+            dataCache.reset( new DataCache( "Data Cache",
+                                            vrParams.getMaxCPUCacheMemoryMB() * LB_1MB ));
+
+        if( !histogramCache )
+            histogramCache.reset( new HistogramCache( "Histogram Cache",
+                                                      32 * LB_1MB )); // 32 MB
     }
 
     void render( RenderStatistics& statistics,
@@ -306,8 +326,7 @@ struct GLRaycastPipeline::Impl
     SimpleExecutor _renderExecutor;
     SimpleExecutor _computeExecutor;
     SimpleExecutor _uploadExecutor;
-    mutable std::unique_ptr< Cache > _textureCache;
-    mutable std::unique_ptr< TexturePool > _texturePool;
+    boost::mutex _initMutex;
 };
 
 GLRaycastPipeline::GLRaycastPipeline( const std::string& name )

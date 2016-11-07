@@ -35,7 +35,6 @@
 #include <livre/core/pipeline/Pipeline.h>
 #include <livre/core/data/DataSource.h>
 #include <livre/core/render/RenderInputs.h>
-#include <livre/core/render/TexturePool.h>
 #include <livre/core/render/Renderer.h>
 #include <livre/core/render/GLContext.h>
 #include <livre/core/settings/RenderSettings.h>
@@ -44,6 +43,7 @@
 #include <lunchbox/debug.h>
 
 #include <boost/progress.hpp>
+#include <boost/thread/tss.hpp>
 
 #include <livre/core/version.h>
 
@@ -57,10 +57,15 @@ namespace livre
 {
 namespace
 {
-const size_t nRenderThreads = 2;
-const size_t nUploadThreads = 4;
-const size_t nComputeThreads = 2;
+const size_t nRenderThreads = 1;
+const size_t nUploadThreads = 1;
+const size_t nComputeThreads = 1;
 lunchbox::PluginRegisterer< CudaRaycastPipeline > registerer;
+
+std::unique_ptr< CudaTextureCache > cudaCache;
+std::unique_ptr< CudaTexturePool > texturePool;
+std::unique_ptr< DataCache > dataCache;
+std::unique_ptr< HistogramCache > histogramCache;
 }
 
 struct CudaRaycastPipeline::Impl
@@ -128,7 +133,7 @@ struct CudaRaycastPipeline::Impl
         std::sort( nodeIdsCopy.begin(), nodeIdsCopy.end(), distanceOp );
 
         const uint32_t maxNodesPerPass =
-                _texturePool->getTextureMem() / _texturePool->getSlotMemSize();
+                texturePool->getTextureMem() / texturePool->getSlotMemSize();
 
         const uint32_t numberOfPasses =
                 std::ceil( (float)nodeIdsCopy.size() / (float)maxNodesPerPass );
@@ -142,7 +147,7 @@ struct CudaRaycastPipeline::Impl
 
         sendHistogramFilter.getPromise( "RelativeViewport" ).set( renderInputs.viewport );
         sendHistogramFilter.getPromise( "Id" ).set( renderInputs.frameInfo.frameId );
-
+        CudaTextureCache& c = *cudaCache;
         for( uint32_t i = 0; i < numberOfPasses; ++i )
         {
             uint32_t renderStages = RENDER_FRAME;
@@ -165,16 +170,54 @@ struct CudaRaycastPipeline::Impl
                                       renderer,
                                       renderStages );
 
-            _cudaCache->purge();
+            std::cout << c.getStatistics() << std::endl;
             if( numberOfPasses > 1 )
                 ++(*showProgress);
         }
-        sendHistogramFilter.schedule( _computeExecutor );
+        // sendHistogramFilter.schedule( _computeExecutor );
 
         const UniqueFutureMap futures( visibleSetGenerator.getPostconditions( ));
         statistics.nAvailable = futures.get< NodeIds >( "VisibleNodes" ).size();
         statistics.nNotAvailable = 0;
         statistics.nRenderAvailable = statistics.nAvailable;
+    }
+
+    void createAndExecuteSyncPass( const NodeIds& nodeIds,
+                                   const RenderInputs& renderInputs,
+                                   PipeFilter&,
+                                   Renderer& renderer,
+                                   const uint32_t renderStages )
+    {
+        PipeFilterT< HistogramFilter > histogramFilter( "HistogramFilter",
+                                                        *histogramCache,
+                                                        *dataCache,
+                                                        renderInputs.dataSource );
+        histogramFilter.getPromise( "Frustum" ).set( renderInputs.frameInfo.frustum );
+        // histogramFilter.connect( "Histogram", sendHistogramFilter, "Histogram" );
+        histogramFilter.getPromise( "RelativeViewport" ).set( renderInputs.viewport );
+        histogramFilter.getPromise( "DataSourceRange" ).set( renderInputs.dataSourceRange );
+
+        PipeFilterT< RenderFilter > renderFilter( "RenderFilter",
+                                                  renderInputs.dataSource,
+                                                  renderer );
+        renderFilter.getPromise( "RenderInputs" ).set( renderInputs );
+        renderFilter.getPromise( "RenderStages" ).set( renderStages );
+
+        PipeFilterT< CudaRenderUploadFilter > renderUploader( "RenderUploader",
+                                                              *dataCache,
+                                                              *cudaCache,
+                                                              *texturePool,
+                                                              nUploadThreads,
+                                                              _uploadExecutor );
+
+        renderUploader.getPromise( "RenderInputs" ).set( renderInputs );
+        renderUploader.getPromise( "NodeIds" ).set( nodeIds );
+        renderUploader.connect( "CudaTextureCacheObjects", renderFilter, "CacheObjects" );
+        // renderUploader.connect( "CudaTextureCacheObjects", histogramFilter, "CacheObjects" );
+
+        renderUploader.execute();
+        // histogramFilter.schedule( _computeExecutor );
+        renderFilter.execute();
     }
 
     void renderAsync( RenderStatistics& statistics,
@@ -185,8 +228,8 @@ struct CudaRaycastPipeline::Impl
         PipeFilter preRenderFilter = renderInputs.filters.find( "PreRenderFilter" )->second;
         PipeFilter redrawFilter = renderInputs.filters.find( "RedrawFilter" )->second;
         PipeFilterT< HistogramFilter > histogramFilter( "HistogramFilter",
-                                                        renderInputs.histogramCache,
-                                                        renderInputs.dataCache,
+                                                        *histogramCache,
+                                                        *dataCache,
                                                         renderInputs.dataSource );
         histogramFilter.getPromise( "Frustum" ).set( renderInputs.frameInfo.frustum );
         histogramFilter.connect( "Histogram", sendHistogramFilter, "Histogram" );
@@ -209,8 +252,8 @@ struct CudaRaycastPipeline::Impl
         setupVisibleGeneratorFilter( visibleSetGenerator, renderInputs );
 
         PipeFilter renderingSetGenerator =
-                renderPipeline.add< RenderingSetGeneratorFilter >(
-                    "RenderingSetGenerator", *_cudaCache );
+                renderPipeline.add< RenderingSetGeneratorFilter< CudaTextureObject >>(
+                    "RenderingSetGenerator", *cudaCache );
 
         visibleSetGenerator.connect( "VisibleNodes", renderingSetGenerator, "VisibleNodes" );
         renderingSetGenerator.connect( "CacheObjects", renderFilter, "CacheObjects" );
@@ -219,8 +262,9 @@ struct CudaRaycastPipeline::Impl
         visibleSetGenerator.connect( "VisibleNodes", preRenderFilter, "VisibleNodes" );
 
         PipeFilter renderUploader = uploadPipeline.add< CudaRenderUploadFilter >( "RenderUploader",
-                                                                                  *_cudaCache,
-                                                                                  *_texturePool,
+                                                                                  *dataCache,
+                                                                                  *cudaCache,
+                                                                                  *texturePool,
                                                                                   nUploadThreads,
                                                                                   _uploadExecutor );
 
@@ -242,56 +286,29 @@ struct CudaRaycastPipeline::Impl
         statistics = futures.get< RenderStatistics >( "RenderStatistics" );
     }
 
-    void createAndExecuteSyncPass( const NodeIds& nodeIds,
-                                   const RenderInputs& renderInputs,
-                                   PipeFilter& sendHistogramFilter,
-                                   Renderer& renderer,
-                                   const uint32_t renderStages )
-    {
-        PipeFilterT< HistogramFilter > histogramFilter( "HistogramFilter",
-                                                        renderInputs.histogramCache,
-                                                        renderInputs.dataCache,
-                                                        renderInputs.dataSource );
-        histogramFilter.getPromise( "Frustum" ).set( renderInputs.frameInfo.frustum );
-        histogramFilter.connect( "Histogram", sendHistogramFilter, "Histogram" );
-        histogramFilter.getPromise( "RelativeViewport" ).set( renderInputs.viewport );
-        histogramFilter.getPromise( "DataSourceRange" ).set( renderInputs.dataSourceRange );
 
-        Pipeline renderPipeline;
-        Pipeline uploadPipeline;
-
-        PipeFilterT< RenderFilter > renderFilter( "RenderFilter",
-                                                  renderInputs.dataSource,
-                                                  renderer );
-        renderFilter.getPromise( "RenderInputs" ).set( renderInputs );
-        renderFilter.getPromise( "RenderStages" ).set( renderStages );
-
-        PipeFilter renderUploader = uploadPipeline.add< CudaRenderUploadFilter >( "RenderUploader",
-                                                                                  *_cudaCache,
-                                                                                  *_texturePool,
-                                                                                  nUploadThreads,
-                                                                                  _uploadExecutor );
-
-        renderUploader.getPromise( "RenderInputs" ).set( renderInputs );
-        renderUploader.getPromise( "NodeIds" ).set( nodeIds );
-        renderUploader.connect( "CudaTextureCacheObjects", renderFilter, "CacheObjects" );
-        renderUploader.connect( "CudaTextureCacheObjects", histogramFilter, "CacheObjects" );
-
-        renderPipeline.schedule( _renderExecutor );
-        uploadPipeline.schedule( _uploadExecutor );
-        histogramFilter.schedule( _computeExecutor );
-        renderFilter.execute();
-    }
 
     void init( const RenderInputs& renderInputs )
     {
-        if( _cudaCache )
+        if( cudaCache.get( ))
+            return;
+
+        ScopedLock lock( _initMutex );
+        if( cudaCache.get( ))
             return;
 
         const RendererParameters& vrParams = renderInputs.vrParameters;
         const size_t gpuMem = vrParams.getMaxGPUCacheMemoryMB() * LB_1MB;
-        _cudaCache.reset( new CacheT< CudaTextureObject >( "CudaTextureCache", gpuMem ));
-        _texturePool.reset( new CudaTexturePool( renderInputs.dataSource, gpuMem ));
+        cudaCache.reset( new CudaTextureCache( "TextureCache", gpuMem ));
+        texturePool.reset( new CudaTexturePool( renderInputs.dataSource, gpuMem ));
+
+        if( !dataCache )
+            dataCache.reset( new DataCache( "Data Cache",
+                                            vrParams.getMaxCPUCacheMemoryMB() * LB_1MB ));
+
+        if( !histogramCache )
+            histogramCache.reset( new HistogramCache( "Histogram Cache",
+                                                      32 * LB_1MB )); // 32 MB
     }
 
     void render( RenderStatistics& statistics,
@@ -308,8 +325,7 @@ struct CudaRaycastPipeline::Impl
     SimpleExecutor _renderExecutor;
     SimpleExecutor _computeExecutor;
     SimpleExecutor _uploadExecutor;
-    mutable std::unique_ptr< Cache > _cudaCache;
-    mutable std::unique_ptr< CudaTexturePool > _texturePool;
+    boost::mutex _initMutex;
 };
 
 CudaRaycastPipeline::CudaRaycastPipeline( const std::string& name )

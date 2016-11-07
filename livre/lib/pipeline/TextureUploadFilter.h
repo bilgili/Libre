@@ -40,7 +40,9 @@ public:
      * @param textureCache texture cache
      * @param texturePool the pool for 3D textures
      */
-    TextureUploadFilter( Cache& textureCache, TexturePool& texturePool );
+    TextureUploadFilter( const DataCache& dataCache,
+                         TextureCache& textureCache,
+                         TexturePool& texturePool );
     ~TextureUploadFilter();
 
     /** @copydoc Filter::execute */

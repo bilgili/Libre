@@ -42,7 +42,9 @@ public:
      * @param textureCache texture cache
      * @param texturePool the pool for 3D textures
      */
-    CudaTextureUploadFilter( Cache& textureCache, CudaTexturePool& texturePool );
+    CudaTextureUploadFilter( const DataCache& dataCache,
+                             CudaTextureCache& textureCache,
+                             CudaTexturePool& texturePool );
     ~CudaTextureUploadFilter();
 
     /** @copydoc Filter::execute */

@@ -42,11 +42,13 @@ struct CudaRenderUploadFilter::Impl
 {
 public:
 
-    Impl( Cache& cudaCache,
+    Impl( DataCache& dataCache,
+          CudaTextureCache& cudaCache,
           CudaTexturePool& texturePool,
           size_t nUploadThreads,
           Executor& executor )
-        : _cudaCache( cudaCache )
+        : _dataCache( dataCache )
+        , _cudaCache( cudaCache )
         , _texturePool( texturePool )
         , _nUploadThreads( nUploadThreads )
         , _executor( executor )
@@ -60,10 +62,10 @@ public:
         const auto& renderInputs = futureMap.get< RenderInputs >( "RenderInputs" );
         for( const auto& nodeId: futureMap.get< NodeIds >( "NodeIds" ))
         {
-            const auto& cacheObj = _cudaCache.load< CudaTextureObject >( nodeId.getId(),
-                                                                         renderInputs.dataCache,
-                                                                         renderInputs.dataSource,
-                                                                         _texturePool );
+            const auto& cacheObj = _cudaCache.load( nodeId.getId(),
+                                                    _dataCache,
+                                                    renderInputs.dataSource,
+                                                    _texturePool );
             if( cacheObj )
                 cacheObjects.push_back( cacheObj );
             else
@@ -79,6 +81,7 @@ public:
         const size_t perThreadSize = std::max( (size_t)1, notAvailable.size() / _nUploadThreads );
         Pipeline pipeline;
         PipeFilter textureUploader = pipeline.add< CudaTextureUploadFilter >( "CudaUploader",
+                                                                              _dataCache,
                                                                               _cudaCache,
                                                                               _texturePool );
         textureUploader.getPromise( "RenderInputs" ).set( renderInputs );
@@ -97,7 +100,7 @@ public:
                                       begin + perThreadSize );
             std::stringstream str;
             str << "DataUploader" << i;
-            PipeFilter dataUploader = pipeline.add< DataUploadFilter >( str.str( ));
+            PipeFilter dataUploader = pipeline.add< DataUploadFilter >( str.str(), _dataCache );
             dataUploader.connect( "DataCacheObjects", textureUploader, "DataCacheObjects" );
             dataUploader.getPromise( "RenderInputs" ).set( renderInputs );
             dataUploader.getPromise( "NodeIds" ).set( partialData );
@@ -114,17 +117,20 @@ public:
         output.set( "CudaTextureCacheObjects", cacheObjects );
     }
 
-    Cache& _cudaCache;
+    DataCache& _dataCache;
+    CudaTextureCache& _cudaCache;
     CudaTexturePool& _texturePool;
     const size_t _nUploadThreads;
     Executor& _executor;
 };
 
-CudaRenderUploadFilter::CudaRenderUploadFilter( Cache& cudaCache,
+CudaRenderUploadFilter::CudaRenderUploadFilter( DataCache& dataCache,
+                                                CudaTextureCache& cudaCache,
                                                 CudaTexturePool& texturePool,
                                                 size_t nUploadThreads,
                                                 Executor& executor )
-    : _impl( new CudaRenderUploadFilter::Impl( cudaCache,
+    : _impl( new CudaRenderUploadFilter::Impl( dataCache,
+                                               cudaCache,
                                                texturePool,
                                                nUploadThreads,
                                                executor ))

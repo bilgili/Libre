@@ -23,7 +23,6 @@
 
 #include <livre/core/api.h>
 #include <livre/core/types.h>
-#include <lunchbox/mtQueue.h>
 
 #define CACHE_LOG_SIZE 1000000
 
