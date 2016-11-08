@@ -1,6 +1,6 @@
 /* Copyright (c) 2011-2016  Ahmet Bilgili <ahmetbilgili@gmail.com>
  *
- * This file is part of Livre <https://github.com/bilgili/Livre>
+ * This file is part of Livre <https://github.com/bilgili/Libre>
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3.0 as published
@@ -179,7 +179,7 @@ struct CudaRaycastRenderer::Impl
                                    aabb.getSize( )});
 
             if( !pool )
-                pool = &cudaObject->getTexturePool().getCudaTexturePool();
+                pool = &cudaObject->getTexturePool()._getCudaTexturePool();
         }
 
         const Vector3f halfWorldSize = volInfo.worldSize / 2.0;

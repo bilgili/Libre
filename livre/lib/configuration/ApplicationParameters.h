@@ -44,6 +44,7 @@ struct ApplicationParameters : public Parameters
     bool isResident; //!< Is the main app resident.
     std::string dataFileName; //!< Data file name.
     std::string colorMap; //!< Path to color map file
+    std::string renderer; //!< Renderer selection
 
     /** @param parameters The source parameters. */
     LIVRE_API ApplicationParameters& operator=( const ApplicationParameters& parameters );

@@ -47,6 +47,7 @@ const std::string CAMERALOOKAT_PARAM = "camera-lookat";
 const std::string SYNC_CAMERA_PARAM = "sync-camera";
 const std::string DATAFILE_PARAM = "volume";
 const std::string COLORMAP_PARAM = "colormap";
+const std::string RENDERER_PARAM = "renderer";
 
 ApplicationParameters::ApplicationParameters()
     : Parameters( "Application Parameters" )
@@ -57,6 +58,7 @@ ApplicationParameters::ApplicationParameters()
     , animation( 0 )
     , animationFPS( 0 )
     , isResident( false )
+    , renderer( "gl" )
 {
     _configuration.addDescription( configGroupName_, ANIMATION_PARAM,
                                    "Enable animation mode (optional frame delta for animation "
@@ -82,6 +84,9 @@ ApplicationParameters::ApplicationParameters()
     _configuration.addDescription( configGroupName_, COLORMAP_PARAM,
                                    "Color map file (*.lba, *.lbb)",
                                    colorMap );
+    _configuration.addDescription( configGroupName_, RENDERER_PARAM,
+                                   "Renderer name (gl, cuda)",
+                                   renderer );
 }
 
 ApplicationParameters& ApplicationParameters::operator = (
@@ -99,6 +104,7 @@ ApplicationParameters& ApplicationParameters::operator = (
     isResident = parameters.isResident;
     dataFileName = parameters.dataFileName;
     colorMap = parameters.colorMap;
+    renderer = parameters.renderer;
 
     return *this;
 }
@@ -113,6 +119,7 @@ void ApplicationParameters::_initialize()
     cameraLookAt = _configuration.getValue( CAMERALOOKAT_PARAM, cameraLookAt );
     dataFileName = _configuration.getValue( DATAFILE_PARAM, dataFileName );
     colorMap = _configuration.getValue( COLORMAP_PARAM, colorMap );
+    renderer = _configuration.getValue( RENDERER_PARAM, renderer );
     bool animationFollowData = false;
     animationFollowData = _configuration.getValue( ANIMATION_FOLLOW_DATA_PARAM,
                                                    animationFollowData );

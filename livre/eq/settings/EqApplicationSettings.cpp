@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2016, ahmetbilgili@gmail.com
  *
- * This file is part of Livre <https://github.com/bilgili/Livre>
+ * This file is part of Livre <https://github.com/bilgili/Libre>
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3.0 as published
@@ -29,18 +29,21 @@ EqApplicationSettings::EqApplicationSettings()
     _resourceFolders =
             SignalledVariable< Strings >( _resourceFolders.get(),
                                           [this](const Strings&){ setDirty( DIRTY_ALL ); });
+    _renderer =
+            SignalledVariable< std::string >( _renderer.get(),
+                                          [this](const std::string&){ setDirty( DIRTY_ALL ); });
 }
 
 void EqApplicationSettings::serialize( co::DataOStream& os, const uint64_t dirtyBits )
 {
     co::Serializable::serialize( os, dirtyBits );
-    os << _resourceFolders.get();
+    os << _resourceFolders.get() << _renderer.get();
 }
 
 void EqApplicationSettings::deserialize( co::DataIStream& is, const uint64_t dirtyBits )
 {
     co::Serializable::deserialize( is, dirtyBits );
-    is >> _resourceFolders.get();
+    is >> _resourceFolders.get() >> _renderer.get();
 }
 
 }

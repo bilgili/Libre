@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2016, ahmetbilgili@gmail.com
  *
- * This file is part of Livre <https://github.com/bilgili/Livre>
+ * This file is part of Livre <https://github.com/bilgili/Libre>
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3.0 as published
@@ -43,9 +43,19 @@ public:
     /** @return the resource folder. */
     Strings getResourceFolders() const;
 
+    /**
+     * Adds resource folder.
+     * @param renderer is the name of the renderer
+     */
+    void setRenderer( const std::string& renderer );
+
+    /** @return the resource folder. */
+    std::string getRenderer() const;
+
 protected:
 
     SignalledVariable< Strings > _resourceFolders;
+    SignalledVariable< std::string > _renderer;
 };
 
 }

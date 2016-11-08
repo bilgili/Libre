@@ -1,6 +1,6 @@
 /* Copyright (c) 2011-2016  Ahmet Bilgili <ahmetbilgili@gmail.com>
  *
- * This file is part of Livre <https://github.com/bilgili/Livre>
+ * This file is part of Livre <https://github.com/bilgili/Libre>
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3.0 as published
@@ -31,6 +31,7 @@ namespace cuda
 {
 class TexturePool;
 
+/** Cuda representation of the render nodes */
 struct NodeData
 {
     Vector3f textureMin;
@@ -41,6 +42,7 @@ struct NodeData
 
 typedef std::vector< NodeData > NodeDatas;
 
+/** View information for rendering */
 struct ViewData
 {
     const Vector3f eyePosition;
@@ -53,6 +55,7 @@ struct ViewData
     const float nearPlane;
 };
 
+/** Render information */
 struct RenderData
 {
     const unsigned int samplesPerRay;
@@ -62,20 +65,45 @@ struct RenderData
     const Vector2f dataSourceRange;
 };
 
+/** Cuda representation of the renderer */
 class Renderer
 {
 public:
+
+    /** Constructor */
     Renderer();
     ~Renderer();
 
+    /**
+     * Updates the clip planes and the color map for rendering kernel
+     * @param clipPlanes is the clip palnes
+     * @param colorMap is the color map
+     */
     void update( const lexis::render::ClipPlanes& clipPlanes,
                  const lexis::render::ColorMap& colorMap );
 
+    /**
+     * Called by the Libre renderer before rendering
+     * @param viewData is the necessary view data settings
+     */
     void preRender( const ViewData& viewData );
+
+    /**
+     * Called by the Libre renderer whie rendering
+     * @param viewData is the necessary view data settings
+     * @param nodeDatas is the list of nodes to be rendered
+     * @param renderData is the necessary render settings
+     * @param texturePool is the cuda representation of the texture pool
+     */
     void render( const ViewData& viewData,
-                 const NodeDatas& nodeData,
+                 const NodeDatas& nodeDatas,
                  const RenderData& renderData,
                  const cuda::TexturePool& texturePool );
+
+    /**
+     * Called by the libre renderer after rendering. The PBO is written
+     * to draw buffer.
+     */
     void postRender();
 
 private:

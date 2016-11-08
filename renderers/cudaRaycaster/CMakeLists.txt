@@ -1,6 +1,6 @@
 # Copyright (c) 2011-2016, ahmetbilgili@gmail.com
 #
-# This file is part of Livre <https://github.com/bilgili/Livre>
+# This file is part of Livre <https://github.com/bilgili/Libre>
 #
 
 if(NOT CUDA_FOUND)
@@ -12,13 +12,15 @@ foreach(DEPEND Livre Lunchbox Servus vmmlib Collage Pression Lexis ZeroBuf)
                            ${${DEPEND}_SOURCE_DIR}
                            ${${DEPEND}_BINARY_DIR}/include)
 endforeach()
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_35,code=sm_35
-                                      ;-gencode arch=compute_52,code=sm_52
-                                      ;--std c++11
-                                      ;-O2
-                                      ;--use_fast_math
-                                      ;--default-stream per-thread
-                                      ;-Xcompiler "-fPIC")
+set(CUDA_NVCC_FLAGS -gencode arch=compute_52,code=sm_52
+                    --std c++11
+                    --use_fast_math
+                    --default-stream per-thread
+                    -Xcompiler "-fPIC")
+
+if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
+    list(APPEND CUDA_NVCC_FLAGS -O2)
+endif()
 
 set(CUDA_SOURCES cuda/ClipPlanes.cu
                  cuda/ColorMap.cu

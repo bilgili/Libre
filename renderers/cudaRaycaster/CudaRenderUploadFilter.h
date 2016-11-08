@@ -32,8 +32,7 @@ namespace livre
 
 /**
  * CudaRenderUploadFilter class implements the parallel data loading for raw volume data and
- * textures. A group of uploaders is executed in rendering pipeline and each uploader
- * has an id in the group.
+ * textures.
  */
 class CudaRenderUploadFilter : public Filter
 {
@@ -41,6 +40,7 @@ public:
 
     /**
      * Constructor
+     * @param dataCache data cache
      * @param textureCache texture cache
      * @param texturePool pool for textures
      * @param nUploadThreads mumber of data upload thread

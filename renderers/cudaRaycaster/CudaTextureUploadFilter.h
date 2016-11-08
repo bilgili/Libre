@@ -39,6 +39,7 @@ public:
 
     /**
      * Constructor
+     * @param data cache data cache
      * @param textureCache texture cache
      * @param texturePool the pool for 3D textures
      */

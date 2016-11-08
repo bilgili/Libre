@@ -83,7 +83,6 @@ struct CudaTextureObject::Impl
         const Vector3f overlapf = overlap / cacheTextureSize;
         _texturePos = _slotPosition + overlapf;
         _textureSize = size / cacheTextureSize;
-        std::cout << cacheId << " loaded to " << _slotPosition << "\n";
         return true;
     }
 

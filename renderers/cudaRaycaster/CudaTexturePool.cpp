@@ -1,6 +1,6 @@
 /* Copyright (c) 2011-2016  Ahmet Bilgili <ahmetbilgili@gmail.com>
  *
- * This file is part of Livre <https://github.com/bilgili/Livre>
+ * This file is part of Livre <https://github.com/bilgili/Libre>
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3.0 as published
@@ -93,7 +93,7 @@ Vector3f CudaTexturePool::copyToSlot( const unsigned char* ptr, const Vector3ui&
     return _impl->copyToSlot( ptr, size );
 }
 
-cuda::TexturePool& CudaTexturePool::getCudaTexturePool() const
+cuda::TexturePool& CudaTexturePool::_getCudaTexturePool() const
 {
     return *_impl->_texturePool;
 }

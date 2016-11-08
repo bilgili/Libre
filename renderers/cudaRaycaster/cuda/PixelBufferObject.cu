@@ -1,6 +1,6 @@
 /* Copyright (c) 2011-2016  Ahmet Bilgili <ahmetbilgili@gmail.com>
  *
- * This file is part of Livre <https://github.com/bilgili/Livre>
+ * This file is part of Livre <https://github.com/bilgili/Libre>
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3.0 as published
@@ -27,16 +27,18 @@ namespace cuda
 {
 
 PixelBufferObject::PixelBufferObject()
-    : _pbo( -1u )
+    : _buffer( 0 )
+    , _pbo( -1u )
     , _width( -1u )
     , _height( -1u )
     , _pboResource( 0 )
 {}
 
 PixelBufferObject::~PixelBufferObject()
-{}
-
-GLuint PixelBufferObject::getId() const { return _pbo; }
+{
+    if( _pbo != -1u )
+        glDeleteBuffers( 1, &_pbo );
+}
 
 void PixelBufferObject::resize( const unsigned int width, const unsigned int height )
 {
@@ -80,7 +82,7 @@ void PixelBufferObject::mapBuffer()
 
 void PixelBufferObject::unmapBuffer()
 {
-    checkCudaErrors( cudaGraphicsUnmapResources(1, &_pboResource, 0 ));
+    checkCudaErrors( cudaGraphicsUnmapResources( 1, &_pboResource, 0 ));
 }
 
 size_t PixelBufferObject::getBufferSize() const

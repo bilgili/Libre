@@ -1,6 +1,6 @@
 /* Copyright (c) 2011-2016  Ahmet Bilgili <ahmetbilgili@gmail.com>
  *
- * This file is part of Livre <https://github.com/bilgili/Livre>
+ * This file is part of Livre <https://github.com/bilgili/Libre>
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3.0 as published
@@ -28,19 +28,42 @@ namespace livre
 {
 namespace cuda
 {
+
+/** Cuda representation of the pixel buffer */
 class PixelBufferObject
 {
 public:
+
+    /** Constructor */
     PixelBufferObject();
     ~PixelBufferObject();
-    GLuint getId() const;
+
+    /** @return id of the pixel buffer. If none is initialized returns -1u */
+    GLuint getId() const { return _pbo; }
+
+    /**
+     * Resizes the color buffer
+     * @param width of the color buffer
+     * @param height of the color buffer
+     */
     void resize( unsigned int width, unsigned int height );
+
+    /** Maps the color buffer to cuda kernel for rendering */
     void mapBuffer();
+
+    /** Unmaps the color buffer from the cuda kernel */
     void unmapBuffer();
+
+    /** @return the size of the PBO in bytes */
     size_t getBufferSize() const;
 
-    float4* getBuffer() const { return _buffer; };
-    unsigned int getWidth() const { return _width; };
+    /** @return the RGBAf pixel buffer pointer ( used in kernel ) */
+    float4* getBuffer() const { return _buffer; }
+
+    /** @return the width of the pixel buffer */
+    unsigned int getWidth() const { return _width; }
+
+    /** @return the height of the pixel buffer */
     unsigned int getHeight() const { return _height; }
 
 private:
