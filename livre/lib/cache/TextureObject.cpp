@@ -25,6 +25,8 @@
 #include <livre/core/data/DataSource.h>
 #include <livre/core/render/TexturePool.h>
 
+#include <lunchbox/debug.h>
+
 #include <GL/glew.h>
 
 namespace livre
@@ -45,7 +47,7 @@ struct TextureObject::Impl
 {
 
     Impl( const CacheId& cacheId,
-          const Cache& dataCache,
+          const DataCache& dataCache,
           const DataSource& dataSource,
           TexturePool& texturePool )
        : _texturePool( texturePool )
@@ -62,11 +64,11 @@ struct TextureObject::Impl
     }
 
     bool load( const CacheId& cacheId,
-               const Cache& dataCache,
+               const DataCache& dataCache,
                const DataSource& dataSource,
                const TexturePool& texturePool )
     {
-        ConstDataObjectPtr data = dataCache.get< DataObject >( cacheId );
+        ConstDataObjectPtr data = dataCache.get( cacheId );
         if( !data )
             return false;
 
@@ -134,7 +136,7 @@ struct TextureObject::Impl
 };
 
 TextureObject::TextureObject( const CacheId& cacheId,
-                              const Cache& dataCache,
+                              const DataCache& dataCache,
                               const DataSource& dataSource,
                               TexturePool& texturePool )
    : CacheObject( cacheId )

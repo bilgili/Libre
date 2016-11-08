@@ -25,7 +25,6 @@ set(LIVRECORE_PUBLIC_HEADERS
   render/RenderPipelinePlugin.h
   render/GLContext.h
   render/GLSLShaders.h
-  lunchboxTypes.h
   mathTypes.h
   types.h
 )
@@ -75,7 +74,6 @@ set(LIVRECORE_HEADERS
 
 set(LIVRECORE_SOURCES
   ${ZEROBUF_GENERATED_SOURCES}
-  cache/Cache.cpp
   cache/CacheObject.cpp
   cache/CacheStatistics.cpp
   configuration/Configuration.cpp

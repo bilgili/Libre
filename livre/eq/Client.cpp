@@ -188,6 +188,8 @@ int Client::run( const int argc, char** argv )
     appSettings.addResourceFolder( execFolder + "/../share/Livre/" );
     appSettings.addResourceFolder( execFolder + "/../Livre/share/" );
 
+    appSettings.setRenderer( _impl->_applicationParameters.renderer );
+
     // 3. init config
     lunchbox::Clock clock;
     if( !config->init( argc, argv ))

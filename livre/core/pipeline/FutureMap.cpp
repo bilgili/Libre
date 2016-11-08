@@ -19,9 +19,10 @@
 
 #include <livre/core/pipeline/FutureMap.h>
 
+#include <lunchbox/debug.h>
+
 namespace livre
 {
-
 namespace
 {
 

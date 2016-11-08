@@ -7,7 +7,6 @@
 set(LIVRELIB_PUBLIC_HEADERS
   ${ZEROBUF_GENERATED_HEADERS}
   types.h
-  animation/CameraPath.h
   cache/DataObject.h
   cache/HistogramObject.h
   cache/TextureObject.h
@@ -21,7 +20,6 @@ set(LIVRELIB_PUBLIC_HEADERS
 
 set(LIVRELIB_SOURCES
   ${ZEROBUF_GENERATED_SOURCES}
-  animation/CameraPath.cpp
   cache/DataObject.cpp
   cache/HistogramObject.cpp
   cache/TextureObject.cpp
@@ -29,7 +27,6 @@ set(LIVRELIB_SOURCES
   pipeline/DataUploadFilter.cpp
   pipeline/HistogramFilter.cpp
   pipeline/RenderFilter.cpp
-  pipeline/RenderingSetGeneratorFilter.cpp
   pipeline/TextureUploadFilter.cpp
   pipeline/VisibleSetGeneratorFilter.cpp)
 

@@ -24,7 +24,9 @@
 #include <livre/core/render/Frustum.h>
 #include <livre/core/data/LODNode.h>
 
+#include <servus/uri.h>
 #include <lunchbox/pluginFactory.h>
+#include <lunchbox/plugin.h>
 
 namespace livre
 {

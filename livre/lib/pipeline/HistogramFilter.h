@@ -46,7 +46,9 @@ public:
      * @param dataCache data cache
      * @param dataSource data source
      */
-    HistogramFilter( Cache& histogramCache, const Cache& dataCache, const DataSource& dataSource );
+    HistogramFilter( HistogramCache& histogramCache,
+                     const DataCache& dataCache,
+                     const DataSource& dataSource );
     ~HistogramFilter();
 
     /** @copydoc Filter::execute */
@@ -59,7 +61,7 @@ public:
         {
             { "Frustum", getType< Frustum >() },
             { "RelativeViewport", getType< Viewport >() },
-            { "CacheObjects", getType< ConstCacheObjects >() },
+            { "NodeIds", getType< NodeIds >() },
             { "DataSourceRange", getType< Vector2f >() },
         };
     }

@@ -214,7 +214,7 @@ private:
             { return _publisher.publish( _getRenderSettings().getClipPlanes( )); };
     }
 
-    void _setupHTTPServer( const int argc LB_UNUSED, char** argv LB_UNUSED )
+    void _setupHTTPServer( const int argc  LIVRE_UNUSED, char** argv  LIVRE_UNUSED )
     {
 #ifdef ZEROEQ_USE_HTTPXX
         _httpServer = ::zeroeq::http::Server::parse( argc, argv, _subscriber );

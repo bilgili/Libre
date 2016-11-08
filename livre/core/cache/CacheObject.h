@@ -22,10 +22,24 @@
 
 #include <livre/core/api.h>
 #include <livre/core/types.h>
-#include <livre/core/lunchboxTypes.h>
 
 namespace livre
 {
+
+/**
+ * Thrown by CacheObjects when loading fails
+ */
+class CacheLoadException : public std::exception
+{
+public:
+    CacheLoadException( const Identifier& id, const std::string& message );
+    ~CacheLoadException() throw() {}
+    char const* what() const throw();
+
+private:
+    Identifier _id;
+    std::string _message;
+};
 
 /**
  * The CacheObject class for cached objects that can be managed with \see Cache.

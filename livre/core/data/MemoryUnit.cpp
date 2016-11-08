@@ -60,7 +60,6 @@ AllocMemoryUnit::~AllocMemoryUnit()
 
 void AllocMemoryUnit::_alloc( const size_t nBytes )
 {
-    LB_TS_THREAD( thread_ );
     _rawData.reset( nBytes );
 }
 

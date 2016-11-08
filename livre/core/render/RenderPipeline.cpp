@@ -1,6 +1,6 @@
 /* Copyright (c) 2011-2016  Ahmet Bilgili <ahmetbilgili@gmail.com>
  *
- * This file is part of Livre <https://github.com/bilgili/Livre>
+ * This file is part of Livre <https://github.com/bilgili/Libre>
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3.0 as published
@@ -25,7 +25,9 @@
 #include <livre/core/cache/CacheObject.h>
 #include <livre/core/version.h>
 
+#include <servus/uri.h>
 #include <lunchbox/pluginFactory.h>
+#include <lunchbox/plugin.h>
 
 namespace livre
 {

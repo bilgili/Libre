@@ -30,6 +30,8 @@
 #include <livre/core/data/VolumeInformation.h>
 #include <livre/core/data/LODNode.h>
 
+#include <servus/uri.h>
+
 namespace livre
 {
 
@@ -41,7 +43,7 @@ public:
      * @param uri Initialization URI. The volume data source is generated accordingly
      * @param accessMode The access mode.
      */
-    LIVRECORE_API DataSource( const lunchbox::URI& uri,
+    LIVRECORE_API DataSource( const servus::URI& uri,
                               const AccessMode accessMode = MODE_READ );
 
     LIVRECORE_API ~DataSource();
@@ -60,7 +62,7 @@ public:
     /**
      * @return The volume information.
      */
-    LIVRECORE_API static VolumeInformation getVolumeInfo( const lunchbox::URI& uri );
+    LIVRECORE_API static VolumeInformation getVolumeInfo( const servus::URI& uri );
 
     /** Initializes the GL specific functions. */
     LIVRECORE_API bool initializeGL();

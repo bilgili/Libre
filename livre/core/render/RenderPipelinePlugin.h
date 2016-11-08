@@ -1,6 +1,6 @@
 /* Copyright (c) 2011-2016  Ahmet Bilgili <ahmetbilgili@gmail.com>
  *
- * This file is part of Livre <https://github.com/bilgili/Livre>
+ * This file is part of Livre <https://github.com/bilgili/Libre>
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3.0 as published
@@ -23,7 +23,7 @@
 #include <livre/core/api.h>
 #include <livre/core/types.h>
 
-#include <lunchbox/plugin.h>
+#include <servus/uri.h>
 
 namespace livre
 {
@@ -38,7 +38,7 @@ public:
     /** Needed by the PluginRegisterer. */
     typedef std::string InitDataT;
 
-    LIVRECORE_API RenderPipelinePlugin( const std::string& name LB_UNUSED ) {}
+    LIVRECORE_API RenderPipelinePlugin( const std::string& name  LIVRE_UNUSED ) {}
     virtual ~RenderPipelinePlugin() {}
 
     /**

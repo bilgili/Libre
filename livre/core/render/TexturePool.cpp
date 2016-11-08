@@ -21,8 +21,9 @@
 
 #include <livre/core/defines.h>
 #include <livre/core/render/GLContext.h>
-
 #include <livre/core/data/DataSource.h>
+
+#include <lunchbox/debug.h>
 
 #include <GL/glew.h>
 
@@ -123,5 +124,4 @@ void TexturePool::release( const GLuint texture )
     ScopedLock lock( _mutex );
     _textureStack.push_back( texture );
 }
-
 }

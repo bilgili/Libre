@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2016, ahmetbilgili@gmail.com
  *
- * This file is part of Livre <https://github.com/bilgili/Livre>
+ * This file is part of Livre <https://github.com/bilgili/Libre>
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3.0 as published
@@ -24,12 +24,12 @@ namespace livre
 
 ApplicationSettings::ApplicationSettings()
     : _resourceFolders( Strings( ))
+    , _renderer( "gl" )
 {}
 
 void ApplicationSettings::addResourceFolder( const std::string& folder )
 {
     _resourceFolders.get().push_back( folder );
-    std::cout << folder << std::endl;
     _resourceFolders = _resourceFolders.get();
 }
 
@@ -37,4 +37,15 @@ Strings ApplicationSettings::getResourceFolders() const
 {
     return _resourceFolders.get();
 }
+
+void ApplicationSettings::setRenderer( const std::string& renderer )
+{
+    _renderer = renderer;
+}
+
+std::string ApplicationSettings::getRenderer() const
+{
+    return _renderer.get();
+}
+
 }

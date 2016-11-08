@@ -47,12 +47,6 @@ public:
     /** @return The data source. */
     const DataSource& getDataSource() const;
 
-    /** @return The data cache. */
-    Cache& getDataCache();
-
-    /** @return The histogram cache. */
-    Cache& getHistogramCache();
-
 private:
     bool configInit( const eq::uint128_t& initId ) final;
     void frameStart(  const eq::uint128_t& frameId, const uint32_t frameNumber ) final;

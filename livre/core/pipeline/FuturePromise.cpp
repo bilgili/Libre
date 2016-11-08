@@ -19,6 +19,7 @@
 
 #include <livre/core/pipeline/FuturePromise.h>
 
+#include <lunchbox/debug.h>
 #include <servus/uint128_t.h>
 
 #include <boost/thread/future.hpp>

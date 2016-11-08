@@ -21,6 +21,8 @@
 #include <livre/core/pipeline/FutureMap.h>
 #include <livre/core/pipeline/Pipeline.h>
 
+#include <lunchbox/debug.h>
+
 namespace livre
 {
 

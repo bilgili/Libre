@@ -36,6 +36,7 @@
 
 #pragma GCC diagnostic pop
 
+#include <lunchbox/debug.h>
 #include <lunchbox/pluginRegisterer.h>
 #include <boost/algorithm/string/predicate.hpp>
 

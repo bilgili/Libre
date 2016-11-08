@@ -35,7 +35,7 @@ const uint32_t VOXEL_SIZE_Z = 138;
 BOOST_AUTO_TEST_CASE( UVFDataSource )
 {
     std::cout << "uvf://" UVF_DATA_FILE << std::endl;
-    const lunchbox::URI uri( "uvf://" UVF_DATA_FILE );
+    const servus::URI uri( "uvf://" UVF_DATA_FILE );
     livre::DataSource source( uri );
     const livre::VolumeInformation& info = source.getVolumeInfo();
 

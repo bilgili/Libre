@@ -46,7 +46,7 @@ public:
      * @throws CacheLoadException when the data cache does not have the data for cache id
      */
     LIVRE_API HistogramObject( const CacheId& cacheId,
-                               const Cache& dataCache,
+                               const DataCache& dataCache,
                                const DataSource& dataSource,
                                const Vector2f& dataSourceRange );
 

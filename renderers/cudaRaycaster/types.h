@@ -1,7 +1,6 @@
-/* Copyright (c) 2011-2014, EPFL/Blue Brain Project
- *                     Ahmet Bilgili <ahmet.bilgili@epfl.ch>
+/* Copyright (c) 2011-2016  Ahmet Bilgili <ahmetbilgili@gmail.com>
  *
- * This file is part of Livre <https://github.com/BlueBrain/Livre>
+ * This file is part of Livre <https://github.com/bilgili/Libre>
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3.0 as published
@@ -17,23 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _lunchboxTypes_h_
-#define _lunchboxTypes_h_
 
-#include <vector>
-#include <memory>
+#ifndef _CudaRaycaster_Types_h_
+#define _CudaRaycaster_Types_h_
 
-#include <lunchbox/thread.h>
-#include <lunchbox/mtQueue.h>
-#include <lunchbox/atomic.h>
-#include <lunchbox/lock.h>
+#include <livre/core/types.h>
 
 namespace livre
 {
-/**
- * Smart ptr definitions
- */
-typedef std::shared_ptr< lunchbox::Thread > ThreadPtr;
+
+class CudaTexturePool;
+class CudaTextureObject;
+
+typedef Cache< CudaTextureObject > CudaTextureCache;
+typedef std::shared_ptr< const CudaTextureObject > ConstCudaTextureObjectPtr;
 
 }
-#endif // _lunchboxTypes_h_
+#endif // _CudaRaycaster_Types_h_
+

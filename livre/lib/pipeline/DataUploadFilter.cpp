@@ -29,7 +29,8 @@ namespace livre
 
 struct DataUploadFilter::Impl
 {
-    Impl()
+    Impl( DataCache& dataCache )
+        : _dataCache( dataCache )
     {}
 
     void execute( const FutureMap& input, PromiseMap& output ) const
@@ -39,9 +40,7 @@ struct DataUploadFilter::Impl
         for( const auto& nodeIds: input.getFutures( "NodeIds" ))
             for( const auto& nodeId: nodeIds.get< NodeIds >( ))
             {
-                const auto& cacheObj =
-                        renderInputs.dataCache.load< DataObject >( nodeId.getId(),
-                                                                   renderInputs.dataSource );
+                const auto& cacheObj = _dataCache.load( nodeId.getId(), renderInputs.dataSource );
                 if( cacheObj )
                     cacheObjects.push_back( cacheObj );
 
@@ -49,10 +48,12 @@ struct DataUploadFilter::Impl
             }
         output.set( "DataCacheObjects", cacheObjects );
     }
+
+    DataCache& _dataCache;
 };
 
-DataUploadFilter::DataUploadFilter()
-    : _impl( new DataUploadFilter::Impl( ))
+DataUploadFilter::DataUploadFilter( DataCache& dataCache )
+    : _impl( new DataUploadFilter::Impl( dataCache ))
 {
 }
 

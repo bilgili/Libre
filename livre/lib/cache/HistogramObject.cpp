@@ -26,6 +26,8 @@
 #include <livre/core/data/Histogram.h>
 #include <livre/core/data/DataSource.h>
 
+#include <lunchbox/debug.h>
+
 namespace livre
 {
 namespace
@@ -122,7 +124,7 @@ struct HistogramObject::Impl
 public:
 
     Impl( const CacheId& cacheId,
-          const Cache& dataCache,
+          const DataCache& dataCache,
           const DataSource& dataSource,
           const Vector2f& dataSourceRange )
         :  _size( 0 )
@@ -133,7 +135,7 @@ public:
 
 
     bool load( const CacheId& cacheId,
-               const Cache& dataCache,
+               const DataCache& dataCache,
                const DataSource& dataSource,
                const Vector2f& dataSourceRange )
     {
@@ -143,7 +145,7 @@ public:
         if( compCount > 1 )
             LBTHROW( std::runtime_error( "Multiple channels are not supported "));
 
-        ConstDataObjectPtr data = dataCache.get< DataObject >( cacheId );
+        ConstDataObjectPtr data = dataCache.get( cacheId );
 
         if( !data )
             return false;
@@ -214,7 +216,7 @@ public:
 };
 
 HistogramObject::HistogramObject( const CacheId& cacheId,
-                                  const Cache& dataCache,
+                                  const DataCache& dataCache,
                                   const DataSource& dataSource,
                                   const Vector2f& dataSourceRange )
     : CacheObject( cacheId )

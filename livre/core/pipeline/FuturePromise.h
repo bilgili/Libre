@@ -24,6 +24,8 @@
 #include <livre/core/pipeline/PortData.h>
 #include <livre/core/types.h>
 
+#include <servus/uint128_t.h>
+
 namespace livre
 {
 

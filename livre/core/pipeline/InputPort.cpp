@@ -21,6 +21,8 @@
 #include <livre/core/pipeline/OutputPort.h>
 #include <livre/core/pipeline/FuturePromise.h>
 
+#include <lunchbox/debug.h>
+
 namespace livre
 {
 

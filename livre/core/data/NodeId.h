@@ -25,8 +25,6 @@
 #include <livre/core/types.h>
 #include <livre/core/mathTypes.h>
 
-#include <functional>
-
 namespace livre
 {
 

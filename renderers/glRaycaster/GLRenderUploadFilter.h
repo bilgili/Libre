@@ -44,7 +44,8 @@ public:
      * @param nUploadThreads mumber of data upload thread
      * @param executor that runs the upload operations
      */
-    GLRenderUploadFilter( Cache& textureCache,
+    GLRenderUploadFilter( DataCache& dataCache,
+                          TextureCache& textureCache,
                           TexturePool& texturePool,
                           size_t nUploadThreads,
                           Executor& executor );

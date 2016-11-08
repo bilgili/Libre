@@ -34,19 +34,15 @@
 #include <livre/core/render/FrameInfo.h>
 #include <livre/core/data/LODNode.h>
 
-
 #include <lexis/render/ColorMap.h>
 
+#include <lunchbox/debug.h>
 #include <lunchbox/pluginRegisterer.h>
+
 #include <GL/glew.h>
 
 namespace livre
 {
-namespace
-{
-lunchbox::PluginRegisterer< GLRaycastRenderer > registerer;
-}
-
 // Sort helper function for sorting the textures with their distances to viewpoint
 struct DistanceOperator
 {
@@ -89,6 +85,7 @@ const GLfloat fullScreenQuad[] = { -1.0f, -1.0f, 0.0f,
 const uint32_t SH_UINT = 0u;
 const uint32_t SH_INT = 1u;
 const uint32_t SH_FLOAT = 2u;
+lunchbox::PluginRegisterer< GLRaycastRenderer > registerer;
 }
 
 struct RenderTexture

@@ -19,6 +19,8 @@
 
 #include <livre/core/data/Histogram.h>
 
+#include <lunchbox/debug.h>
+
 namespace livre
 {
 

@@ -40,11 +40,13 @@ struct GLRenderUploadFilter::Impl
 {
 public:
 
-    Impl( Cache& textureCache,
+    Impl( DataCache& dataCache,
+          TextureCache& textureCache,
           TexturePool& texturePool,
           size_t nUploadThreads,
           Executor& executor )
-        : _textureCache( textureCache )
+        : _dataCache( dataCache )
+        , _textureCache( textureCache )
         , _texturePool( texturePool )
         , _nUploadThreads( nUploadThreads )
         , _executor( executor )
@@ -58,10 +60,10 @@ public:
         const auto& renderInputs = futureMap.get< RenderInputs >( "RenderInputs" );
         for( const auto& nodeId: futureMap.get< NodeIds >( "NodeIds" ))
         {
-            const auto& cacheObj = _textureCache.load< TextureObject >( nodeId.getId(),
-                                                                        renderInputs.dataCache,
-                                                                        renderInputs.dataSource,
-                                                                        _texturePool );
+            const auto& cacheObj = _textureCache.load( nodeId.getId(),
+                                                       _dataCache,
+                                                       renderInputs.dataSource,
+                                                       _texturePool );
             if( cacheObj )
                 cacheObjects.push_back( cacheObj );
             else
@@ -77,6 +79,7 @@ public:
         const size_t perThreadSize = std::max( (size_t)1, notAvailable.size() / _nUploadThreads );
         Pipeline pipeline;
         PipeFilter textureUploader = pipeline.add< TextureUploadFilter >( "TextureUploader",
+                                                                          _dataCache,
                                                                           _textureCache,
                                                                           _texturePool );
         textureUploader.getPromise( "RenderInputs" ).set( renderInputs );
@@ -95,7 +98,7 @@ public:
                                       begin + perThreadSize );
             std::stringstream str;
             str << "DataUploader" << i;
-            PipeFilter dataUploader = pipeline.add< DataUploadFilter >( str.str( ));
+            PipeFilter dataUploader = pipeline.add< DataUploadFilter >( str.str( ), _dataCache );
             dataUploader.connect( "DataCacheObjects", textureUploader, "DataCacheObjects" );
             dataUploader.getPromise( "RenderInputs" ).set( renderInputs );
             dataUploader.getPromise( "NodeIds" ).set( partialData );
@@ -112,17 +115,20 @@ public:
         output.set( "TextureCacheObjects", cacheObjects );
     }
 
-    Cache& _textureCache;
+    DataCache& _dataCache;
+    TextureCache& _textureCache;
     TexturePool& _texturePool;
     const size_t _nUploadThreads;
     Executor& _executor;
 };
 
-GLRenderUploadFilter::GLRenderUploadFilter( Cache& textureCache,
+GLRenderUploadFilter::GLRenderUploadFilter( DataCache& dataCache,
+                                            TextureCache& textureCache,
                                             TexturePool& texturePool,
                                             size_t nUploadThreads,
                                             Executor& executor )
-    : _impl( new GLRenderUploadFilter::Impl( textureCache,
+    : _impl( new GLRenderUploadFilter::Impl( dataCache,
+                                             textureCache,
                                              texturePool,
                                              nUploadThreads,
                                              executor ))

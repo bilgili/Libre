@@ -37,7 +37,7 @@ const uint32_t VOXEL_SIZE_Z = 512;
 
 void _testDataSource( const std::string& uriStr )
 {
-    const lunchbox::URI uri( uriStr );
+    const servus::URI uri( uriStr );
     livre::DataSource source( uri );
     const livre::VolumeInformation& info = source.getVolumeInfo();
 

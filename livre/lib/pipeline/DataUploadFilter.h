@@ -36,7 +36,7 @@ class DataUploadFilter : public Filter
 public:
 
     /** Constructor */
-    DataUploadFilter();
+    DataUploadFilter( DataCache& dataCache );
     ~DataUploadFilter();
 
     /** @copydoc Filter::execute */

@@ -29,13 +29,8 @@
 #include <livre/eq/Node.h>
 #include <livre/eq/Pipe.h>
 #include <livre/eq/render/EqContext.h>
-#include <livre/eq/settings/EqFrameSettings.h>
-
-#include <livre/core/configuration/RendererParameters.h>
+#include <livre/eq/settings/EqApplicationSettings.h>
 #include <livre/core/render/RenderPipeline.h>
-#include <livre/lib/cache/TextureObject.h>
-
-#include <livre/core/cache/Cache.h>
 
 #include <eq/gl.h>
 
@@ -64,7 +59,11 @@ public:
     void configInit()
     {
         shareGLContexts();
-        _renderPipeline.reset( new RenderPipeline( "gl" ));
+
+        const livre::Pipe* pipe = static_cast< const livre::Pipe* >( _window->getPipe( ));
+        const ApplicationSettings& settings = pipe->getFrameData()->getApplicationSettings();
+
+        _renderPipeline.reset( new RenderPipeline( settings.getRenderer( )));
     }
 
     void shareGLContexts()

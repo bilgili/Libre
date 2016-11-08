@@ -32,11 +32,8 @@
 
 #include <livre/eq/settings/EqVolumeSettings.h>
 #include <livre/core/configuration/RendererParameters.h>
-#include <livre/lib/cache/DataObject.h>
-#include <livre/lib/cache/HistogramObject.h>
 
 #include <livre/core/data/DataSource.h>
-#include <livre/core/cache/Cache.h>
 
 #include <eq/eq.h>
 #include <eq/gl.h>
@@ -51,25 +48,12 @@ public:
        , _config( static_cast< livre::Config* >( node->getConfig( )))
     {}
 
-    void initializeCache()
-    {
-        const RendererParameters& vrRenderParameters =
-                _config->getFrameData().getVRParameters();
-
-        const size_t maxMemBytes = vrRenderParameters.getMaxCPUCacheMemoryMB() * LB_1MB;
-        _dataCache.reset( new CacheT< DataObject >( "DataCache", maxMemBytes ));
-
-        const size_t histCacheSize =
-                32 * LB_1MB; // Histogram cache is 32 MB. Can hold approx 16k hists
-        _histogramCache.reset( new CacheT< HistogramObject >( "HistogramCache", histCacheSize ));
-    }
-
     bool initializeVolume()
     {
         try
         {
             const VolumeSettings& volumeSettings = _config->getFrameData().getVolumeSettings();
-            const lunchbox::URI& uri = lunchbox::URI( volumeSettings.getURI( ));
+            const servus::URI& uri = servus::URI( volumeSettings.getURI( ));
             _dataSource.reset( new livre::DataSource( uri ));
         }
         catch( const std::runtime_error& err )
@@ -89,7 +73,6 @@ public:
 
         auto event = _config->sendEvent( VOLUME_INFO );
         event << _dataSource->getVolumeInfo();
-        initializeCache();
         return true;
     }
 
@@ -111,8 +94,6 @@ public:
     livre::Node* const _node;
     livre::Config* const _config;
     std::unique_ptr< DataSource > _dataSource;
-    std::unique_ptr< Cache > _dataCache;
-    std::unique_ptr< Cache > _histogramCache;
 };
 
 Node::Node( eq::Config* parent )
@@ -168,16 +149,6 @@ DataSource& Node::getDataSource()
 const DataSource& Node::getDataSource() const
 {
     return *_impl->_dataSource;
-}
-
-Cache& Node::getDataCache()
-{
-    return *_impl->_dataCache;
-}
-
-livre::Cache& livre::Node::getHistogramCache()
-{
-    return *_impl->_histogramCache;
 }
 
 void Node::frameStart( const eq::uint128_t &frameId,

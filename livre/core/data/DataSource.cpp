@@ -38,7 +38,7 @@ struct DataSource::Impl
 public:
     typedef lunchbox::PluginFactory< DataSourcePlugin, DataSourcePluginData > PluginFactory;
 
-    Impl( const lunchbox::URI& uri, const AccessMode accessMode )
+    Impl( const servus::URI& uri, const AccessMode accessMode )
         : plugin( PluginFactory::getInstance().create( DataSourcePluginData( uri, accessMode )))
     {}
 
@@ -60,7 +60,7 @@ public:
     std::unique_ptr< DataSourcePlugin > plugin;
 };
 
-DataSource::DataSource( const lunchbox::URI& uri, const AccessMode accessMode )
+DataSource::DataSource( const servus::URI& uri, const AccessMode accessMode )
     : _impl( new Impl( uri, accessMode ) )
 {
 }
@@ -122,7 +122,7 @@ ConstMemoryUnitPtr DataSource::getData( const NodeId& nodeId ) const
     return _impl->plugin->getData( lodNode );
 }
 
-VolumeInformation DataSource::getVolumeInfo( const lunchbox::URI& uri )
+VolumeInformation DataSource::getVolumeInfo( const servus::URI& uri )
 {
     const DataSource source( uri );
     return source.getVolumeInfo();

@@ -26,6 +26,8 @@
 #include <livre/core/data/LODNode.h>
 #include <livre/core/data/VolumeInformation.h>
 
+#include <servus/uri.h>
+#include <lunchbox/pluginFactory.h>
 #include <lunchbox/plugin.h>
 
 namespace livre
@@ -34,18 +36,18 @@ namespace livre
 class DataSourcePluginData
 {
 public:
-    explicit DataSourcePluginData( const lunchbox::URI& uri,
+    explicit DataSourcePluginData( const servus::URI& uri,
                                    const AccessMode accessMode = MODE_READ )
         : _uri( uri ),
           _accessMode( accessMode )
     {}
 
-    const lunchbox::URI& getURI( ) const { return _uri; }
+    const servus::URI& getURI( ) const { return _uri; }
     AccessMode getAccessMode( ) const { return _accessMode; }
 
 private:
 
-    const lunchbox::URI& _uri;
+    const servus::URI& _uri;
     const AccessMode _accessMode;
 };
 

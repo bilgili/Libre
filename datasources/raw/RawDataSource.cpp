@@ -25,6 +25,7 @@
 #include <livre/core/version.h>
 
 #include <lunchbox/pluginRegisterer.h>
+#include <lunchbox/debug.h>
 
 #include "nrrd/nrrd.hxx"
 

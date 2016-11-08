@@ -23,7 +23,6 @@
 #include <livre/core/api.h>
 #include <livre/core/types.h>
 #include <lunchbox/buffer.h> // member
-#include <lunchbox/thread.h> // LB_TS_VAR
 
 namespace livre
 {
@@ -158,7 +157,6 @@ private:
     uint8_t* _getData() final;
 
     lunchbox::Bufferb _rawData;
-    LB_TS_VAR( thread_ );
 };
 
 }

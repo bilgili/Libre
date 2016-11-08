@@ -26,6 +26,7 @@
 #include <livre/core/version.h>
 
 #include <lunchbox/pluginRegisterer.h>
+#include <lunchbox/debug.h>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
