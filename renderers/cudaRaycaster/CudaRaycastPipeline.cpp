@@ -145,7 +145,6 @@ struct CudaRaycastPipeline::Impl
             showProgress.reset( new boost::progress_display( numberOfPasses ));
         }
 
-        CudaTextureCache& c = *cudaCache;
         for( uint32_t i = 0; i < numberOfPasses; ++i )
         {
             uint32_t renderStages = RENDER_FRAME;
@@ -167,7 +166,6 @@ struct CudaRaycastPipeline::Impl
                                       renderer,
                                       renderStages );
 
-            std::cout << c.getStatistics() << std::endl;
             if( numberOfPasses > 1 )
                 ++(*showProgress);
         }
@@ -287,8 +285,6 @@ struct CudaRaycastPipeline::Impl
         statistics = futures.get< RenderStatistics >( "RenderStatistics" );
     }
 
-
-
     void init( const RenderInputs& renderInputs )
     {
         if( cudaCache.get( ))
@@ -308,8 +304,7 @@ struct CudaRaycastPipeline::Impl
                                             vrParams.getMaxCPUCacheMemoryMB() * LB_1MB ));
 
         if( !histogramCache )
-            histogramCache.reset( new HistogramCache( "Histogram Cache",
-                                                      32 * LB_1MB )); // 32 MB
+            histogramCache.reset( new HistogramCache( "Histogram Cache", 32 * LB_1MB )); // 32 MB
     }
 
     void render( RenderStatistics& statistics,

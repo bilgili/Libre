@@ -2,6 +2,8 @@ Changelog {#Changelog}
 =========
 
 # master {#master}
+* [#5](https://github.com/bilgili/Libre/pull/5):
+  * Added CUDA based renderer that can be accessed through command line
 * [#9](https://github.com/bilgili/Livre/pull/9):
   * Plugin-based rendering system. Re-organized folder structure
   * Re-organized data sources

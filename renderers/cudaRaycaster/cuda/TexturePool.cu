@@ -85,9 +85,7 @@ size_t findSingleBlockCudaMemorySize( const size_t dataTypeSize,
                                                                   isFloat,
                                                                   nComponents );
     cudaArray_t array ;
-    const cudaExtent blockSize = { maxBlockSize[ 0 ],
-                                   maxBlockSize[ 1 ],
-                                   maxBlockSize[ 2 ]};
+    const cudaExtent blockSize = { maxBlockSize[ 0 ], maxBlockSize[ 1 ], maxBlockSize[ 2 ]};
     size_t preAvailableMemory, totalMemory;
     checkCudaErrors( cudaMemGetInfo( &preAvailableMemory, &totalMemory));
     checkCudaErrors( cudaMalloc3DArray( &array, &channelDesc, blockSize ));
@@ -184,7 +182,6 @@ Vector3f TexturePool::copyToSlot(  const unsigned char* ptr, const Vector3ui& si
 
         slot = _emptySlotsList.back();
         _emptySlotsList.pop_back();
-
     }
 
     cudaMemcpy3DParms params = { 0 };
@@ -194,9 +191,10 @@ Vector3f TexturePool::copyToSlot(  const unsigned char* ptr, const Vector3ui& si
                                          size[ 1 ] );
 
     const Vector3f volumeSize = _cacheSlotsSize * _maxBlockSize;
-    params.dstPos = { std::lround( slot[ 0 ] *  volumeSize[ 0 ] ) * _dataTypeSize * _nComponents,
-                      std::lround( slot[ 1 ] *  volumeSize[ 1 ] ),
-                      std::lround( slot[ 2 ] *  volumeSize[ 2 ] )};
+    params.dstPos = { (uint)std::lround( slot[ 0 ] *  volumeSize[ 0 ] )
+                      * _dataTypeSize * _nComponents,
+                      (uint)std::lround( slot[ 1 ] *  volumeSize[ 1 ] ),
+                      (uint)std::lround( slot[ 2 ] *  volumeSize[ 2 ] )};
     params.dstArray = _cudaArray;
     params.kind = cudaMemcpyHostToDevice;
     params.extent = { size[ 0 ], size[ 1 ], size[ 2 ] };

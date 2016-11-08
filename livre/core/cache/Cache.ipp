@@ -17,70 +17,73 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+
+
 template< class CacheObjectT >
-struct LRUCachePolicy
+class Cache< CacheObjectT >::Impl final
 {
-    typedef std::deque< CacheId > LRUQueue;
+    friend class Cache< CacheObjectT >;
 
-    LRUCachePolicy( const size_t maxMemBytes )
-        : _maxMemBytes( maxMemBytes )
-        , _cleanUpRatio( 1.0f )
-    {}
-
-    bool isFull( const Cache< CacheObjectT >& cache ) const
+    struct LRUCachePolicy
     {
-        const size_t usedMemBytes = cache.getStatistics().getUsedMemory();
-        return usedMemBytes >= _maxMemBytes;
-    }
+        typedef std::deque< CacheId > LRUQueue;
 
-    bool hasSpace( const Cache< CacheObjectT >& cache ) const
-    {
-        const size_t usedMemBytes = cache.getStatistics().getUsedMemory();
-        return usedMemBytes < _cleanUpRatio * _maxMemBytes;
-    }
+        LRUCachePolicy( const size_t maxMemBytes )
+            : _maxMemBytes( maxMemBytes )
+            , _cleanUpRatio( 1.0f )
+        {}
 
-    void insert( const CacheId& cacheId )
-    {
-        remove( cacheId );
-        _lruQueue.push_back( cacheId );
-    }
-
-    void remove( const CacheId& cacheId )
-    {
-        typename LRUQueue::iterator it = _lruQueue.begin();
-        while( it != _lruQueue.end( ))
+        bool isFull( const Cache< CacheObjectT >& cache ) const
         {
-            if( *it == cacheId )
-            {
-                _lruQueue.erase( it );
-                return;
-            }
-            else
-                ++it;
+            const size_t usedMemBytes = cache.getStatistics().getUsedMemory();
+            return usedMemBytes >= _maxMemBytes;
         }
-    }
 
-    CacheIds getObjects() const
-    {
-        CacheIds ids;
-        ids.reserve( _lruQueue.size( ));
-        ids.insert( ids.begin(), _lruQueue.begin(), _lruQueue.end());
-        return ids;
-    }
+        bool hasSpace( const Cache< CacheObjectT >& cache ) const
+        {
+            const size_t usedMemBytes = cache.getStatistics().getUsedMemory();
+            return usedMemBytes < _cleanUpRatio * _maxMemBytes;
+        }
 
-    void clear()
-    {
-        _lruQueue.clear();
-    }
+        void insert( const CacheId& cacheId )
+        {
+            remove( cacheId );
+            _lruQueue.push_back( cacheId );
+        }
 
-    const size_t _maxMemBytes;
-    const float _cleanUpRatio;
-    LRUQueue _lruQueue;
-};
+        void remove( const CacheId& cacheId )
+        {
+            typename LRUQueue::iterator it = _lruQueue.begin();
+            while( it != _lruQueue.end( ))
+            {
+                if( *it == cacheId )
+                {
+                    _lruQueue.erase( it );
+                    return;
+                }
+                else
+                    ++it;
+            }
+        }
 
-template< class CacheObjectT >
-struct Cache< CacheObjectT >::Impl
-{
+        CacheIds getObjects() const
+        {
+            CacheIds ids;
+            ids.reserve( _lruQueue.size( ));
+            ids.insert( ids.begin(), _lruQueue.begin(), _lruQueue.end());
+            return ids;
+        }
+
+        void clear()
+        {
+            _lruQueue.clear();
+        }
+
+        const size_t _maxMemBytes;
+        const float _cleanUpRatio;
+        LRUQueue _lruQueue;
+    };
+
     struct InternalCacheObject
     {
         InternalCacheObject()
@@ -121,9 +124,6 @@ struct Cache< CacheObjectT >::Impl
     , _cache( cache )
     , _statistics( name, maxMemBytes )
     , _cacheMap( 128 )
-    {}
-
-    ~Impl()
     {}
 
     void applyPolicy()
@@ -263,11 +263,15 @@ struct Cache< CacheObjectT >::Impl
         _cacheMap.erase( cacheId );
     }
 
-    mutable LRUCachePolicy< CacheObjectT > _policy;
+    mutable LRUCachePolicy _policy;
     Cache< CacheObjectT >& _cache;
     mutable CacheStatistics _statistics;
     CacheMap _cacheMap;
     mutable ReadWriteMutex _mutex;
+
+public:
+    ~Impl()
+    {}
 };
 
 template< class CacheObjectT >

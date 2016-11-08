@@ -50,7 +50,7 @@ public:
     /**
      * Is called on start of each rendering.
      * @param renderInputs necessary information for rendering
-     * @param bricks is the list of bricks.
+     * @param renderData is the list of cached render objects
      */
     virtual void preRender( const RenderInputs& renderInputs  LIVRE_UNUSED,
                             const ConstCacheObjects& renderData  LIVRE_UNUSED ) {}
@@ -58,7 +58,7 @@ public:
     /**
      * Is called on start of each render. Default is front to back rendering.
      * @param renderInputs necessary information for rendering
-     * @param orderedBricks is the list of bricks.
+     * @param renderData is the list of cached render objects
     */
     virtual void render( const RenderInputs& renderInputs  LIVRE_UNUSED,
                          const ConstCacheObjects& renderData  LIVRE_UNUSED ) = 0;
@@ -66,7 +66,7 @@ public:
     /**
      * Is called on end of each rendering.
      * @param renderInputs necessary information for rendering
-     * @param orderedBricks is the list of bricks.
+     * @param renderData is the list of cached render objects
      */
     virtual void postRender( const RenderInputs& renderInputs  LIVRE_UNUSED,
                              const ConstCacheObjects& renderData  LIVRE_UNUSED ) {}

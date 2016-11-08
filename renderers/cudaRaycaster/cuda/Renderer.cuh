@@ -89,7 +89,7 @@ public:
     void preRender( const ViewData& viewData );
 
     /**
-     * Called by the Libre renderer whie rendering
+     * Called by the Libre renderer while rendering
      * @param viewData is the necessary view data settings
      * @param nodeDatas is the list of nodes to be rendered
      * @param renderData is the necessary render settings

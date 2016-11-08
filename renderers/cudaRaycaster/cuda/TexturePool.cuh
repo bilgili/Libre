@@ -91,10 +91,10 @@ private:
 
     Vector3ui _cacheSlotsSize;
     std::vector< Vector3f > _emptySlotsList;
-    const size_t _dataTypeSize;
+    const uint32_t _dataTypeSize;
     const bool _isSigned;
     const bool _isFloat;
-    const size_t _nComponents;
+    const uint32_t _nComponents;
     const Vector3ui _maxBlockSize;
     boost::mutex _mutex;
     const size_t _cudaBlockSize;

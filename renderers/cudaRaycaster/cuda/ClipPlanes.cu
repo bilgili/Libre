@@ -40,10 +40,7 @@ void ClipPlanes::upload( const lexis::render::ClipPlanes& clipPlanes )
     {
         const ::lexis::render::Plane& plane = clipPlanes.getPlanes()[ i ];
         const float* normal = plane.getNormal();
-        _clipPlanes[ i ] = make_float4( normal[ 0 ],
-                                        normal[ 1 ],
-                                        normal[ 2 ],
-                                        plane.getD( ));
+        _clipPlanes[ i ] = make_float4( normal[ 0 ], normal[ 1 ], normal[ 2 ], plane.getD( ));
     }
     _nPlanes = nPlanes;
 }

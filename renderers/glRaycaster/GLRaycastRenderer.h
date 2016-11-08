@@ -43,7 +43,7 @@ public:
      */
     static bool handles( const std::string& name ) { return name == "gl"; }
 
-protected:
+private:
 
     void preRender( const RenderInputs& renderInputs,
                     const ConstCacheObjects& renderData ) final;

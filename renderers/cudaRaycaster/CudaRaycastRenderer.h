@@ -39,7 +39,7 @@ public:
     /** @return true if renderer handles the name */
     static bool handles( const std::string& name ) { return name == "cuda"; }
 
-protected:
+private:
 
     void preRender( const RenderInputs& renderInputs,
                     const ConstCacheObjects& renderData ) final;

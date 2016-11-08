@@ -29,10 +29,7 @@
 namespace livre
 {
 
-
-/**
- * CudaTextureUploadFilter class implements the CudaTextureObject uploading
- */
+/** CudaTextureUploadFilter class implements the CudaTextureObject uploading */
 class CudaTextureUploadFilter : public Filter
 {
 public:

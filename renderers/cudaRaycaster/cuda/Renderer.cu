@@ -359,8 +359,3 @@ void Renderer::update( const lexis::render::ClipPlanes& clipPlanes,
 }
 }
 }
-
-
-
-
-

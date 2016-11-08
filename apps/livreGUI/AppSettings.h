@@ -32,8 +32,8 @@ namespace livre
 
 static void setCoreSettingsNames()
 {
-    QCoreApplication::setOrganizationName( "Blue Brain Project" );
-    QCoreApplication::setApplicationName( "Livre Controller" );
+    QCoreApplication::setOrganizationName( "Free Skies" );
+    QCoreApplication::setApplicationName( "Libre Controller" );
 }
 
 }

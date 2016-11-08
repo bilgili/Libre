@@ -42,9 +42,9 @@ public:
 
 
     /**
+     * Constructor
      * @param name is the name of the cache.
      * @param maxMemBytes maximum memory.
-     * @param cacheObjectType type info for the cached object.
      */
     LIVRECORE_API Cache( const std::string& name, size_t maxMemBytes );
 

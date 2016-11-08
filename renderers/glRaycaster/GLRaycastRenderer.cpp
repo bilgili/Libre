@@ -270,7 +270,7 @@ struct GLRaycastRenderer::Impl
         tParamNameGL = glGetUniformLocation( program, "modelViewProjectionMatrix" );
         glUniformMatrix4fv( tParamNameGL, 1, false, frustum.getMVPMatrix().array );
 
-          // Because the volume is centered to the origin we can compute the volume AABB by using
+        // Because the volume is centered to the origin we can compute the volume AABB by using
         // the volume total size.
         const Vector3f halfWorldSize = volInfo.worldSize / 2.0;
 

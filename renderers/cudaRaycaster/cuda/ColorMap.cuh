@@ -24,7 +24,6 @@
 #include <lexis/render/ColorMap.h>
 #include <cuda_runtime.h>
 #include <cuda_texture_types.h>
-#include <memory>
 
 namespace livre
 {
@@ -45,6 +44,8 @@ public:
      * @param colorMap is the color map ( transfer function )
      */
     void upload( const lexis::render::ColorMap& colorMap );
+
+    /** @return the cuda bindless texture */
     cudaTextureObject_t getTexture() const  { return _texture; }
 
 private:
