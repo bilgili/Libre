@@ -69,14 +69,14 @@ BOOST_AUTO_TEST_CASE( testCache )
 
     // Read same data with the data cache
     const size_t maxMemory = 2048;
-    livre::CacheT< livre::DataObject > dataCache( "DataCache", maxMemory );
+    livre::Cache< livre::DataObject > dataCache( "DataCache", maxMemory );
 
     livre::ConstCacheObjectPtr constData = dataCache.get( firstChildNodeId.getId( ));
     BOOST_CHECK( dataCache.getCount() == 0 );
     BOOST_CHECK( !constData );
 
     livre::ConstCacheObjectPtr dataCacheObject =
-            dataCache.load< livre::DataObject >( firstChildNodeId.getId(), source );
+            dataCache.load( firstChildNodeId.getId(), source );
     BOOST_CHECK( dataCacheObject );
 
     constData = dataCache.get( livre::INVALID_CACHE_ID );
@@ -94,20 +94,18 @@ BOOST_AUTO_TEST_CASE( testCache )
     BOOST_CHECK( dataObject->getSize() == allocSize );
     BOOST_CHECK( dataCache.getStatistics().getUsedMemory() == allocSize );
 
-    BOOST_CHECK_THROW( dataCache.get( firstChildNodeId.getId( )), std::runtime_error );
-
     const uint8_t* manual = memUnit->getData< const uint8_t >();
     const uint8_t* cached = static_cast< const uint8_t* >( dataObject->getDataPtr( ));
 
     BOOST_CHECK_EQUAL_COLLECTIONS( manual, manual + allocSize,
                                    cached, cached + allocSize );
 
-    livre::CacheT< livre::HistogramObject > histogramCache( "HistogramCache", 1024 );
+    livre::Cache< livre::HistogramObject > histogramCache( "HistogramCache", 1024 );
     livre::ConstCacheObjectPtr histCacheObject =
-            histogramCache.load< livre::HistogramObject >( firstChildNodeId.getId(),
-                                                           dataCache,
-                                                           source,
-                                                           livre::Vector2f( 0.0f, 255.f));
+            histogramCache.load( firstChildNodeId.getId(),
+                                 dataCache,
+                                 source,
+                                 livre::Vector2f( 0.0f, 255.f));
     BOOST_CHECK( histCacheObject );
 
     livre::ConstHistogramObjectPtr histObject = histogramCache.get( firstChildNodeId.getId( ));

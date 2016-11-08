@@ -56,7 +56,6 @@ public:
      * @param cacheId The object cache id to be queried.
      * @return The cache object from cache, if object is not in the list an empty cache
      * object is returned.
-     * @throw std::runtime_error if cached object is not CacheObjectT type
      */
     LIVRECORE_API std::shared_ptr< const CacheObjectT > get( const CacheId& cacheId ) const;
 

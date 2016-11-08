@@ -84,10 +84,10 @@ struct HistogramFilter::Impl
         const auto& viewport = viewports.front();
 
         Histogram histogramAccumulated;
-        for( const auto& cacheObjects: input.getFutures( "CacheObjects" ))
-            for( const auto& cacheObject: cacheObjects.get< ConstCacheObjects >( ))
+        for( const auto& nodeIds: input.getFutures( "NodeIds" ))
+            for( const auto& nodeId: nodeIds.get< NodeIds >( ))
             {
-                const CacheId& cacheId = cacheObject->getId();
+                const CacheId& cacheId = nodeId.getId();
 
                 // Hist cache object expands the data source range if data has larger values
                 ConstHistogramObjectPtr histCacheObject =

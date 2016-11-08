@@ -124,6 +124,13 @@ struct RenderingSetGeneratorFilter< CacheObjectT >::Impl
         output.set( "CacheObjects", cacheObjects );
         output.set( "RenderingDone", cacheObjects.size() == nVisible );
         output.set( "RenderStatistics", cumulativeAvailability );
+
+        NodeIds ids;
+        ids.reserve( cacheObjects.size( ));
+        for( const auto& cacheObject: cacheObjects )
+            ids.emplace_back( cacheObject->getId( ));
+
+        output.set( "NodeIds", ids );
     }
 
     const Cache< CacheObjectT >& _cache;

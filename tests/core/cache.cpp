@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE( testCache )
 {
     const size_t maxMemBytes = 2048u;
 
-    livre::CacheT< test::ValidCacheObject > cache( "Test Cache", maxMemBytes );
+    livre::Cache< test::ValidCacheObject > cache( "Test Cache", maxMemBytes );
     BOOST_CHECK_EQUAL( cache.getCount(), 0 );
     BOOST_CHECK_EQUAL( cache.getStatistics().getMaximumMemory(), maxMemBytes );
 
@@ -42,11 +42,11 @@ BOOST_AUTO_TEST_CASE( testCache )
     size_t cacheSize = 0;
     BOOST_CHECK( !constCacheObject );
 
-    livre::ConstCacheObjectPtr cacheObject = cache.load< test::ValidCacheObject >( 1 );
+    livre::ConstCacheObjectPtr cacheObject = cache.load( 1 );
     cacheSize = cacheSize + cacheObject->getSize();
     BOOST_CHECK_EQUAL( cache.getStatistics().getUsedMemory(), cacheSize );
 
-    cacheObject = cache.load< test::ValidCacheObject >( 2 );
+    cacheObject = cache.load( 2 );
     BOOST_CHECK( cacheObject );
     BOOST_CHECK_EQUAL( cache.getCount(), 2 );
     BOOST_CHECK_EQUAL( cacheObject->getId(), 2 );
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE( testCache )
     cacheSize = cacheSize + cacheObject->getSize();
     BOOST_CHECK_EQUAL( cache.getStatistics().getUsedMemory(), cacheSize );
 
-    cacheObject = cache.load< test::ValidCacheObject >( 1 );
+    cacheObject = cache.load( 1 );
     BOOST_CHECK( cacheObject );
     BOOST_CHECK_EQUAL( cache.getCount(), 2 );
     BOOST_CHECK_EQUAL( cacheObject->getId(), 1 );
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE( testCache )
     BOOST_CHECK_EQUAL( cache.getStatistics().getUsedMemory(), cacheSize );
     cacheObject.reset();
 
-    livre::ConstCacheObjectPtr cacheObjectTriggerClean = cache.load< test::ValidCacheObject >( 3 );
+    livre::ConstCacheObjectPtr cacheObjectTriggerClean = cache.load( 3 );
     BOOST_CHECK( cacheObjectTriggerClean );
 
     BOOST_CHECK_EQUAL( cache.getCount(), 2 );

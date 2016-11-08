@@ -145,8 +145,6 @@ struct CudaRaycastPipeline::Impl
             showProgress.reset( new boost::progress_display( numberOfPasses ));
         }
 
-        sendHistogramFilter.getPromise( "RelativeViewport" ).set( renderInputs.viewport );
-        sendHistogramFilter.getPromise( "Id" ).set( renderInputs.frameInfo.frameId );
         CudaTextureCache& c = *cudaCache;
         for( uint32_t i = 0; i < numberOfPasses; ++i )
         {
@@ -166,7 +164,6 @@ struct CudaRaycastPipeline::Impl
 
             createAndExecuteSyncPass( nodesPerPass,
                                       renderInputs,
-                                      sendHistogramFilter,
                                       renderer,
                                       renderStages );
 
@@ -174,7 +171,21 @@ struct CudaRaycastPipeline::Impl
             if( numberOfPasses > 1 )
                 ++(*showProgress);
         }
-        // sendHistogramFilter.schedule( _computeExecutor );
+
+        PipeFilterT< HistogramFilter > histogramFilter( "HistogramFilter",
+                                                        *histogramCache,
+                                                        *dataCache,
+                                                        renderInputs.dataSource );
+        histogramFilter.getPromise( "NodeIds" ).set( nodeIdsCopy );
+        sendHistogramFilter.getPromise( "RelativeViewport" ).set( renderInputs.viewport );
+        sendHistogramFilter.getPromise( "Id" ).set( renderInputs.frameInfo.frameId );
+        histogramFilter.getPromise( "Frustum" ).set( renderInputs.frameInfo.frustum );
+        histogramFilter.connect( "Histogram", sendHistogramFilter, "Histogram" );
+        histogramFilter.getPromise( "RelativeViewport" ).set( renderInputs.viewport );
+        histogramFilter.getPromise( "DataSourceRange" ).set( renderInputs.dataSourceRange );
+
+        histogramFilter.schedule( _computeExecutor );
+        sendHistogramFilter.schedule( _computeExecutor );
 
         const UniqueFutureMap futures( visibleSetGenerator.getPostconditions( ));
         statistics.nAvailable = futures.get< NodeIds >( "VisibleNodes" ).size();
@@ -184,18 +195,10 @@ struct CudaRaycastPipeline::Impl
 
     void createAndExecuteSyncPass( const NodeIds& nodeIds,
                                    const RenderInputs& renderInputs,
-                                   PipeFilter&,
                                    Renderer& renderer,
                                    const uint32_t renderStages )
     {
-        PipeFilterT< HistogramFilter > histogramFilter( "HistogramFilter",
-                                                        *histogramCache,
-                                                        *dataCache,
-                                                        renderInputs.dataSource );
-        histogramFilter.getPromise( "Frustum" ).set( renderInputs.frameInfo.frustum );
-        // histogramFilter.connect( "Histogram", sendHistogramFilter, "Histogram" );
-        histogramFilter.getPromise( "RelativeViewport" ).set( renderInputs.viewport );
-        histogramFilter.getPromise( "DataSourceRange" ).set( renderInputs.dataSourceRange );
+
 
         PipeFilterT< RenderFilter > renderFilter( "RenderFilter",
                                                   renderInputs.dataSource,
@@ -213,10 +216,8 @@ struct CudaRaycastPipeline::Impl
         renderUploader.getPromise( "RenderInputs" ).set( renderInputs );
         renderUploader.getPromise( "NodeIds" ).set( nodeIds );
         renderUploader.connect( "CudaTextureCacheObjects", renderFilter, "CacheObjects" );
-        // renderUploader.connect( "CudaTextureCacheObjects", histogramFilter, "CacheObjects" );
 
         renderUploader.execute();
-        // histogramFilter.schedule( _computeExecutor );
         renderFilter.execute();
     }
 
@@ -257,7 +258,7 @@ struct CudaRaycastPipeline::Impl
 
         visibleSetGenerator.connect( "VisibleNodes", renderingSetGenerator, "VisibleNodes" );
         renderingSetGenerator.connect( "CacheObjects", renderFilter, "CacheObjects" );
-        renderingSetGenerator.connect( "CacheObjects", histogramFilter, "CacheObjects" );
+        renderingSetGenerator.connect( "NodeIds", histogramFilter, "NodeIds" );
         renderingSetGenerator.connect( "RenderingDone", redrawFilter, "RenderingDone" );
         visibleSetGenerator.connect( "VisibleNodes", preRenderFilter, "VisibleNodes" );
 

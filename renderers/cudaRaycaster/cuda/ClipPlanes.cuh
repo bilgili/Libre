@@ -39,8 +39,8 @@ public:
     ~ClipPlanes();
 
     void upload( const lexis::render::ClipPlanes& clipPlanes );
-    const float4* getClipPlanes() const { return _clipPlanes; }
-    unsigned int getNPlanes() const { return _nPlanes; };
+    CUDA_CALL const float4* getClipPlanes() const { return _clipPlanes; }
+    CUDA_CALL unsigned int getNPlanes() const { return _nPlanes; };
 
 private:
     float4 _clipPlanes[ 6 ];

@@ -147,9 +147,6 @@ struct GLRaycastPipeline::Impl
             showProgress.reset( new boost::progress_display( numberOfPasses ));
         }
 
-        sendHistogramFilter.getPromise( "RelativeViewport" ).set( renderInputs.viewport );
-        sendHistogramFilter.getPromise( "Id" ).set( renderInputs.frameInfo.frameId );
-
         for( uint32_t i = 0; i < numberOfPasses; ++i )
         {
             uint32_t renderStages = RENDER_FRAME;
@@ -167,12 +164,26 @@ struct GLRaycastPipeline::Impl
 
             createAndExecuteSyncPass( nodesPerPass,
                                       renderInputs,
-                                      sendHistogramFilter,
                                       renderer,
                                       renderStages );
             if( numberOfPasses > 1 )
                 ++(*showProgress);
         }
+
+        PipeFilterT< HistogramFilter > histogramFilter( "HistogramFilter",
+                                                        *histogramCache,
+                                                        *dataCache,
+                                                        renderInputs.dataSource );
+        histogramFilter.getPromise( "Frustum" ).set( renderInputs.frameInfo.frustum );
+        histogramFilter.connect( "Histogram", sendHistogramFilter, "Histogram" );
+        histogramFilter.getPromise( "RelativeViewport" ).set( renderInputs.viewport );
+        histogramFilter.getPromise( "DataSourceRange" ).set( renderInputs.dataSourceRange );
+        histogramFilter.getPromise( "NodeIds" ).set( nodeIdsCopy );
+
+        sendHistogramFilter.getPromise( "RelativeViewport" ).set( renderInputs.viewport );
+        sendHistogramFilter.getPromise( "Id" ).set( renderInputs.frameInfo.frameId );
+
+        histogramFilter.schedule( _computeExecutor );
         sendHistogramFilter.schedule( _computeExecutor );
 
         const UniqueFutureMap futures( visibleSetGenerator.getPostconditions( ));
@@ -180,6 +191,38 @@ struct GLRaycastPipeline::Impl
         statistics.nNotAvailable = 0;
         statistics.nRenderAvailable = statistics.nAvailable;
     }
+
+    void createAndExecuteSyncPass( NodeIds nodeIds,
+                                   const RenderInputs& renderInputs,
+                                   Renderer& renderer,
+                                   const uint32_t renderStages )
+    {
+
+        Pipeline renderPipeline;
+        Pipeline uploadPipeline;
+
+        PipeFilterT< RenderFilter > renderFilter( "RenderFilter",
+                                                  renderInputs.dataSource,
+                                                  renderer );
+        renderFilter.getPromise( "RenderInputs" ).set( renderInputs );
+        renderFilter.getPromise( "RenderStages" ).set( renderStages );
+
+        PipeFilter renderUploader = uploadPipeline.add< GLRenderUploadFilter >( "RenderUploader",
+                                                                                *dataCache,
+                                                                                *textureCache,
+                                                                                *texturePool,
+                                                                                nUploadThreads,
+                                                                                _uploadExecutor );
+
+        renderUploader.getPromise( "RenderInputs" ).set( renderInputs );
+        renderUploader.getPromise( "NodeIds" ).set( nodeIds );
+        renderUploader.connect( "TextureCacheObjects", renderFilter, "CacheObjects" );
+
+        renderPipeline.schedule( _renderExecutor );
+        uploadPipeline.schedule( _uploadExecutor );
+        renderFilter.execute();
+    }
+
 
     void renderAsync( RenderStatistics& statistics,
                       Renderer& renderer,
@@ -218,7 +261,7 @@ struct GLRaycastPipeline::Impl
 
         visibleSetGenerator.connect( "VisibleNodes", renderingSetGenerator, "VisibleNodes" );
         renderingSetGenerator.connect( "CacheObjects", renderFilter, "CacheObjects" );
-        renderingSetGenerator.connect( "CacheObjects", histogramFilter, "CacheObjects" );
+        renderingSetGenerator.connect( "NodeIds", histogramFilter, "NodeIds" );
         renderingSetGenerator.connect( "RenderingDone", redrawFilter, "RenderingDone" );
         visibleSetGenerator.connect( "VisibleNodes", preRenderFilter, "VisibleNodes" );
 
@@ -245,48 +288,6 @@ struct GLRaycastPipeline::Impl
 
         const UniqueFutureMap futures( renderingSetGenerator.getPostconditions( ));
         statistics = futures.get< RenderStatistics >( "RenderStatistics" );
-    }
-
-    void createAndExecuteSyncPass( NodeIds nodeIds,
-                                   const RenderInputs& renderInputs,
-                                   PipeFilter& sendHistogramFilter,
-                                   Renderer& renderer,
-                                   const uint32_t renderStages )
-    {
-        PipeFilterT< HistogramFilter > histogramFilter( "HistogramFilter",
-                                                        *histogramCache,
-                                                        *dataCache,
-                                                        renderInputs.dataSource );
-        histogramFilter.getPromise( "Frustum" ).set( renderInputs.frameInfo.frustum );
-        histogramFilter.connect( "Histogram", sendHistogramFilter, "Histogram" );
-        histogramFilter.getPromise( "RelativeViewport" ).set( renderInputs.viewport );
-        histogramFilter.getPromise( "DataSourceRange" ).set( renderInputs.dataSourceRange );
-
-        Pipeline renderPipeline;
-        Pipeline uploadPipeline;
-
-        PipeFilterT< RenderFilter > renderFilter( "RenderFilter",
-                                                  renderInputs.dataSource,
-                                                  renderer );
-        renderFilter.getPromise( "RenderInputs" ).set( renderInputs );
-        renderFilter.getPromise( "RenderStages" ).set( renderStages );
-
-        PipeFilter renderUploader = uploadPipeline.add< GLRenderUploadFilter >( "RenderUploader",
-                                                                                *dataCache,
-                                                                                *textureCache,
-                                                                                *texturePool,
-                                                                                nUploadThreads,
-                                                                                _uploadExecutor );
-
-        renderUploader.getPromise( "RenderInputs" ).set( renderInputs );
-        renderUploader.getPromise( "NodeIds" ).set( nodeIds );
-        renderUploader.connect( "TextureCacheObjects", renderFilter, "CacheObjects" );
-        renderUploader.connect( "TextureCacheObjects", histogramFilter, "CacheObjects" );
-
-        renderPipeline.schedule( _renderExecutor );
-        uploadPipeline.schedule( _uploadExecutor );
-        histogramFilter.schedule( _computeExecutor );
-        renderFilter.execute();
     }
 
     void initTextureCache( const RenderInputs& renderInputs )

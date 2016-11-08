@@ -63,6 +63,7 @@ public:
         return
         {
             { "CacheObjects", getType< ConstCacheObjects >() },
+            { "NodeIds", getType< NodeIds >() },
             { "RenderingDone", getType< bool >() },
             { "RenderStatistics", getType< RenderStatistics >() },
         };

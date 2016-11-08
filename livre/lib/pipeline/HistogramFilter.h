@@ -61,7 +61,7 @@ public:
         {
             { "Frustum", getType< Frustum >() },
             { "RelativeViewport", getType< Viewport >() },
-            { "CacheObjects", getType< ConstCacheObjects >() },
+            { "NodeIds", getType< NodeIds >() },
             { "DataSourceRange", getType< Vector2f >() },
         };
     }

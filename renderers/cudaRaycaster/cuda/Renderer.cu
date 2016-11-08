@@ -95,8 +95,7 @@ __global__ void rayCast( const cudaTextureObject_t dataTexture,
                          float4* pixelBuffer,
                          const unsigned int pixelBufferWidth,
                          const unsigned int pixelBufferHeight,
-                         const float4* clipPlanesArray,
-                         const unsigned int clipPlaneCount,
+                         const ::livre::cuda::ClipPlanes clipPlanes,
                          const cudaTextureObject_t tfTexture,
                          const ::livre::cuda::ViewData viewData,
                          const unsigned int nodeCount,
@@ -115,7 +114,7 @@ __global__ void rayCast( const cudaTextureObject_t dataTexture,
 
     const float4& pixelWorldSpacePos = viewData.invViewMatrix.array * pixelEyeSpacePos;
     const float3& eyePos = make_float3FromArray( viewData.eyePosition.array );
-    float3 dir =  normalize( make_float3( pixelWorldSpacePos ) -  eyePos );
+    float3 dir = normalize( make_float3( pixelWorldSpacePos ) -  eyePos );
 
     if( dir.x == 0.0f ) dir.x = EPSILON;
     if( dir.y == 0.0f ) dir.y = EPSILON;
@@ -136,7 +135,27 @@ __global__ void rayCast( const cudaTextureObject_t dataTexture,
     if( !intersectBox( origin, dir, globalBoxMin, globalBoxMax, &tNearGlobal, &tFarGlobal ))
         return;
 
-    const float tNearPlane = -viewData.nearPlane / pixelEyeSpacePos.z;
+    const float4* clipPlanesArray = clipPlanes.getClipPlanes();
+    for( unsigned int i = 0; i < clipPlanes.getNPlanes(); i++ )
+    {
+        const float4& clipPlane = clipPlanesArray[ i ];
+        const float3& planeNormal = make_float3( clipPlane );
+        float rn = dot( dir, planeNormal );
+        if( rn == 0.0f )
+            rn = EPSILON;
+        const float d = clipPlane.w;
+        float t = -( dot( planeNormal, eyePos) + d ) / rn;
+        if( rn > 0.0 )
+            tNearGlobal = fmaxf( tNearGlobal, t );
+        else
+            tFarGlobal = fminf( tFarGlobal, t );
+    }
+
+    if( tNearGlobal > tFarGlobal )
+        return;
+
+    const float3 nPixelEyeSpacePos = normalize( make_float3( pixelEyeSpacePos ));
+    const float tNearPlane = -viewData.nearPlane / nPixelEyeSpacePos.z;
 
     const float2& dataSourceRange = make_float2FromArray( renderData.dataSourceRange.array );
     const float multiplyer = 1.0f / ( dataSourceRange.y - dataSourceRange.x );
@@ -146,9 +165,11 @@ __global__ void rayCast( const cudaTextureObject_t dataTexture,
     const float alphaCorrection = float( renderData.maxSamplesPerRay ) /
                                   float( renderData.samplesPerRay );
 
+    const float stepSize = 1.0 / float( renderData.samplesPerRay );
+
     for( unsigned int i = 0; i < nodeCount; ++i  )
     {
-        const ::livre::cuda::NodeData& nodeData = nodeDatas[ i ];
+        const ::livre::cuda::NodeData nodeData = nodeDatas[ i ];
         const float3& boxMin = make_float3FromArray( nodeData.aabbMin.array );
         const float3& boxSize = make_float3FromArray( nodeData.aabbSize.array );
         const float3& boxMax = boxMin + boxSize;
@@ -157,30 +178,11 @@ __global__ void rayCast( const cudaTextureObject_t dataTexture,
         if( !intersectBox( origin, dir, boxMin, boxMax, &tNear, &tFar ))
             continue;
 
-        if( tNear < tNearPlane )
-            tNear = tNearPlane;
+        if( tNear > tFarGlobal )
+            break;
 
-        const float stepSize = 1.0 / float( renderData.samplesPerRay );
-        const float residu = mod( tNear - tNearGlobal, stepSize );
-
-        if( residu > 0.0f )
-            tNear += stepSize - residu;
-
-        if( tNear > tFar )
-            continue;
-
-        for( int j = 0; j < clipPlaneCount; j++ )
-        {
-            const float4& clipPlane = clipPlanesArray[ j ];
-            const float3& planeNormal = make_float3( clipPlane );
-            const float rn = fmaxf( dot( dir, planeNormal ), EPSILON );
-            const float d = clipPlane.w;
-            float t = -( dot( planeNormal, eyePos) + d ) / rn;
-            if( rn > 0.0 ) // opposite direction plane
-                tNear = fmaxf( tNear, t );
-            else
-                tFar = fminf( tFar, t );
-        }
+        tNear = fmaxf( fmaxf( tNearPlane, tNear ), tNearGlobal );
+        tFar = fminf( tFar, tFarGlobal );
 
         if( tNear > tFar )
             continue;
@@ -191,14 +193,16 @@ __global__ void rayCast( const cudaTextureObject_t dataTexture,
         float3 pos = rayStart;
         const float3& step = normalize( rayStop - rayStart ) * stepSize;
 
+        const float dist = distance( rayStop, rayStart );
+
+        const float3& texMin = make_float3FromArray( nodeData.textureMin.array );
+        const float3& texSize = make_float3FromArray( nodeData.textureSize.array );
+
         bool isEarlyExit = false;
         // Front-to-back absorption-emission integrator
-        for( float travel = distance( rayStop, rayStart );
-             travel > 0.0; pos += step, travel -= stepSize )
+        for( float travel = dist; travel > 0.0; pos += step, travel -= stepSize )
         {
-            const float3& texPos = ((( pos - boxMin ) / boxSize)
-                                    * make_float3FromArray( nodeData.textureSize.array ))
-                                    + make_float3FromArray( nodeData.textureMin.array );
+            const float3& texPos = ((( pos - boxMin ) / boxSize) * texSize ) + texMin;
             const float density = tex3D< unsigned char >( dataTexture,
                                                           texPos.x,
                                                           texPos.y,
@@ -213,7 +217,7 @@ __global__ void rayCast( const cudaTextureObject_t dataTexture,
                 break;
         }
 
-        if( isEarlyExit || tFar >= tFarGlobal )
+        if( isEarlyExit )
             break;
 
      }
@@ -279,8 +283,7 @@ struct Renderer::Impl
                                           _cudaRenderPBO.getBuffer(),
                                           _cudaRenderPBO.getWidth(),
                                           _cudaRenderPBO.getHeight(),
-                                          _cudaClipPlanes.getClipPlanes(),
-                                          _cudaClipPlanes.getNPlanes(),
+                                          _cudaClipPlanes,
                                           _cudaColorMap.getTexture(),
                                           viewData,
                                           _nodeCount,
@@ -315,7 +318,6 @@ struct Renderer::Impl
         glLoadMatrixf( projection );
         glMatrixMode(GL_MODELVIEW);
         glLoadMatrixf( modelview );
-
     }
 
     ::livre::cuda::ClipPlanes _cudaClipPlanes;

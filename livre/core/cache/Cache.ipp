@@ -164,19 +164,22 @@ struct Cache< CacheObjectT >::Impl
                 _cacheMap.emplace( std::piecewise_construct,
                                    std::forward_as_tuple( cacheId ),
                                    std::forward_as_tuple( InternalCacheObject()));
-                applyPolicy();
             }
+            applyPolicy();
         }
 
-        {
+
             // If object is in cache, wait it is loading
+        {
             ReadLock readLock( _mutex );
-            std::shared_ptr< const CacheObjectT > obj;
             typename CacheMap::iterator it = _cacheMap.find( cacheId );
+            readLock.unlock();
+
+            std::shared_ptr< const CacheObjectT > obj;
             try
             {
                 // This can throw exception
-                readLock.unlock(); // Unlock read lock so nobody is blocked
+                // Unlock read lock so nobody is blocked
                 obj = it->second.load( cacheId, args... );
             }
             catch( const CacheLoadException& )
@@ -188,6 +191,7 @@ struct Cache< CacheObjectT >::Impl
                 _statistics.notifyMiss();
                 _statistics.notifyLoaded( *obj );
                 _policy.insert( cacheId );
+                applyPolicy();
             }
             else
                 _cacheMap.erase( cacheId );
