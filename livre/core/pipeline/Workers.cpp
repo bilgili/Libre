@@ -66,10 +66,7 @@ struct Workers::Impl
         }
 
         if( context )
-        {
-            context->doneCurrent();
             context.reset();
-        }
     }
 
     ~Impl()

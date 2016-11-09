@@ -101,9 +101,17 @@ class Cache< CacheObjectT >::Impl final
            WriteLock lock( *_mutex );
            if( _obj )
                return _obj;
-
-           _obj.reset( new CacheObjectT( cacheId, args... ));
-           return std::static_pointer_cast< const CacheObjectT >( _obj );
+           try
+           {
+               // This can throw exception
+               // Unlock read lock so nobody is blocked
+               _obj.reset( new CacheObjectT( cacheId, args... ));
+           }
+           catch( const CacheLoadException& )
+           {
+               return std::shared_ptr< const CacheObjectT >();
+           }
+           return _obj;
         }
 
         const std::shared_ptr< const CacheObjectT >& get() const
@@ -145,9 +153,10 @@ class Cache< CacheObjectT >::Impl final
     {
         {   // If object is in cache, wait it is loading
             ReadLock readLock( _mutex );
-            typename CacheMap::const_iterator it = _cacheMap.find( cacheId );
+            typename CacheMap::iterator it = _cacheMap.find( cacheId );
+            readLock.unlock();
             if( it != _cacheMap.end() && it->second.get( ))
-                return std::static_pointer_cast< const CacheObjectT >( it->second.get( ));
+                return it->second.load( cacheId, args... );
         }
 
         {
@@ -168,23 +177,14 @@ class Cache< CacheObjectT >::Impl final
             applyPolicy();
         }
 
-
-            // If object is in cache, wait it is loading
+        // If object is in cache, wait it is loading
         {
             ReadLock readLock( _mutex );
             typename CacheMap::iterator it = _cacheMap.find( cacheId );
             readLock.unlock();
 
             std::shared_ptr< const CacheObjectT > obj;
-            try
-            {
-                // This can throw exception
-                // Unlock read lock so nobody is blocked
-                obj = it->second.load( cacheId, args... );
-            }
-            catch( const CacheLoadException& )
-            {}
-
+            obj = it->second.load( cacheId, args... );
             WriteLock writeLock( _mutex );
             if( obj )
             {

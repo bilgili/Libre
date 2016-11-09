@@ -120,13 +120,6 @@ __global__ void rayCast( const cudaTextureObject_t dataTexture,
     if( dir.y == 0.0f ) dir.y = EPSILON;
     if( dir.z == 0.0f ) dir.z = EPSILON;
 
-    const unsigned int pixelPos = y * pixelBufferWidth + x;
-    const float alpha = pixelBuffer[ pixelPos ].w;
-
-    if( alpha > EARLY_EXIT )
-        return;
-
-    float4 color = pixelBuffer[ pixelPos ];
     float tNearGlobal, tFarGlobal;
 
     const float3& globalBoxMin = make_float3FromArray( viewData.aabbMin.array );
@@ -153,6 +146,14 @@ __global__ void rayCast( const cudaTextureObject_t dataTexture,
 
     if( tNearGlobal > tFarGlobal )
         return;
+
+    const unsigned int pixelPos = y * pixelBufferWidth + x;
+    const float alpha = pixelBuffer[ pixelPos ].w;
+
+    if( alpha > EARLY_EXIT )
+        return;
+
+    float4 color = pixelBuffer[ pixelPos ];
 
     const float3 nPixelEyeSpacePos = normalize( make_float3( pixelEyeSpacePos ));
     const float tNearPlane = -viewData.nearPlane / nPixelEyeSpacePos.z;
@@ -219,8 +220,8 @@ __global__ void rayCast( const cudaTextureObject_t dataTexture,
 
         if( isEarlyExit )
             break;
-
      }
+
      pixelBuffer[ pixelPos ] = color;
 }
 

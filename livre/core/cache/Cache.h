@@ -40,16 +40,13 @@ class Cache
 {
 public:
 
-
     /**
      * Constructor
      * @param name is the name of the cache.
      * @param maxMemBytes maximum memory.
      */
     LIVRECORE_API Cache( const std::string& name, size_t maxMemBytes );
-
-
-    LIVRECORE_API virtual ~Cache();
+    LIVRECORE_API ~Cache();
 
     /**
      * Gets the cached object from the cache with a given type and d
@@ -67,9 +64,7 @@ public:
      */
     LIVRECORE_API bool unload( const CacheId& cacheId );
 
-    /**
-     * @return The number of cache objects managed.
-     */
+    /** @return The number of cache objects managed. */
     LIVRECORE_API size_t getCount() const;
 
     /**
@@ -83,10 +78,7 @@ public:
     template< class... Args >
     LIVRECORE_API std::shared_ptr< const CacheObjectT > load( const CacheId& cacheId,
                                                               Args&&... args );
-
-    /**
-     * @return Statistics.
-     */
+    /** @return Statistics. */
     LIVRECORE_API const CacheStatistics& getStatistics() const;
 
     /**
