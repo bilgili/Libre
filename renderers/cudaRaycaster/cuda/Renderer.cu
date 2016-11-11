@@ -183,6 +183,9 @@ __global__ void rayCast( const cudaTextureObject_t dataTexture,
         if( tNear > tFarGlobal )
             break;
 
+        if( tFar < tNearGlobal )
+            continue;
+
         tNear = fmaxf( fmaxf( tNearPlane, tNear ), tNearGlobal );
         tFar = fminf( tFar, tFarGlobal );
 
