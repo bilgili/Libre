@@ -58,8 +58,9 @@ namespace livre
 namespace
 {
 const size_t nRenderThreads = 1;
-const size_t nUploadThreads = 1;
-const size_t nComputeThreads = 1;
+const size_t nUploadThreads = 2;
+const size_t nComputeThreads = 2;
+const size_t nAsyncUploadThreads = 1;
 lunchbox::PluginRegisterer< CudaRaycastPipeline > registerer;
 
 std::unique_ptr< CudaTextureCache > cudaCache;
@@ -74,6 +75,7 @@ struct CudaRaycastPipeline::Impl
         : _renderExecutor( nRenderThreads, "Render Executor", GLContext::getCurrent()->clone( ))
         , _computeExecutor( nComputeThreads, "Compute Executor", GLContext::getCurrent()->clone( ))
         , _uploadExecutor( nUploadThreads, "Upload Executor", GLContext::getCurrent()->clone( ))
+        , _asyncUploadExecutor( nAsyncUploadThreads, "Async Upload Executor", GLContext::getCurrent()->clone( ))
     {
     }
 
@@ -275,7 +277,7 @@ struct CudaRaycastPipeline::Impl
 
         redrawFilter.schedule( _renderExecutor );
         renderPipeline.schedule( _renderExecutor );
-        uploadPipeline.schedule( _computeExecutor );
+        uploadPipeline.schedule( _asyncUploadExecutor );
         sendHistogramFilter.schedule( _computeExecutor );
         histogramFilter.schedule( _computeExecutor );
         preRenderFilter.execute();
@@ -296,8 +298,8 @@ struct CudaRaycastPipeline::Impl
 
         const RendererParameters& vrParams = renderInputs.vrParameters;
         const size_t gpuMem = vrParams.getMaxGPUCacheMemoryMB() * LB_1MB;
-        cudaCache.reset( new CudaTextureCache( "TextureCache", gpuMem ));
         texturePool.reset( new CudaTexturePool( renderInputs.dataSource, gpuMem ));
+        cudaCache.reset( new CudaTextureCache( "TextureCache", texturePool->getTextureMem( )));
 
         if( !dataCache )
             dataCache.reset( new DataCache( "Data Cache",
@@ -321,6 +323,7 @@ struct CudaRaycastPipeline::Impl
     SimpleExecutor _renderExecutor;
     SimpleExecutor _computeExecutor;
     SimpleExecutor _uploadExecutor;
+    SimpleExecutor _asyncUploadExecutor;
     boost::mutex _initMutex;
 };
 

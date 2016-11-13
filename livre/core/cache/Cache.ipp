@@ -114,11 +114,6 @@ class Cache< CacheObjectT >::Impl final
            return _obj;
         }
 
-        const std::shared_ptr< const CacheObjectT >& get() const
-        {
-           return _obj;
-        }
-
         mutable std::shared_ptr< ReadWriteMutex > _mutex;
         std::shared_ptr< const CacheObjectT > _obj;
     };
@@ -155,7 +150,7 @@ class Cache< CacheObjectT >::Impl final
             ReadLock readLock( _mutex );
             typename CacheMap::iterator it = _cacheMap.find( cacheId );
             readLock.unlock();
-            if( it != _cacheMap.end() && it->second.get( ))
+            if( it != _cacheMap.end() && it->second._obj )
                 return it->second.load( cacheId, args... );
         }
 

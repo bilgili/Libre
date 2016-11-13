@@ -58,6 +58,7 @@ namespace
 const size_t nRenderThreads = 1;
 const size_t nUploadThreads = 4;
 const size_t nComputeThreads = 2;
+const size_t nAsyncUploadThreads = 1;
 lunchbox::PluginRegisterer< GLRaycastPipeline > registerer;
 
 boost::thread_specific_ptr< TextureCache > textureCache;
@@ -72,6 +73,7 @@ struct GLRaycastPipeline::Impl
         : _renderExecutor( nRenderThreads, "Render Executor", GLContext::getCurrent()->clone( ))
         , _computeExecutor( nComputeThreads, "Compute Executor", GLContext::getCurrent()->clone( ))
         , _uploadExecutor( nUploadThreads, "Upload Executor", GLContext::getCurrent()->clone( ))
+        , _asyncUploadExecutor( nAsyncUploadThreads, "Async Upload Executor", GLContext::getCurrent()->clone( ))
     {
     }
 
@@ -199,7 +201,6 @@ struct GLRaycastPipeline::Impl
     {
 
         Pipeline renderPipeline;
-        Pipeline uploadPipeline;
 
         PipeFilterT< RenderFilter > renderFilter( "RenderFilter",
                                                   renderInputs.dataSource,
@@ -207,19 +208,19 @@ struct GLRaycastPipeline::Impl
         renderFilter.getPromise( "RenderInputs" ).set( renderInputs );
         renderFilter.getPromise( "RenderStages" ).set( renderStages );
 
-        PipeFilter renderUploader = uploadPipeline.add< GLRenderUploadFilter >( "RenderUploader",
-                                                                                *dataCache,
-                                                                                *textureCache,
-                                                                                *texturePool,
-                                                                                nUploadThreads,
-                                                                                _uploadExecutor );
+        PipeFilterT< GLRenderUploadFilter > renderUploader( "RenderUploader",
+                                                            *dataCache,
+                                                            *textureCache,
+                                                            *texturePool,
+                                                            nUploadThreads,
+                                                            _uploadExecutor );
 
         renderUploader.getPromise( "RenderInputs" ).set( renderInputs );
         renderUploader.getPromise( "NodeIds" ).set( nodeIds );
         renderUploader.connect( "TextureCacheObjects", renderFilter, "CacheObjects" );
 
         renderPipeline.schedule( _renderExecutor );
-        uploadPipeline.schedule( _uploadExecutor );
+        renderUploader.schedule( _uploadExecutor );
         renderFilter.execute();
     }
 
@@ -265,12 +266,12 @@ struct GLRaycastPipeline::Impl
         renderingSetGenerator.connect( "RenderingDone", redrawFilter, "RenderingDone" );
         visibleSetGenerator.connect( "VisibleNodes", preRenderFilter, "VisibleNodes" );
 
-        PipeFilter renderUploader = uploadPipeline.add< GLRenderUploadFilter >( "RenderUploader",
-                                                                                *dataCache,
-                                                                                *textureCache,
-                                                                                *texturePool,
-                                                                                nUploadThreads,
-                                                                                _uploadExecutor );
+        PipeFilterT< GLRenderUploadFilter > renderUploader( "RenderUploader",
+                                                           *dataCache,
+                                                           *textureCache,
+                                                           *texturePool,
+                                                           nUploadThreads,
+                                                           _uploadExecutor );
 
         renderUploader.getPromise( "RenderInputs" ).set( renderInputs );
         visibleSetGenerator.connect( "VisibleNodes", renderUploader, "NodeIds" );
@@ -280,7 +281,7 @@ struct GLRaycastPipeline::Impl
 
         redrawFilter.schedule( _renderExecutor );
         renderPipeline.schedule( _renderExecutor );
-        uploadPipeline.schedule( _computeExecutor );
+        renderUploader.schedule( _asyncUploadExecutor );
         sendHistogramFilter.schedule( _computeExecutor );
         histogramFilter.schedule( _computeExecutor );
         preRenderFilter.execute();
@@ -327,6 +328,7 @@ struct GLRaycastPipeline::Impl
     SimpleExecutor _renderExecutor;
     SimpleExecutor _computeExecutor;
     SimpleExecutor _uploadExecutor;
+    SimpleExecutor _asyncUploadExecutor;
     boost::mutex _initMutex;
 };
 

@@ -112,6 +112,7 @@ public:
                              textureCacheObjects.begin(),
                              textureCacheObjects.end( ));
 
+        glFinish();
         output.set( "TextureCacheObjects", cacheObjects );
     }
 
