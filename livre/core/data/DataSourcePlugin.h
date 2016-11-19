@@ -61,23 +61,15 @@ class DataSourcePlugin
 public:
 
     LIVRECORE_API DataSourcePlugin();
+    virtual ~DataSourcePlugin() {}
 
     /** Needed by the PluginRegisterer. */
     typedef DataSourcePlugin PluginT;
 
-    /** Needed by the PluginRegisterer. */
-    typedef DataSourcePluginData InitDataT;
-
-    virtual ~DataSourcePlugin() {}
-
-    /**
-     * @return The volume information.
-     */
+    /** @return The volume information. */
     const VolumeInformation& getVolumeInfo() const;
 
-    /**
-     * Initializes the GL specific functions.
-     */
+    /** Initializes the GL specific functions. */
     virtual bool initializeGL() { return true; }
 
     /**

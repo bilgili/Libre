@@ -23,10 +23,9 @@
 
 #include <livre/core/render/Frustum.h>
 #include <livre/core/data/LODNode.h>
+#include <livre/core/util/PluginFactory.h>
 
 #include <servus/uri.h>
-#include <lunchbox/pluginFactory.h>
-#include <lunchbox/plugin.h>
 
 namespace livre
 {
@@ -34,10 +33,10 @@ namespace livre
 struct Renderer::Impl
 {
 public:
-    typedef lunchbox::PluginFactory< RendererPlugin, std::string > PluginFactory;
+    typedef PluginFactory< RendererPlugin, const std::string& > PFactory;
 
     Impl( const std::string& name )
-        : plugin( PluginFactory::getInstance().create( name ))
+        : plugin( PFactory::getInstance().create( name ))
     {}
 
     void render( const RenderInputs& renderInputs,

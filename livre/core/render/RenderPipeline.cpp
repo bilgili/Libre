@@ -24,10 +24,9 @@
 #include <livre/core/data/LODNode.h>
 #include <livre/core/cache/CacheObject.h>
 #include <livre/core/version.h>
+#include <livre/core/util/PluginFactory.h>
 
 #include <servus/uri.h>
-#include <lunchbox/pluginFactory.h>
-#include <lunchbox/plugin.h>
 
 namespace livre
 {
@@ -40,10 +39,10 @@ namespace
 struct RenderPipeline::Impl
 {
 public:
-    typedef lunchbox::PluginFactory< RenderPipelinePlugin, std::string > PluginFactory;
+    typedef PluginFactory< RenderPipelinePlugin, const std::string& > PFactory;
 
     Impl( const std::string& name )
-        : plugin( PluginFactory::getInstance().create( name ))
+        : plugin( PFactory::getInstance().create( name ))
         , renderer( new Renderer( name ))
     {}
 
@@ -66,14 +65,14 @@ RenderPipeline::~RenderPipeline()
 void RenderPipeline::loadPlugins()
 {
     unloadPlugins();
-    _plugins = RenderPipeline::Impl::PluginFactory::getInstance().load(
+    _plugins = RenderPipeline::Impl::PFactory::getInstance().load(
         LIVRECORE_VERSION_ABI, lunchbox::getLibraryPaths(), "Livre.*Pipeline" );
 }
 
 void RenderPipeline::unloadPlugins()
 {
     for( lunchbox::DSO* plugin: _plugins )
-        RenderPipeline::Impl::PluginFactory::getInstance().unload( plugin );
+        RenderPipeline::Impl::PFactory::getInstance().unload( plugin );
 }
 
 RenderStatistics RenderPipeline::render( const RenderInputs& renderInputs )

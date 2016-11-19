@@ -37,7 +37,7 @@
 #include <livre/core/render/GLContext.h>
 #include <livre/core/settings/RenderSettings.h>
 
-#include <lunchbox/pluginRegisterer.h>
+#include <livre/core/util/PluginRegisterer.h>
 #include <lunchbox/debug.h>
 
 #include <boost/progress.hpp>
@@ -59,7 +59,7 @@ const size_t nRenderThreads = 1;
 const size_t nUploadThreads = 4;
 const size_t nComputeThreads = 2;
 const size_t nAsyncUploadThreads = 1;
-lunchbox::PluginRegisterer< GLRaycastPipeline > registerer;
+PluginRegisterer< GLRaycastPipeline, const std::string& > registerer;
 
 boost::thread_specific_ptr< TextureCache > textureCache;
 boost::thread_specific_ptr< TexturePool > texturePool;

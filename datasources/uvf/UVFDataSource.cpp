@@ -37,7 +37,7 @@
 #pragma GCC diagnostic pop
 
 #include <lunchbox/debug.h>
-#include <lunchbox/pluginRegisterer.h>
+#include <livre/core/util/PluginRegisterer.h>
 #include <boost/algorithm/string/predicate.hpp>
 
 #define MAX_ACCEPTABLE_BLOCK_SIZE 512
@@ -53,7 +53,7 @@ namespace livre
 
 namespace
 {
-   lunchbox::PluginRegisterer< UVFDataSource > registerer;
+PluginRegisterer< UVFDataSource, const DataSourcePluginData& > registerer;
 }
 
 struct UVFDataSource::Impl

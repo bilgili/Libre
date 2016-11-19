@@ -24,7 +24,7 @@
 #include <livre/core/data/MemoryUnit.h>
 #include <livre/core/version.h>
 
-#include <lunchbox/pluginRegisterer.h>
+#include <livre/core/util/PluginRegisterer.h>
 #include <lunchbox/debug.h>
 
 #include "nrrd/nrrd.hxx"
@@ -48,7 +48,7 @@ namespace livre
 
 namespace
 {
-   lunchbox::PluginRegisterer< RawDataSource > registerer;
+PluginRegisterer< RawDataSource, const DataSourcePluginData& > registerer;
 }
 
 struct RawDataSource::Impl

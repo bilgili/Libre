@@ -44,9 +44,6 @@ public:
     /** Needed by the PluginRegisterer. */
     typedef RendererPlugin PluginT;
 
-    /** Needed by the PluginRegisterer. */
-    typedef std::string InitDataT;
-
     /**
      * Is called on start of each rendering.
      * @param renderInputs necessary information for rendering

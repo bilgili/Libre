@@ -25,7 +25,7 @@
 #include <livre/core/data/MemoryUnit.h>
 #include <livre/core/version.h>
 
-#include <lunchbox/pluginRegisterer.h>
+#include <livre/core/util/PluginRegisterer.h>
 #include <lunchbox/debug.h>
 
 #include <boost/lexical_cast.hpp>
@@ -42,7 +42,7 @@ namespace livre
 
 namespace
 {
-   lunchbox::PluginRegisterer< MemoryDataSource > registerer;
+PluginRegisterer< MemoryDataSource, const DataSourcePluginData& > registerer;
 }
 
 template<typename T>

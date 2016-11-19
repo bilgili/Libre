@@ -32,7 +32,7 @@
 #include <livre/core/render/RenderInputs.h>
 
 #include <lunchbox/debug.h>
-#include <lunchbox/pluginRegisterer.h>
+#include <livre/core/util/PluginRegisterer.h>
 #include <GL/glew.h>
 
 namespace livre
@@ -67,7 +67,7 @@ const uint32_t minSamplesPerRay = 512;
 const uint32_t SH_UINT = 0u;
 const uint32_t SH_INT = 1u;
 const uint32_t SH_FLOAT = 2u;
-lunchbox::PluginRegisterer< CudaRaycastRenderer > registerer;
+PluginRegisterer< CudaRaycastRenderer, const std::string& > registerer;
 }
 
 struct CudaRaycastRenderer::Impl

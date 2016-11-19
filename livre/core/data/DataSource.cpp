@@ -23,7 +23,8 @@
 #include <livre/core/data/DataSourcePlugin.h>
 #include <livre/core/version.h>
 
-#include <lunchbox/pluginFactory.h>
+#include <livre/core/util/Plugin.h>
+#include <livre/core/util/PluginFactory.h>
 
 namespace livre
 {
@@ -36,10 +37,10 @@ namespace
 struct DataSource::Impl
 {
 public:
-    typedef lunchbox::PluginFactory< DataSourcePlugin, DataSourcePluginData > PluginFactory;
+    typedef PluginFactory< DataSourcePlugin, const DataSourcePluginData& > PFactory;
 
     Impl( const servus::URI& uri, const AccessMode accessMode )
-        : plugin( PluginFactory::getInstance().create( DataSourcePluginData( uri, accessMode )))
+        : plugin( PFactory::getInstance().create( DataSourcePluginData( uri, accessMode )))
     {}
 
     LODNode getNode( const NodeId& nodeId ) const
@@ -68,14 +69,14 @@ DataSource::DataSource( const servus::URI& uri, const AccessMode accessMode )
 void DataSource::loadPlugins()
 {
     unloadPlugins();
-    _plugins = DataSource::Impl::PluginFactory::getInstance().load(
+    _plugins = DataSource::Impl::PFactory::getInstance().load(
         LIVRECORE_VERSION_ABI, lunchbox::getLibraryPaths(), "Livre.*Source" );
 }
 
 void DataSource::unloadPlugins()
 {
     for( lunchbox::DSO* plugin: _plugins )
-        DataSource::Impl::PluginFactory::getInstance().unload( plugin );
+        DataSource::Impl::PFactory::getInstance().unload( plugin );
 }
 
 LODNode DataSource::getNode( const NodeId& nodeId ) const

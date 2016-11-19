@@ -35,9 +35,6 @@ public:
     /** Needed by the PluginRegisterer. */
     typedef RenderPipelinePlugin PluginT;
 
-    /** Needed by the PluginRegisterer. */
-    typedef std::string InitDataT;
-
     LIVRECORE_API RenderPipelinePlugin( const std::string& name  LIVRE_UNUSED ) {}
     virtual ~RenderPipelinePlugin() {}
 
