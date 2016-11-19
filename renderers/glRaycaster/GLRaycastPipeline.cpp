@@ -63,7 +63,7 @@ PluginRegisterer< GLRaycastPipeline, const std::string& > registerer;
 
 boost::thread_specific_ptr< TextureCache > textureCache;
 boost::thread_specific_ptr< TexturePool > texturePool;
-std::unique_ptr< DataCache > dataCache;
+std::unique_ptr< DataCache > _dataCache;
 std::unique_ptr< HistogramCache > histogramCache;
 }
 
@@ -174,7 +174,7 @@ struct GLRaycastPipeline::Impl
 
         PipeFilterT< HistogramFilter > histogramFilter( "HistogramFilter",
                                                         *histogramCache,
-                                                        *dataCache,
+                                                        *_dataCache,
                                                         renderInputs.dataSource );
         histogramFilter.getPromise( "Frustum" ).set( renderInputs.frameInfo.frustum );
         histogramFilter.connect( "Histogram", sendHistogramFilter, "Histogram" );
@@ -209,7 +209,7 @@ struct GLRaycastPipeline::Impl
         renderFilter.getPromise( "RenderStages" ).set( renderStages );
 
         PipeFilterT< GLRenderUploadFilter > renderUploader( "RenderUploader",
-                                                            *dataCache,
+                                                            *_dataCache,
                                                             *textureCache,
                                                             *texturePool,
                                                             nUploadThreads,
@@ -234,7 +234,7 @@ struct GLRaycastPipeline::Impl
         PipeFilter redrawFilter = renderInputs.filters.find( "RedrawFilter" )->second;
         PipeFilterT< HistogramFilter > histogramFilter( "HistogramFilter",
                                                         *histogramCache,
-                                                        *dataCache,
+                                                        *_dataCache,
                                                         renderInputs.dataSource );
         histogramFilter.getPromise( "Frustum" ).set( renderInputs.frameInfo.frustum );
         histogramFilter.connect( "Histogram", sendHistogramFilter, "Histogram" );
@@ -267,7 +267,7 @@ struct GLRaycastPipeline::Impl
         visibleSetGenerator.connect( "VisibleNodes", preRenderFilter, "VisibleNodes" );
 
         PipeFilterT< GLRenderUploadFilter > renderUploader( "RenderUploader",
-                                                           *dataCache,
+                                                           *_dataCache,
                                                            *textureCache,
                                                            *texturePool,
                                                            nUploadThreads,
@@ -305,8 +305,8 @@ struct GLRaycastPipeline::Impl
         textureCache.reset( new TextureCache( "TextureCache", gpuMem ));
         texturePool.reset( new TexturePool( renderInputs.dataSource ));
 
-        if( !dataCache )
-            dataCache.reset( new DataCache( "Data Cache",
+        if( !_dataCache )
+            _dataCache.reset( new DataCache( "Data Cache",
                                             vrParams.getMaxCPUCacheMemoryMB() * LB_1MB ));
 
         if( !histogramCache )

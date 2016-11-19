@@ -66,6 +66,7 @@ class GLContext;
 class GLSLShaders;
 class Histogram;
 class LODNode;
+class LightSource;
 class MemoryUnit;
 class NodeId;
 class NodeVisitor;
@@ -73,6 +74,7 @@ class Parameter;
 class Renderer;
 class RendererPlugin;
 class RenderPipeline;
+class RenderPipelinePlugin;
 class RenderSettings;
 class RootNode;
 class TexturePool;
@@ -128,6 +130,7 @@ typedef std::shared_ptr< CacheObject > CacheObjectPtr;
 typedef std::shared_ptr< const CacheObject > ConstCacheObjectPtr;
 typedef std::shared_ptr< PortData > PortDataPtr;
 typedef std::shared_ptr< Executable > ExecutablePtr;
+typedef std::shared_ptr< const LightSource > ConstLightSourcePtr;
 
 typedef std::unique_ptr< Filter > FilterPtr;
 
@@ -179,6 +182,7 @@ typedef std::vector< CacheId > CacheIds;
 typedef std::vector< CacheObjectPtr > CacheObjects;
 typedef std::vector< ConstCacheObjectPtr > ConstCacheObjects;
 typedef std::vector< std::string > Strings;
+typedef std::vector< ConstLightSourcePtr > ConstLightSources;
 
 /**
  * List definitions for complex types

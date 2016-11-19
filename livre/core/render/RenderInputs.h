@@ -29,6 +29,7 @@
 #include <livre/core/configuration/RendererParameters.h>
 #include <livre/core/render/FrameInfo.h>
 #include <livre/core/pipeline/PipeFilter.h>
+#include <livre/core/render/LightSource.h>
 
 namespace livre
 {
@@ -45,6 +46,7 @@ struct RenderInputs
     const RenderSettings renderSettings;
     const RendererParameters vrParameters;
     const PipeFilterMap filters;
+    const ConstLightSources lightSources;
     DataSource& dataSource;
 };
 

@@ -19,51 +19,18 @@
 #ifndef _Cuda_Renderer_h
 #define _Cuda_Renderer_h
 
+#include "common.cuh"
+#include "types.cuh"
+
 #include <livre/core/mathTypes.h>
 #include <lexis/render/ColorMap.h>
 #include <lexis/render/clipPlanes.h>
-
-#include <vector>
 
 namespace livre
 {
 namespace cuda
 {
 class TexturePool;
-
-/** Cuda representation of the render nodes */
-struct NodeData
-{
-    Vector3f textureMin;
-    Vector3f textureSize;
-    Vector3f aabbMin;
-    Vector3f aabbSize;
-};
-
-typedef std::vector< NodeData > NodeDatas;
-
-/** View information for rendering */
-struct ViewData
-{
-    const Vector3f eyePosition;
-    const Vector4ui glViewport;
-    const Matrix4f invProjMatrix;
-    const Matrix4f modelViewMatrix;
-    const Matrix4f invViewMatrix;
-    const Vector3f aabbMin;
-    const Vector3f aabbMax;
-    const float nearPlane;
-};
-
-/** Render information */
-struct RenderData
-{
-    const unsigned int samplesPerRay;
-    const unsigned int samplesPerPixel;
-    const unsigned int maxSamplesPerRay;
-    const unsigned int datatype;
-    const Vector2f dataSourceRange;
-};
 
 /** Cuda representation of the renderer */
 class Renderer
@@ -81,6 +48,12 @@ public:
      */
     void update( const lexis::render::ClipPlanes& clipPlanes,
                  const lexis::render::ColorMap& colorMap );
+
+    /**
+     * Updates the irradiance texture
+     * @param irradianceCompute
+     */
+    void update( IrradianceCompute& irradianceCompute );
 
     /**
      * Called by the Libre renderer before rendering

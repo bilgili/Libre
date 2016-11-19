@@ -35,11 +35,9 @@ class RendererPlugin
 {
 public:
 
-    /**
-     * Constructor
-     * @param name is the name of the renderer plugin
-     */
-    LIVRECORE_API RendererPlugin( const std::string& name  LIVRE_UNUSED ) {}
+    /** Constructor */
+    RendererPlugin( const std::string& name LIVRE_UNUSED,
+                    RenderPipelinePlugin& pipeline LIVRE_UNUSED ) {}
 
     /** Needed by the PluginRegisterer. */
     typedef RendererPlugin PluginT;
@@ -69,6 +67,7 @@ public:
                              const ConstCacheObjects& renderData  LIVRE_UNUSED ) {}
 
     virtual ~RendererPlugin() {}
+
 };
 }
 #endif // _RendererPlugin_h_

@@ -19,7 +19,7 @@
 #ifndef _Cuda_ClipPlanes_h_
 #define _Cuda_ClipPlanes_h_
 
-#include "cuda.h"
+#include "cuda.cuh"
 
 #include <lexis/render/clipPlanes.h>
 

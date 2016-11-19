@@ -16,50 +16,53 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifndef _CudaIrradianceCompute_h_
+#define _CudaIrradianceCompute_h_
 
-#ifndef _RenderPipeline_h_
-#define _RenderPipeline_h_
-
-#include <livre/core/api.h>
+#include "types.h"
+#include <livre/lib/types.h>
 #include <livre/core/types.h>
+#include <livre/core/mathTypes.h>
 
-#include <livre/core/render/FrameInfo.h>
+#include <lexis/render/ColorMap.h>
 
 namespace livre
 {
-
-class RenderPipeline
+namespace cuda
 {
+class IrradianceCompute;
+}
+
+/** Manages the texture pool allocation, data copies and deallocations */
+class CudaIrradianceCompute
+{
+
 public:
 
-    /**
+     /**
      * Constructor
-     * @param name name of the renderer
+     * @param dataSource the data source
+     * @param dataCache the data cache
      */
-    LIVRECORE_API RenderPipeline( const std::string& name );
-    LIVRECORE_API ~RenderPipeline();
-
-    /** Load all plugin DSOs.*/
-    LIVRECORE_API static void loadPlugins();
-
-    /** Unload all plugin DSOs. */
-    LIVRECORE_API static void unloadPlugins();
+    CudaIrradianceCompute( DataSource& dataSource, DataCache& dataCache );
+    ~CudaIrradianceCompute();
 
     /**
-     * Renders the frame with given render inputs
-     * @param renderInputs the needed render information
-     * @return the render statistics
+     * Updates the irradiance texture for a given frame id. If the texture is already computed
+     * for the given timeStep id, it returns.
+     * @param renderInputs inputs for the rendering
      */
-    LIVRECORE_API RenderStatistics render( const RenderInputs& renderInputs );
+    bool update( const RenderInputs& renderInputs );
+
+    /** @return the cuda compute */
+    ::livre::cuda::IrradianceCompute& getCudaCompute() const;
 
 private:
 
-    friend class Renderer;
-    RenderPipelinePlugin& _getPlugin() const;
-
     struct Impl;
-    std::unique_ptr< Impl > _impl;
+    std::unique_ptr<Impl> _impl;
 };
 }
-#endif // _RenderPipeline_h_
+
+#endif // _CudaIrradianceCompute_h_
 

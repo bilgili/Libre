@@ -40,6 +40,7 @@
 #include <livre/core/data/Histogram.h>
 #include <livre/core/render/FrameInfo.h>
 #include <livre/core/render/Frustum.h>
+#include <livre/core/render/LightSource.h>
 #include <livre/core/render/RenderPipeline.h>
 #include <livre/core/render/RenderInputs.h>
 #include <livre/core/settings/ApplicationSettings.h>
@@ -282,6 +283,12 @@ public:
         const FrameData& frameData = *pipe->getFrameData();
         Vector2f dataSourceRange = frameData.getVolumeSettings().getDataSourceRange();
         dataSourceRange = Vector2f( 0.0f, 255.0f );
+
+        ConstLightSources lightSources; // Scene later !
+        /*lightSources.emplace_back( new PointLightSource( { -1.0f, -1.0f, -1.0f },
+                                                         { 1.0f, 0.0f, 0.0f } ));*/
+        lightSources.emplace_back( new PointLightSource( { 0.0f, 0.0f, 1.0f },
+                                                         { 1.0f, 0.0f, 1.0f } ));
         const RenderInputs inputs= {
                                         _frameInfo,
                                         {{ _drawRange.start, _drawRange.end }},
@@ -301,7 +308,8 @@ public:
                                            PipeFilterT< PreRenderFilter >(
                                            "PreRenderFilter", this )}
                                         },
-                                        node->getDataSource()
+                                        lightSources,
+                                        node->getDataSource(),
                                     };
 
         _statistics = renderPipeline.render( inputs );

@@ -19,7 +19,7 @@
 #ifndef _Cuda_ColorMap_h_
 #define _Cuda_ColorMap_h_
 
-#include "cuda.h"
+#include "cuda.cuh"
 
 #include <lexis/render/ColorMap.h>
 #include <cuda_runtime.h>
@@ -39,6 +39,9 @@ public:
     ColorMap();
     ~ColorMap();
 
+    /** Deletes the cuda objects */
+    void clear();
+
     /**
      * Uploads the color map to cuda structures
      * @param colorMap is the color map ( transfer function )
@@ -46,7 +49,7 @@ public:
     void upload( const lexis::render::ColorMap& colorMap );
 
     /** @return the cuda bindless texture */
-    cudaTextureObject_t getTexture() const  { return _texture; }
+    CUDA_CALL cudaTextureObject_t getTexture() const  { return _texture; }
 
 private:
     cudaTextureObject_t _texture;

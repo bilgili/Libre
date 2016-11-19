@@ -17,6 +17,8 @@
  */
 
 #include "ColorMap.cuh"
+#include "debug.cuh"
+
 #include <cuda_runtime.h>
 #include <cuda_texture_types.h>
 
@@ -49,6 +51,10 @@ ColorMap::ColorMap()
 }
 
 ColorMap::~ColorMap()
+{}
+
+/** Deletes the cuda objects */
+void ColorMap::clear()
 {
     cudaFreeArray( _array );
 }
@@ -57,11 +63,10 @@ void ColorMap::upload( const lexis::render::ColorMap& colorMap )
 {
     const auto& colors =
             colorMap.sampleColors< float >( 256, 0.0f, 256.0f, 0 );
-
-    cudaMemcpyToArray( _array, 0, 0,
-                       colors.data(),
-                       colors.size() * sizeof(float4),
-                       cudaMemcpyHostToDevice );
+    checkCudaErrors( cudaMemcpyToArray( _array, 0, 0,
+                                        colors.data(),
+                                        colors.size() * sizeof(float4),
+                                        cudaMemcpyHostToDevice ));
 }
 }
 }

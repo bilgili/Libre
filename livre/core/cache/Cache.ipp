@@ -302,7 +302,7 @@ template< class CacheObjectT >
 std::shared_ptr< const CacheObjectT > Cache< CacheObjectT >::get( const CacheId& cacheId ) const
 {
     if( cacheId == INVALID_CACHE_ID )
-        return false;
+        return std::shared_ptr< const CacheObjectT >();
 
     std::shared_ptr< const CacheObjectT > obj = _impl->get( cacheId );
     if( !obj )

@@ -18,6 +18,7 @@
 
 #include "cuda.h"
 #include "TexturePool.cuh"
+#include "debug.cuh"
 
 #include <cuda_runtime.h>
 #include <cuda_texture_types.h>
@@ -67,9 +68,6 @@ cudaChannelFormatDesc getCudaChannelFormatDesc( const size_t dataTypeSize,
         throw std::runtime_error( "Channel number cannot be 0 or larger than 4" );
     }
 
-
-    size_t availableMemory, totalMemory;
-    cudaMemGetInfo( &availableMemory, &totalMemory) ;
     return { x, y, z, w, format };
 }
 
@@ -119,7 +117,7 @@ TexturePool::TexturePool( const size_t dataTypeSize,
     size_t availableMemory, totalMemory;
     checkCudaErrors( cudaMemGetInfo( &availableMemory, &totalMemory ));
 
-    const uint32_t maxMemory = std::min( availableMemory, maxGpuMemory );
+    const size_t maxMemory = std::min( availableMemory, maxGpuMemory );
     const uint32_t maxBlocks = maxMemory / _cudaBlockSize;
 
     cudaDeviceProp deviceProp;
@@ -198,7 +196,7 @@ Vector3f TexturePool::copyToSlot(  const unsigned char* ptr, const Vector3ui& si
     params.dstArray = _cudaArray;
     params.kind = cudaMemcpyHostToDevice;
     params.extent = { size[ 0 ], size[ 1 ], size[ 2 ] };
-    checkCudaErrors( cudaMemcpy3DAsync( &params ));
+    checkCudaErrors( cudaMemcpy3D( &params ));
     return slot;
 }
 

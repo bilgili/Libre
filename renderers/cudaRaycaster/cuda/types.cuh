@@ -17,37 +17,26 @@
  */
 
 
-#ifndef _RenderPipelinePlugin_h_
-#define _RenderPipelinePlugin_h_
+#ifndef _CudaTypes_h_
+#define _CudaTypes_h_
 
-#include <livre/core/api.h>
 #include <livre/core/types.h>
-
-#include <servus/uri.h>
+#include <memory>
 
 namespace livre
 {
-
-class RenderPipelinePlugin
+namespace cuda
 {
-public:
 
-    /** Constructor */
-    LIVRECORE_API RenderPipelinePlugin( const std::string& name  LIVRE_UNUSED ) {}
-    virtual ~RenderPipelinePlugin() {}
+class IrradianceCompute;
+class IrradianceTexture;
+class LightSource;
+class PointLightSource;
+class DirectLightSource;
+class TexturePool;
 
-    /** Needed by the PluginRegisterer. */
-    typedef RenderPipelinePlugin PluginT;
-
-    /**
-     * Renders a scene with the given renderer
-     * @param renderer renders the scene
-     * @param renderInputs all inputs necessary for rendering
-     * @return the renderin statistics
-     */
-    virtual RenderStatistics render( Renderer& renderer,
-                                     const RenderInputs& renderInputs ) = 0;
-};
+typedef std::vector< LightSource* > LightSources;
 }
-#endif // _RenderPipelinePlugin_h_
+}
+#endif // _CudaRaycaster_Types_h_
 
