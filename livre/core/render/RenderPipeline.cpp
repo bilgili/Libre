@@ -41,10 +41,11 @@ struct RenderPipeline::Impl
 public:
     typedef PluginFactory< RenderPipelinePlugin, const std::string& > PFactory;
 
-    Impl( const std::string& name )
+    Impl( const std::string& name, RenderPipeline& pipeline )
         : plugin( PFactory::getInstance().create( name ))
-        , renderer( new Renderer( name ))
-    {}
+    {
+        renderer.reset( new Renderer( name, pipeline ));
+    }
 
     RenderStatistics render( const RenderInputs& renderInputs )
     {
@@ -56,7 +57,7 @@ public:
 };
 
 RenderPipeline::RenderPipeline( const std::string& name )
-    : _impl( new RenderPipeline::Impl( name ))
+    : _impl( new RenderPipeline::Impl( name, *this ))
 {}
 
 RenderPipeline::~RenderPipeline()
@@ -80,8 +81,8 @@ RenderStatistics RenderPipeline::render( const RenderInputs& renderInputs )
     return _impl->render( renderInputs );
 }
 
-const Renderer& RenderPipeline::getRenderer() const
+RenderPipelinePlugin &RenderPipeline::_getPlugin() const
 {
-    return *_impl->renderer;
+    return *_impl->plugin;
 }
 }

@@ -16,38 +16,35 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifndef _Cuda_Image_h_
+#define _Cuda_Image_h_
 
-#ifndef _RenderPipelinePlugin_h_
-#define _RenderPipelinePlugin_h_
+#include "cuda.h"
+#include "math.cuh"
 
-#include <livre/core/api.h>
-#include <livre/core/types.h>
+#include <cuda_runtime_api.h>
+#include <livre/core/mathTypes.h>
 
-#include <servus/uri.h>
+#define PI 3.141592654f
 
 namespace livre
 {
+namespace cuda
+{
 
-class RenderPipelinePlugin
+class Image
 {
 public:
+    Image( const ::livre::Image& image )
+    {}
 
-    /** Constructor */
-    LIVRECORE_API RenderPipelinePlugin( const std::string& name  LIVRE_UNUSED ) {}
-    virtual ~RenderPipelinePlugin() {}
+    void getTexture() const  { return _textureObject; }
 
-    /** Needed by the PluginRegisterer. */
-    typedef RenderPipelinePlugin PluginT;
-
-    /**
-     * Renders a scene with the given renderer
-     * @param renderer renders the scene
-     * @param renderInputs all inputs necessary for rendering
-     * @return the renderin statistics
-     */
-    virtual RenderStatistics render( Renderer& renderer,
-                                     const RenderInputs& renderInputs ) = 0;
+private:
+    cudaTextureObject_t _textureObject;
 };
+
 }
-#endif // _RenderPipelinePlugin_h_
+}
+#endif // _Cuda_LightSource_h_
 

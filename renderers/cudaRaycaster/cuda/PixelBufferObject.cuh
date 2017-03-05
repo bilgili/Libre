@@ -19,7 +19,7 @@
 #ifndef _Cuda_PixelBufferObject_h_
 #define _Cuda_PixelBufferObject_h_
 
-#include "cuda.h"
+#include "cuda.cuh"
 #include <cuda_runtime.h>
 #include <memory>
 #include <GL/glew.h>

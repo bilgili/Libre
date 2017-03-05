@@ -16,38 +16,26 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifndef _InfiniteLightSource_h_
+#define _InfiniteLightSource_h_
 
-#ifndef _RenderPipelinePlugin_h_
-#define _RenderPipelinePlugin_h_
-
-#include <livre/core/api.h>
-#include <livre/core/types.h>
-
-#include <servus/uri.h>
+#include "LightSource.h"
+#include "Image.h"
 
 namespace livre
 {
 
-class RenderPipelinePlugin
+class InfiniteLightSource : public LightSource
 {
 public:
-
-    /** Constructor */
-    LIVRECORE_API RenderPipelinePlugin( const std::string& name  LIVRE_UNUSED ) {}
-    virtual ~RenderPipelinePlugin() {}
-
-    /** Needed by the PluginRegisterer. */
-    typedef RenderPipelinePlugin PluginT;
-
-    /**
-     * Renders a scene with the given renderer
-     * @param renderer renders the scene
-     * @param renderInputs all inputs necessary for rendering
-     * @return the renderin statistics
-     */
-    virtual RenderStatistics render( Renderer& renderer,
-                                     const RenderInputs& renderInputs ) = 0;
+    InfiniteLightSource( const Image& image );
+    bool operator==( const LightSource& ls ) const final;
+    Vector4f getSample( const Vector3f& dir );
+private:
+    struct Impl;
+    std::unique_ptr< Impl >  _impl;
 };
+
 }
-#endif // _RenderPipelinePlugin_h_
+#endif // _InfiniteLightSource_h_
 

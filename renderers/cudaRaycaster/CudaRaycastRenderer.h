@@ -33,11 +33,12 @@ class CudaRaycastRenderer : public RendererPlugin
 public:
 
     /** Constructor */
-    CudaRaycastRenderer( const std::string& );
+    CudaRaycastRenderer( const std::string&, RenderPipelinePlugin& pipeline );
     ~CudaRaycastRenderer();
 
     /** @return true if renderer handles the name */
-    static bool handles( const std::string& name ) { return name == "cuda"; }
+    static bool handles( const std::string& name,
+                         RenderPipelinePlugin& ) { return name == "cuda"; }
 
 private:
 

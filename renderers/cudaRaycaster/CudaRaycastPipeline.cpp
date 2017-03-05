@@ -1,7 +1,6 @@
-/* Copyright (c) 2011-2015, EPFL/Blue Brain Project
- *                     Ahmet Bilgili <ahmet.bilgili@epfl.ch>
+/* Copyright (c) 2011-2016  Ahmet Bilgili <ahmetbilgili@gmail.com>
  *
- * This file is part of Livre <https://github.com/BlueBrain/Livre>
+ * This file is part of Livre <https://github.com/bilgili/Libre>
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3.0 as published
@@ -38,8 +37,8 @@
 #include <livre/core/render/Renderer.h>
 #include <livre/core/render/GLContext.h>
 #include <livre/core/settings/RenderSettings.h>
-#include <livre/core/util/PluginRegisterer.h>
 
+#include <livre/core/util/PluginRegisterer.h>
 #include <lunchbox/debug.h>
 
 #include <boost/progress.hpp>
@@ -62,10 +61,7 @@ const size_t nUploadThreads = 2;
 const size_t nComputeThreads = 2;
 const size_t nAsyncUploadThreads = 1;
 PluginRegisterer< CudaRaycastPipeline, const std::string& > registerer;
-
-std::unique_ptr< CudaTextureCache > cudaCache;
-std::unique_ptr< CudaTexturePool > texturePool;
-std::unique_ptr< DataCache > dataCache;
+std::unique_ptr< DataCache > _dataCache;
 std::unique_ptr< HistogramCache > histogramCache;
 }
 
@@ -135,7 +131,7 @@ struct CudaRaycastPipeline::Impl
         std::sort( nodeIdsCopy.begin(), nodeIdsCopy.end(), distanceOp );
 
         const uint32_t maxNodesPerPass =
-                texturePool->getTextureMem() / texturePool->getSlotMemSize();
+                _texturePool->getTextureMem() / _texturePool->getSlotMemSize();
 
         const uint32_t numberOfPasses =
                 std::ceil( (float)nodeIdsCopy.size() / (float)maxNodesPerPass );
@@ -174,7 +170,7 @@ struct CudaRaycastPipeline::Impl
 
         PipeFilterT< HistogramFilter > histogramFilter( "HistogramFilter",
                                                         *histogramCache,
-                                                        *dataCache,
+                                                        *_dataCache,
                                                         renderInputs.dataSource );
         histogramFilter.getPromise( "NodeIds" ).set( nodeIdsCopy );
         sendHistogramFilter.getPromise( "RelativeViewport" ).set( renderInputs.viewport );
@@ -207,9 +203,9 @@ struct CudaRaycastPipeline::Impl
         renderFilter.getPromise( "RenderStages" ).set( renderStages );
 
         PipeFilterT< CudaRenderUploadFilter > renderUploader( "RenderUploader",
-                                                              *dataCache,
-                                                              *cudaCache,
-                                                              *texturePool,
+                                                              *_dataCache,
+                                                              *_cudaCache,
+                                                              *_texturePool,
                                                               nUploadThreads,
                                                               _uploadExecutor );
 
@@ -230,7 +226,7 @@ struct CudaRaycastPipeline::Impl
         PipeFilter redrawFilter = renderInputs.filters.find( "RedrawFilter" )->second;
         PipeFilterT< HistogramFilter > histogramFilter( "HistogramFilter",
                                                         *histogramCache,
-                                                        *dataCache,
+                                                        *_dataCache,
                                                         renderInputs.dataSource );
         histogramFilter.getPromise( "Frustum" ).set( renderInputs.frameInfo.frustum );
         histogramFilter.connect( "Histogram", sendHistogramFilter, "Histogram" );
@@ -254,7 +250,7 @@ struct CudaRaycastPipeline::Impl
 
         PipeFilter renderingSetGenerator =
                 renderPipeline.add< RenderingSetGeneratorFilter< CudaTextureObject >>(
-                    "RenderingSetGenerator", *cudaCache );
+                    "RenderingSetGenerator", *_cudaCache );
 
         visibleSetGenerator.connect( "VisibleNodes", renderingSetGenerator, "VisibleNodes" );
         renderingSetGenerator.connect( "CacheObjects", renderFilter, "CacheObjects" );
@@ -263,9 +259,9 @@ struct CudaRaycastPipeline::Impl
         visibleSetGenerator.connect( "VisibleNodes", preRenderFilter, "VisibleNodes" );
 
         PipeFilter renderUploader = uploadPipeline.add< CudaRenderUploadFilter >( "RenderUploader",
-                                                                                  *dataCache,
-                                                                                  *cudaCache,
-                                                                                  *texturePool,
+                                                                                  *_dataCache,
+                                                                                  *_cudaCache,
+                                                                                  *_texturePool,
                                                                                   nUploadThreads,
                                                                                   _uploadExecutor );
 
@@ -289,20 +285,20 @@ struct CudaRaycastPipeline::Impl
 
     void init( const RenderInputs& renderInputs )
     {
-        if( cudaCache.get( ))
+        if( _cudaCache.get( ))
             return;
 
         ScopedLock lock( _initMutex );
-        if( cudaCache.get( ))
+        if( _cudaCache.get( ))
             return;
 
         const RendererParameters& vrParams = renderInputs.vrParameters;
         const size_t gpuMem = vrParams.getMaxGPUCacheMemoryMB() * LB_1MB;
-        texturePool.reset( new CudaTexturePool( renderInputs.dataSource, gpuMem ));
-        cudaCache.reset( new CudaTextureCache( "TextureCache", texturePool->getTextureMem( )));
+        _texturePool.reset( new CudaTexturePool( renderInputs.dataSource, gpuMem ));
+        _cudaCache.reset( new CudaTextureCache( "TextureCache", _texturePool->getTextureMem( )));
 
-        if( !dataCache )
-            dataCache.reset( new DataCache( "Data Cache",
+        if( !_dataCache )
+            _dataCache.reset( new DataCache( "Data Cache",
                                             vrParams.getMaxCPUCacheMemoryMB() * LB_1MB ));
 
         if( !histogramCache )
@@ -325,6 +321,9 @@ struct CudaRaycastPipeline::Impl
     SimpleExecutor _uploadExecutor;
     SimpleExecutor _asyncUploadExecutor;
     boost::mutex _initMutex;
+
+    std::unique_ptr< CudaTextureCache > _cudaCache;
+    std::unique_ptr< CudaTexturePool > _texturePool;
 };
 
 CudaRaycastPipeline::CudaRaycastPipeline( const std::string& name )
@@ -334,6 +333,11 @@ CudaRaycastPipeline::CudaRaycastPipeline( const std::string& name )
 
 CudaRaycastPipeline::~CudaRaycastPipeline()
 {}
+
+DataCache& CudaRaycastPipeline::getDataCache()
+{
+    return *_dataCache;
+}
 
 RenderStatistics CudaRaycastPipeline::render( Renderer& renderer, const RenderInputs& renderInputs )
 {

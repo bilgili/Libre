@@ -66,6 +66,7 @@ class GLContext;
 class GLSLShaders;
 class Histogram;
 class LODNode;
+class LightSource;
 class MemoryUnit;
 class NodeId;
 class NodeVisitor;
@@ -73,6 +74,7 @@ class Parameter;
 class Renderer;
 class RendererPlugin;
 class RenderPipeline;
+class RenderPipelinePlugin;
 class RenderSettings;
 class RootNode;
 class TexturePool;
@@ -128,6 +130,7 @@ typedef std::shared_ptr< CacheObject > CacheObjectPtr;
 typedef std::shared_ptr< const CacheObject > ConstCacheObjectPtr;
 typedef std::shared_ptr< PortData > PortDataPtr;
 typedef std::shared_ptr< Executable > ExecutablePtr;
+typedef std::shared_ptr< const LightSource > ConstLightSourcePtr;
 
 typedef std::unique_ptr< Filter > FilterPtr;
 
@@ -179,6 +182,7 @@ typedef std::vector< CacheId > CacheIds;
 typedef std::vector< CacheObjectPtr > CacheObjects;
 typedef std::vector< ConstCacheObjectPtr > ConstCacheObjects;
 typedef std::vector< std::string > Strings;
+typedef std::vector< ConstLightSourcePtr > ConstLightSources;
 
 /**
  * List definitions for complex types
@@ -255,6 +259,18 @@ static const std::string NO_PREFIX = "";
 #  define  LIVRE_UNUSED __attribute__((unused))
 #endif
 
+/** Data types */
+enum DataType
+{
+    DT_FLOAT,
+    DT_UINT8,
+    DT_UINT16,
+    DT_UINT32,
+    DT_INT8,
+    DT_INT16,
+    DT_INT32,
+    DT_UNDEFINED
+};
 }
 
 #endif // _coreTypes_h_

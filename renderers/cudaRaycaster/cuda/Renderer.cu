@@ -18,21 +18,24 @@
 
 #include "Renderer.cuh"
 
-#include <cuda_runtime.h>
-#include <device_functions.h>
-#include "math.cuh"
-
 #include "PixelBufferObject.cuh"
 #include "ColorMap.cuh"
 #include "ClipPlanes.cuh"
 #include "TexturePool.cuh"
+#include "IrradianceCompute.cuh"
+
+#include "math.cuh"
+#include "commonMath.cuh"
+#include "debug.cuh"
+
+#include <cuda_runtime.h>
+#include <device_functions.h>
 
 namespace livre
 {
 namespace cuda
 {
-#define EARLY_EXIT 0.999f
-#define EPSILON 0.0000000001f
+
 #define SH_UINT 0u
 #define SH_INT 1u
 #define SH_FLOAT 2u
@@ -50,54 +53,13 @@ inline __device__ float4 calcPositionInEyeSpaceFromWindowSpace( const float2& wi
     return eyeSpacePos / eyeSpacePos.w;
 }
 
-// intersect ray with a box
-// http://www.siggraph.org/education/materials/HyperGraph/raytrace/rtinter3.htm
-// implementation from nvidia sample
-inline __device__ bool intersectBox( const float3& origin,
-                                     const float3& dir,
-                                     const float3& boxMin,
-                                     const float3& boxMax,
-                                     float *tnear,
-                                     float *tfar )
-{
-    // compute intersection of ray with all six bbox planes
-    const float3& invR = recp( dir );
-    const float3& tbot = invR * ( boxMin - origin );
-    const float3& ttop = invR * ( boxMax - origin );
-
-    // re-order intersections to find smallest and largest on each axis
-    const float3& tmin = fminf( ttop, tbot );
-    const float3& tmax = fmaxf( ttop, tbot );
-
-    // find the largest tmin and the smallest tmax
-    const float largestTmin = fmaxf( fmaxf( tmin.x, tmin.y ), fmaxf( tmin.x, tmin.z ));
-    const float smallestTmax = fminf( fminf( tmax.x, tmax.y ), fminf( tmax.x, tmax.z ));
-
-    *tnear = largestTmin;
-    *tfar = smallestTmax;
-
-    return smallestTmax > largestTmin;
-}
-
-
-inline __device__ float4 composite( const float4& src,
-                                    const float4& dst,
-                                    const float alphaCorrection )
-{
-    // The alpha correction function behaves badly around maximum alpha
-    const float corr = 1.0f - fminf( src.w, 1.0f - 1.0f / 256.0 );
-    const float alpha = 1.0f - pow( corr , alphaCorrection );
-    const float3& xyz = make_float3( dst ) + make_float3( src ) * alpha * ( 1.0 - dst.w );
-    const float dstw = dst.w + alpha * ( 1.0f - dst.w );
-    return {  xyz.x, xyz.y, xyz.z, dstw };
-}
-
 __global__ void rayCast( const cudaTextureObject_t dataTexture,
+                         const IrradianceTexture irradianceTexture,
                          float4* pixelBuffer,
                          const unsigned int pixelBufferWidth,
                          const unsigned int pixelBufferHeight,
                          const ::livre::cuda::ClipPlanes clipPlanes,
-                         const cudaTextureObject_t tfTexture,
+                         const ColorMap tfTexture,
                          const ::livre::cuda::ViewData viewData,
                          const unsigned int nodeCount,
                          const ::livre::cuda::NodeData* nodeDatas,
@@ -125,8 +87,9 @@ __global__ void rayCast( const cudaTextureObject_t dataTexture,
 
     const float3& globalBoxMin = make_float3FromArray( viewData.aabbMin.array );
     const float3& globalBoxMax = make_float3FromArray( viewData.aabbMax.array );
+    const float3& globalBoxSize = globalBoxMax - globalBoxMin;
     const float3& origin = eyePos;
-    if( !intersectBox( origin, dir, globalBoxMin, globalBoxMax, &tNearGlobal, &tFarGlobal ))
+    if( !intersectBox( origin, dir, globalBoxMin, globalBoxMax, tNearGlobal, tFarGlobal ))
         return;
 
     const float4* clipPlanesArray = clipPlanes.getClipPlanes();
@@ -169,6 +132,9 @@ __global__ void rayCast( const cudaTextureObject_t dataTexture,
 
     const float stepSize = 1.0 / float( renderData.samplesPerRay );
 
+    const cudaTextureObject_t* irrTextures = irradianceTexture.getIrradianceTexture();
+
+
     for( unsigned int i = 0; i < nodeCount; ++i  )
     {
         const ::livre::cuda::NodeData nodeData = nodeDatas[ i ];
@@ -177,7 +143,7 @@ __global__ void rayCast( const cudaTextureObject_t dataTexture,
         const float3& boxMax = boxMin + boxSize;
 
         float tNear = 0.0f; float tFar = 0.0f;
-        if( !intersectBox( origin, dir, boxMin, boxMax, &tNear, &tFar ))
+        if( !intersectBox( origin, dir, boxMin, boxMax, tNear, tFar ))
             continue;
 
         if( tNear > tFarGlobal )
@@ -207,15 +173,34 @@ __global__ void rayCast( const cudaTextureObject_t dataTexture,
         // Front-to-back absorption-emission integrator
         for( float travel = dist; travel > 0.0; pos += step, travel -= stepSize )
         {
-            const float3& texPos = ((( pos - boxMin ) / boxSize) * texSize ) + texMin;
-            const float density = tex3D< unsigned char >( dataTexture,
-                                                          texPos.x,
-                                                          texPos.y,
-                                                          texPos.z );
-            const float4& transferFn = tex1D< float4 >( tfTexture,
-                                                        density * multiplyer + addedValue );
+            const float3& texTfPos = ((( pos - boxMin ) / boxSize) * texSize ) + texMin;
+            const float density = tex3D< unsigned char >( dataTexture, texTfPos.x, texTfPos.y, texTfPos.z );
+            const float4& transferFn = tex1D< float4 >( tfTexture.getTexture(),
+                                                 density * multiplyer + addedValue );
 
-            color = composite( transferFn, color, alphaCorrection );
+            const float3& texPos = ( pos - globalBoxMin ) / globalBoxSize;
+            float4 irradiance = { 0.0 };
+            irradiance.x = tex3D<float>( irrTextures[ 0 ], texPos.x, texPos.y, texPos.z );
+            irradiance.y = tex3D<float>( irrTextures[ 1 ], texPos.x, texPos.y, texPos.z );
+            irradiance.z = tex3D<float>( irrTextures[ 2 ], texPos.x, texPos.y, texPos.z );
+            // irradiance.w = transferFn.w;
+
+            color = composite( transferFn + irradiance, color, alphaCorrection );
+
+            /*
+            if( threadIdx.x == 0 && threadIdx.y == 0 && threadIdx.z == 0 )
+            {
+                printf("%f, %f %f %f %f, %f %f %f, %f %f %f, %f %f %f, %f %f %f, %f %f %f\n",
+                                     density * multiplyer + addedValue,
+                                     transferFn,x, transferFn.y, transferFn.z, transferFn.w,
+                                     texTfPos.x, texTfPos.y, texTfPos.z,
+                                     irradiance.x, irradiance.y, irradiance.z,
+                                     texPos.x, texPos.y, texPos.z,
+                                     emmColor.x, emmColor.y, emmColor.z,
+                                     irrColor.x, irrColor.y, irrColor.z );
+
+            }
+            */
             isEarlyExit = color.w > EARLY_EXIT;
 
             if( isEarlyExit )
@@ -233,13 +218,13 @@ struct Renderer::Impl
 {
     Impl()
     {
-       cudaGLSetGLDevice( 0 );
-       cudaMalloc( &_cudaNodeDatas, sizeof( ::livre::cuda::NodeData ) * 16384 );
+        cudaMalloc( &_cudaNodeDatas, sizeof( ::livre::cuda::NodeData ) * 16384 );
     }
 
     ~Impl()
     {
         cudaFree( _cudaNodeDatas );
+        _cudaColorMap.clear();
     }
 
     void update( const lexis::render::ClipPlanes& clipPlanes,
@@ -247,6 +232,11 @@ struct Renderer::Impl
     {
         _cudaClipPlanes.upload( clipPlanes );
         _cudaColorMap.upload( colorMap );
+    }
+
+    void update( IrradianceCompute& irradianceCompute )
+    {
+        _irradianceTexture = irradianceCompute.compute();
     }
 
     void preRender( const ViewData& viewData )
@@ -276,24 +266,24 @@ struct Renderer::Impl
                  const cuda::RenderData& renderData,
                  const cuda::TexturePool& texturePool )
     {
-
-
         const unsigned int width = _cudaRenderPBO.getWidth();
         const unsigned int height = _cudaRenderPBO.getHeight();
 
         copyNodeDatasToCudaMemory( nodeDatas );
-        const dim3 blockDim( 16, 16 );
+        const dim3 blockDim( 8, 4 );
         const dim3 gridDim( iDivUp( width, blockDim.x ), iDivUp( height, blockDim.y ));
         rayCast<<< gridDim, blockDim >>>( texturePool.getTexture(),
+                                          _irradianceTexture,
                                           _cudaRenderPBO.getBuffer(),
                                           _cudaRenderPBO.getWidth(),
                                           _cudaRenderPBO.getHeight(),
                                           _cudaClipPlanes,
-                                          _cudaColorMap.getTexture(),
+                                          _cudaColorMap,
                                           viewData,
                                           _nodeCount,
                                           _cudaNodeDatas,
                                           renderData );
+        checkCudaErrors( cudaThreadSynchronize( ));
     }
 
     void postRender()
@@ -330,6 +320,7 @@ struct Renderer::Impl
     ::livre::cuda::PixelBufferObject _cudaRenderPBO;
     unsigned int _nodeCount;
     ::livre::cuda::NodeData* _cudaNodeDatas;
+    IrradianceTexture _irradianceTexture;
 };
 
 Renderer::Renderer()
@@ -361,6 +352,11 @@ void Renderer::update( const lexis::render::ClipPlanes& clipPlanes,
                        const lexis::render::ColorMap& colorMap )
 {
     _impl->update( clipPlanes, colorMap );
+}
+
+void Renderer::update( IrradianceCompute& irradianceCompute )
+{
+    _impl->update( irradianceCompute );
 }
 }
 }

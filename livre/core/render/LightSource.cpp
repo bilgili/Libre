@@ -15,39 +15,21 @@
  * along with this library; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-
-
-#ifndef _RenderPipelinePlugin_h_
-#define _RenderPipelinePlugin_h_
-
-#include <livre/core/api.h>
-#include <livre/core/types.h>
-
-#include <servus/uri.h>
+#include "LightSource.h"
 
 namespace livre
 {
 
-class RenderPipelinePlugin
+bool PointLightSource::operator==( const LightSource& ls ) const
 {
-public:
-
-    /** Constructor */
-    LIVRECORE_API RenderPipelinePlugin( const std::string& name  LIVRE_UNUSED ) {}
-    virtual ~RenderPipelinePlugin() {}
-
-    /** Needed by the PluginRegisterer. */
-    typedef RenderPipelinePlugin PluginT;
-
-    /**
-     * Renders a scene with the given renderer
-     * @param renderer renders the scene
-     * @param renderInputs all inputs necessary for rendering
-     * @return the renderin statistics
-     */
-    virtual RenderStatistics render( Renderer& renderer,
-                                     const RenderInputs& renderInputs ) = 0;
-};
+    const PointLightSource* pls = dynamic_cast< const PointLightSource* >( &ls );
+    return pls && pls->position == position && pls->color == color;
 }
-#endif // _RenderPipelinePlugin_h_
+
+bool DirectLightSource::operator==( const LightSource& ls ) const
+{
+    const DirectLightSource* dls = dynamic_cast< const DirectLightSource* >( &ls );
+    return dls && dls->direction == direction && pls->color == color;
+}
+}
 

@@ -17,6 +17,8 @@
  */
 
 #include "ColorMap.cuh"
+#include "debug.cuh"
+
 #include <cuda_runtime.h>
 #include <cuda_texture_types.h>
 
@@ -41,7 +43,7 @@ ColorMap::ColorMap()
     ::memset( &texDesc, 0, sizeof( cudaTextureDesc ));
     texDesc.readMode = cudaReadModeElementType;
     texDesc.addressMode[ 0 ] = cudaAddressModeClamp;
-    texDesc.filterMode = cudaFilterModeLinear;
+    texDesc.filterMode = cudaFilterModePoint;
     texDesc.normalizedCoords = 1;
 
     // create texture object: we only have to do this once!
@@ -49,6 +51,10 @@ ColorMap::ColorMap()
 }
 
 ColorMap::~ColorMap()
+{}
+
+/** Deletes the cuda objects */
+void ColorMap::clear()
 {
     cudaFreeArray( _array );
 }
@@ -57,11 +63,10 @@ void ColorMap::upload( const lexis::render::ColorMap& colorMap )
 {
     const auto& colors =
             colorMap.sampleColors< float >( 256, 0.0f, 256.0f, 0 );
-
-    cudaMemcpyToArray( _array, 0, 0,
-                       colors.data(),
-                       colors.size() * sizeof(float4),
-                       cudaMemcpyHostToDevice );
+    checkCudaErrors( cudaMemcpyToArray( _array, 0, 0,
+                                        colors.data(),
+                                        colors.size() * sizeof(float4),
+                                        cudaMemcpyHostToDevice ));
 }
 }
 }

@@ -84,7 +84,7 @@ const GLfloat fullScreenQuad[] = { -1.0f, -1.0f, 0.0f,
 const uint32_t SH_UINT = 0u;
 const uint32_t SH_INT = 1u;
 const uint32_t SH_FLOAT = 2u;
-PluginRegisterer< GLRaycastRenderer, const std::string& > registerer;
+PluginRegisterer< GLRaycastRenderer, const std::string&, RenderPipelinePlugin& > registerer;
 }
 
 struct RenderTexture
@@ -547,8 +547,8 @@ struct GLRaycastRenderer::Impl
 
 };
 
-GLRaycastRenderer::GLRaycastRenderer( const std::string& name )
-    : RendererPlugin( name )
+GLRaycastRenderer::GLRaycastRenderer( const std::string& name, RenderPipelinePlugin& plugin )
+    : RendererPlugin( name, plugin )
     , _impl( new GLRaycastRenderer::Impl( ))
 {}
 

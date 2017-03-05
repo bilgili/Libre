@@ -40,8 +40,11 @@ public:
      * Constructor
      * @param name name of the renderer
      */
-    LIVRECORE_API Renderer( const std::string& name );
+    LIVRECORE_API Renderer( const std::string& name, RenderPipeline& pipeline );
     LIVRECORE_API ~Renderer();
+
+    /** @return the name of the renderer plugin */
+    LIVRECORE_API std::string getName() const;
 
     /**
      * Renders the list of render bricks for a given frustum.
@@ -53,9 +56,9 @@ public:
      * rendering. i.e. With different settings, multipass rendering can be performed in
      * the same frame.
      */
-    void render( const RenderInputs& renderInputs,
-                 const ConstCacheObjects& renderData,
-                 const uint32_t renderStages = RENDER_ALL );
+    LIVRECORE_API void render( const RenderInputs& renderInputs,
+                               const ConstCacheObjects& renderData,
+                               const uint32_t renderStages = RENDER_ALL );
 
 private:
 

@@ -34,14 +34,15 @@ public:
      * Constructor
      * @param name is the name of the render plugin
      */
-    GLRaycastRenderer( const std::string& name );
+    GLRaycastRenderer( const std::string& name, RenderPipelinePlugin& plugin );
     ~GLRaycastRenderer();
 
     /**
      * @param name is checked for the right plugin
      * @return true if renderer handles the name
      */
-    static bool handles( const std::string& name ) { return name == "gl"; }
+    static bool handles( const std::string& name,
+                         RenderPipelinePlugin& ) { return name == "gl"; }
 
 private:
 

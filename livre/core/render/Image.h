@@ -16,38 +16,33 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifndef _Image_h_
+#define _Image_h_
 
-#ifndef _RenderPipelinePlugin_h_
-#define _RenderPipelinePlugin_h_
-
-#include <livre/core/api.h>
 #include <livre/core/types.h>
-
-#include <servus/uri.h>
+#include <livre/core/mathTypes.h>
 
 namespace livre
 {
 
-class RenderPipelinePlugin
+class Image
 {
 public:
 
-    /** Constructor */
-    LIVRECORE_API RenderPipelinePlugin( const std::string& name  LIVRE_UNUSED ) {}
-    virtual ~RenderPipelinePlugin() {}
+    Image( const Strings& resourceFolders, const std::string& imageFileName );
+    Image getTonedImage( double gamma, double exposure ) const;
+    bool isHDR() const;
+    Vector4f getPixel( size_t x, size_t y ) const;
+    Vector2ui getSize() const;
 
-    /** Needed by the PluginRegisterer. */
-    typedef RenderPipelinePlugin PluginT;
+private:
 
-    /**
-     * Renders a scene with the given renderer
-     * @param renderer renders the scene
-     * @param renderInputs all inputs necessary for rendering
-     * @return the renderin statistics
-     */
-    virtual RenderStatistics render( Renderer& renderer,
-                                     const RenderInputs& renderInputs ) = 0;
+    Image( const Image& image, double gamma, double exposure );
+
+    struct Impl;
+    std::shared_ptr< Impl >  _impl;
 };
+
 }
-#endif // _RenderPipelinePlugin_h_
+#endif // _Image_h_
 

@@ -361,19 +361,17 @@ public:
     }
 
     uint32_t getBrickIndex( const uint32_t x,
-                             const uint32_t y,
-                             const uint32_t z,
-                             const Vector3i& max ) const
+                            const uint32_t y,
+                            const uint32_t z,
+                            const Vector3i& max ) const
     {
         return x + y * max[ 0 ] + z * max[ 0 ] * max[ 1 ];
     }
 
-    uint32_t tuvokLODLevelToTreeLevel( const uint32_t tuvokLevel,
-                                        const uint32_t depth ) const
+    uint32_t tuvokLODLevelToTreeLevel( const uint32_t tuvokLevel, const uint32_t depth ) const
     {
         return depth - tuvokLevel - 1;
     }
-
 
     uint32_t treeLevelToTuvokLevel( const uint32_t treeLevel ) const
     {
@@ -394,8 +392,7 @@ public:
 
 UVFDataSource::UVFDataSource( const DataSourcePluginData& initData )
     : _impl( new Impl( _volumeInfo, initData ))
-{
-}
+{}
 
 UVFDataSource::~UVFDataSource()
 {}

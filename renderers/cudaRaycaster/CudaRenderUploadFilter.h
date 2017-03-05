@@ -1,7 +1,6 @@
-/* Copyright (c) 2011-2014, EPFL/Blue Brain Project
- *                     Ahmet Bilgili <ahmet.bilgili@epfl.ch>
+/* Copyright (c) 2011-2016  Ahmet Bilgili <ahmetbilgili@gmail.com>
  *
- * This file is part of Livre <https://github.com/BlueBrain/Livre>
+ * This file is part of Livre <https://github.com/bilgili/Libre>
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3.0 as published
@@ -16,6 +15,7 @@
  * along with this library; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+
 
 #ifndef _CudaRenderUploadFilter_h_
 #define _CudaRenderUploadFilter_h_

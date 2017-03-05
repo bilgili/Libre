@@ -16,8 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include "CudaIrradianceCompute.h"
 #include "CudaRaycastRenderer.h"
 #include "CudaTextureObject.h"
+#include "CudaRaycastPipeline.h"
 #include "cuda/Renderer.cuh"
 
 #include <livre/core/configuration/RendererParameters.h>
@@ -30,9 +32,9 @@
 #include <livre/core/data/LODNode.h>
 #include <livre/core/settings/RenderSettings.h>
 #include <livre/core/render/RenderInputs.h>
+#include <livre/core/util/PluginRegisterer.h>
 
 #include <lunchbox/debug.h>
-#include <livre/core/util/PluginRegisterer.h>
 #include <GL/glew.h>
 
 namespace livre
@@ -67,21 +69,28 @@ const uint32_t minSamplesPerRay = 512;
 const uint32_t SH_UINT = 0u;
 const uint32_t SH_INT = 1u;
 const uint32_t SH_FLOAT = 2u;
-PluginRegisterer< CudaRaycastRenderer, const std::string& > registerer;
+PluginRegisterer< CudaRaycastRenderer, const std::string&, RenderPipelinePlugin& > registerer;
 }
 
 struct CudaRaycastRenderer::Impl
 {
-    Impl()
+    Impl( CudaRaycastPipeline& pipeline )
+        : _pipeline( pipeline )
     {}
 
     ~Impl()
     {}
 
-    void update( const lexis::render::ClipPlanes& clipPlanes,
-                 const lexis::render::ColorMap& colorMap )
+    void update( const RenderInputs& renderInputs )
     {
-        _cudaRenderer.update( clipPlanes, colorMap );
+        if( !_irradianceCompute )
+            _irradianceCompute.reset( new CudaIrradianceCompute( renderInputs.dataSource,
+                                                                 _pipeline.getDataCache( )));
+
+        if( _irradianceCompute->update( renderInputs ))
+            _cudaRenderer.update( _irradianceCompute->getCudaCompute( ));
+        _cudaRenderer.update( renderInputs.renderSettings.getClipPlanes(),
+                              renderInputs.renderSettings.getColorMap( ));
     }
 
     uint32_t getShaderDataType( const VolumeInformation& volInfo ) const
@@ -106,8 +115,7 @@ struct CudaRaycastRenderer::Impl
 
     void preRender( const RenderInputs& renderInputs, const ConstCacheObjects& renderData )
     {
-        update( renderInputs.renderSettings.getClipPlanes(),
-                renderInputs.renderSettings.getColorMap( ));
+        update( renderInputs );
 
         const auto& volInfo = renderInputs.dataSource.getVolumeInfo();
         if( renderInputs.vrParameters.getSamplesPerRay() == 0 ) // Find sampling rate
@@ -149,6 +157,7 @@ struct CudaRaycastRenderer::Impl
                                           frustum.nearPlane()
                                         };
 
+        update( renderInputs );
         _cudaRenderer.preRender( viewData );
     }
 
@@ -216,14 +225,16 @@ struct CudaRaycastRenderer::Impl
         _cudaRenderer.postRender();
     }
 
+    CudaRaycastPipeline& _pipeline;
     ::livre::cuda::Renderer _cudaRenderer;
     uint32_t _computedSamplesPerRay;
     CudaTexturePool* _texturePool;
+    std::unique_ptr< CudaIrradianceCompute > _irradianceCompute;
 };
 
-CudaRaycastRenderer::CudaRaycastRenderer( const std::string& )
-    : RendererPlugin( "cuda" )
-    , _impl( new CudaRaycastRenderer::Impl( ))
+CudaRaycastRenderer::CudaRaycastRenderer( const std::string& name, RenderPipelinePlugin& pipeline )
+    : RendererPlugin( name, pipeline )
+    , _impl( new CudaRaycastRenderer::Impl( static_cast< CudaRaycastPipeline& >( pipeline )))
 {}
 
 CudaRaycastRenderer::~CudaRaycastRenderer()

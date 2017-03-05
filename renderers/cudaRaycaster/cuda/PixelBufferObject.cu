@@ -17,6 +17,7 @@
  */
 
 #include "PixelBufferObject.cuh"
+#include "debug.cuh"
 
 #include <cuda_gl_interop.h>
 #include <lunchbox/debug.h>

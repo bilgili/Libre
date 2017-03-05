@@ -19,6 +19,7 @@ set(LIVRECORE_PUBLIC_HEADERS
   data/MemoryUnit.h
   data/DataSourcePlugin.h
   data/VolumeInformation.h
+  render/LightSource.h
   render/Renderer.h
   render/RendererPlugin.h
   render/RenderPipeline.h
@@ -55,7 +56,7 @@ set(LIVRECORE_HEADERS
   pipeline/PromiseMap.h
   pipeline/SimpleExecutor.h
   pipeline/Workers.h
-  render/ClipPlanes.cpp
+  render/ClipPlanes.h
   render/FrameInfo.h
   render/Frustum.h
   render/SelectVisibles.h
@@ -97,6 +98,7 @@ set(LIVRECORE_SOURCES
   pipeline/PromiseMap.cpp
   pipeline/SimpleExecutor.cpp
   pipeline/Workers.cpp
+  render/LightSource.cpp
   render/ClipPlanes.cpp
   render/FrameInfo.cpp
   render/Frustum.cpp

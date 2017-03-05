@@ -16,38 +16,47 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifndef _Cuda_Allocate_h
+#define _Cuda_Allocate_h
 
-#ifndef _RenderPipelinePlugin_h_
-#define _RenderPipelinePlugin_h_
+#include "cuda.h"
+#include "debug.cuh"
 
-#include <livre/core/api.h>
-#include <livre/core/types.h>
-
-#include <servus/uri.h>
+#include <cuda_runtime_api.h>
+#include <utility>
 
 namespace livre
 {
-
-class RenderPipelinePlugin
+namespace cuda
 {
-public:
 
-    /** Constructor */
-    LIVRECORE_API RenderPipelinePlugin( const std::string& name  LIVRE_UNUSED ) {}
-    virtual ~RenderPipelinePlugin() {}
-
-    /** Needed by the PluginRegisterer. */
-    typedef RenderPipelinePlugin PluginT;
-
-    /**
-     * Renders a scene with the given renderer
-     * @param renderer renders the scene
-     * @param renderInputs all inputs necessary for rendering
-     * @return the renderin statistics
-     */
-    virtual RenderStatistics render( Renderer& renderer,
-                                     const RenderInputs& renderInputs ) = 0;
-};
+template< class T, class... Args >
+__global__ void allocate( T* ptr, Args... args )
+{
+    new( ptr ) T( args... );
 }
-#endif // _RenderPipelinePlugin_h_
 
+template< class T >
+__global__ void deallocate( T* ptr )
+{
+   ptr->~T();
+}
+
+template< class T, class... Args >
+CUDA_HOST_CALL T* allocateCudaObjectInDevice( Args&&... args )
+{
+    T* ptr;
+    checkCudaErrors( cudaMalloc( &ptr, sizeof( T )));
+    allocate< T ><<<1,1>>>( ptr, std::forward< Args >( args )... );
+    return ptr;
+}
+
+template< class T >
+CUDA_HOST_CALL void deallocateCudaObjectInDevice( T* ptr )
+{
+    deallocate< T ><<<1,1>>>( ptr );
+    cudaFree( ptr );
+}
+}
+}
+#endif

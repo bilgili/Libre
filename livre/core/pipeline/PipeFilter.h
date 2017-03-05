@@ -119,7 +119,7 @@ public:
     template< class... Args >
     PipeFilterT( const std::string& name,
                  Args&&... args )
-        : PipeFilter( name, FilterPtr( new FilterT( args... )))
+        : PipeFilter( name, FilterPtr( new FilterT( std::forward< Args >( args )... )))
     {}
 };
 

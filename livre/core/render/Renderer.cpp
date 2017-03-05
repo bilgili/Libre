@@ -33,10 +33,10 @@ namespace livre
 struct Renderer::Impl
 {
 public:
-    typedef PluginFactory< RendererPlugin, const std::string& > PFactory;
+    typedef PluginFactory< RendererPlugin, const std::string&, RenderPipelinePlugin& > PFactory;
 
-    Impl( const std::string& name )
-        : plugin( PFactory::getInstance().create( name ))
+    Impl( const std::string& name, RenderPipelinePlugin& pipeline )
+        : plugin( PFactory::getInstance().create( name, pipeline ))
     {}
 
     void render( const RenderInputs& renderInputs,
@@ -56,8 +56,8 @@ public:
     std::unique_ptr< RendererPlugin > plugin;
 };
 
-Renderer::Renderer( const std::string& name )
-    : _impl( new Renderer::Impl( name ))
+Renderer::Renderer( const std::string& name, RenderPipeline& pipeline )
+    : _impl( new Renderer::Impl( name, pipeline._getPlugin( )))
 {}
 
 Renderer::~Renderer()
@@ -69,5 +69,4 @@ void Renderer::render( const RenderInputs& renderInputs,
 {
     _impl->render( renderInputs, renderData, renderStages );
 }
-
 }

@@ -23,7 +23,7 @@
 #ifndef HELPER_MATH_H
 #define HELPER_MATH_H
 
-#include "cuda.h"
+#include "cuda.cuh"
 #include "cuda_runtime.h"
 
 typedef unsigned int uint;
@@ -1520,7 +1520,7 @@ inline __device__  float mod( const float val, const float modVal )
     return val - float( n ) * modVal;
 }
 
-inline __device__  float distance( const float3 u, const float3 v )
+inline __device__ __host__  float distance( const float3& u, const float3& v )
 {
     const float3 diff = u - v;
     return sqrt( dot( diff, diff ));
