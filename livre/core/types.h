@@ -259,6 +259,18 @@ static const std::string NO_PREFIX = "";
 #  define  LIVRE_UNUSED __attribute__((unused))
 #endif
 
+/** Data types */
+enum DataType
+{
+    DT_FLOAT,
+    DT_UINT8,
+    DT_UINT16,
+    DT_UINT32,
+    DT_INT8,
+    DT_INT16,
+    DT_INT32,
+    DT_UNDEFINED
+};
 }
 
 #endif // _coreTypes_h_

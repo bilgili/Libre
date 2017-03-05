@@ -15,21 +15,27 @@
  * along with this library; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+
+#ifndef _InfiniteLightSource_h_
+#define _InfiniteLightSource_h_
+
 #include "LightSource.h"
+#include "Image.h"
 
 namespace livre
 {
 
-bool PointLightSource::operator==( const LightSource& ls ) const
+class InfiniteLightSource : public LightSource
 {
-    const PointLightSource* pls = dynamic_cast< const PointLightSource* >( &ls );
-    return pls && pls->position == position && pls->color == color;
-}
+public:
+    InfiniteLightSource( const Image& image );
+    bool operator==( const LightSource& ls ) const final;
+    Vector4f getSample( const Vector3f& dir );
+private:
+    struct Impl;
+    std::unique_ptr< Impl >  _impl;
+};
 
-bool DirectLightSource::operator==( const LightSource& ls ) const
-{
-    const DirectLightSource* dls = dynamic_cast< const DirectLightSource* >( &ls );
-    return dls && dls->direction == direction && pls->color == color;
 }
-}
+#endif // _InfiniteLightSource_h_
 

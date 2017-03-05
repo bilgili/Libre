@@ -26,19 +26,6 @@
 namespace livre
 {
 
-/** Voxel data type in a volume */
-enum DataType
-{
-    DT_FLOAT,
-    DT_UINT8,
-    DT_UINT16,
-    DT_UINT32,
-    DT_INT8,
-    DT_INT16,
-    DT_INT32,
-    DT_UNDEFINED
-};
-
 /** Properties of the volumetric data. */
 struct VolumeInformation
 {

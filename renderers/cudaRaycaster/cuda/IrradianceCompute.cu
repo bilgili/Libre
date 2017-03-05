@@ -63,8 +63,7 @@ inline __device__ float4 integrate( const float3& pos,
     float tFar = 0;
     float3 rayStart;
     float3 rayStop;
-    if( !intersectBox( pos, dir, globalBoxMin, globalBoxMax, tNear, tFar ))
-        return colorPrev;
+    intersectBox( pos, dir, globalBoxMin, globalBoxMax, tNear, tFar );
 
     // Starting position is always inside
     rayStart = pos;
@@ -86,7 +85,7 @@ inline __device__ float4 integrate( const float3& pos,
     bool isEarlyExit = false;
     for( float travel = dist; travel > 0.0; rayStart += step, travel -= stepSize )
     {
-        const float3& texPos = ( rayStart -  globalBoxMin ) / globalBoxSize;
+        const float3& texPos = ( rayStart - globalBoxMin ) / globalBoxSize;
         const float density = tex3D< unsigned char >( volumeTex, texPos.x, texPos.y, texPos.z );
         float4 color = tex1D< float4 >( tfTex, density * mult + add );
         if( irrTextures )
@@ -139,9 +138,24 @@ __global__ void computeIrradiance( IrradianceTexture texture,
     const float alphaCorrection = float( renderData.maxSamplesPerRay ) /
                                   float( renderData.samplesPerRay );
 
-    const float stepSize = 1.0 / float( renderData.samplesPerRay );
+    const float stepSize = 1.0 / 128.0;
     const cudaTextureObject_t& volumeTex = texture.getVolumeTexture();
+
     cudaSurfaceObject_t* irradianceBuffer = texture.getIrradianceBuffer();
+    /*
+
+    const float3& texPos = ( worldPos -  globalBoxMin ) / globalBoxSize;
+    const float density = tex3D< unsigned char >( volumeTex, texPos.x, texPos.y, texPos.z );
+    const float4 color = tex1D< float4 >( colorMap.getTexture(), density * multiplyer + addedValue );
+
+    const uchar3 _radiance8bit = { fminf( color.x * 255.0, 255.0 ),
+                     fminf( color.y * 255.0, 255.0 ),
+                     fminf( color.z * 255.0, 255.0 ) };
+    surf3Dwrite( _radiance8bit.x, irradianceBuffer[ 0 ], i, j, k );
+    surf3Dwrite( _radiance8bit.y, irradianceBuffer[ 1 ], i, j, k );
+    surf3Dwrite( _radiance8bit.z, irradianceBuffer[ 2 ], i, j, k );
+    return;
+    */
 
     LightData lighDatas[ 16 ];
 
@@ -157,8 +171,8 @@ __global__ void computeIrradiance( IrradianceTexture texture,
     const float pi = 3.141592654f;
     if( threadIdx.x == 0 && threadIdx.y == 0 && threadIdx.z == 0 )
     {
-        const float thetaSamples = 4.0f;
-        const float phiSamples = 4.0f;
+        const float thetaSamples = 8.0f;
+        const float phiSamples = 8.0f;
 
         const float deltaTheta = pi / thetaSamples;
         const float deltaPhi = 2.0 * pi / phiSamples;
@@ -181,23 +195,23 @@ __global__ void computeIrradiance( IrradianceTexture texture,
     // printf("lightDataCount %d\n", lightDataCount );
     // Light contribution
     float4 lightRadiance = { 0.0f, 0.0f, 0.0f, 1.0f };
-    const float scale = 1000.0f;
+    const float scale = 1.0f;
     for( unsigned int ldInd = 0; ldInd < lightDataCount; ++ldInd )
     {
         const LightData& lightData = lighDatas[ ldInd ];
         float4 color = integrate( worldPos,
-                                         lightData.dir * -1.0f,
-                                         lightData.distance,
-                                         volumeTex,
-                                         colorMap.getTexture(),
-                                         0,
-                                         globalBoxMin,
-                                         globalBoxMax,
-                                         globalBoxSize,
-                                         multiplyer,
-                                         addedValue,
-                                         stepSize,
-                                         alphaCorrection );
+                                  lightData.dir * -1.0f,
+                                  lightData.distance,
+                                  volumeTex,
+                                  colorMap.getTexture(),
+                                  0,
+                                  globalBoxMin,
+                                  globalBoxMax,
+                                  globalBoxSize,
+                                  multiplyer,
+                                  addedValue,
+                                  stepSize,
+                                  alphaCorrection );
 
         if( color.w <= EARLY_EXIT )
         {
@@ -205,10 +219,9 @@ __global__ void computeIrradiance( IrradianceTexture texture,
                                         lightData.color.y * scale,
                                         lightData.color.z * scale,
                                         1.0f };
-            color.x = 0; color.y = 0; color.z = 0;
+            color.x = color.y = color.z = 0.0f;
             lightRadiance = lightRadiance + composite( lightColor, color, alphaCorrection );
         }
-
     }
     lightRadiance.w = 0.0f;
 
@@ -222,7 +235,8 @@ __global__ void computeIrradiance( IrradianceTexture texture,
 
      __syncthreads();
     // Volume contribution
-    float4 emissionRadiance = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+    float4 emissionRadiance = { 0.0f };
     for( unsigned int volInd = 0; volInd < directionCount; ++volInd )
     {
         const float4 color = integrate( worldPos,
@@ -240,8 +254,7 @@ __global__ void computeIrradiance( IrradianceTexture texture,
                                         alphaCorrection );
         emissionRadiance = emissionRadiance + color * dirWeights[ volInd ];
     }
-
-    radiance = ( lightRadiance + emissionRadiance ) / ( 4.0 * pi );
+    radiance = lightRadiance + emissionRadiance / ( 2.0 );
     radiance8bit = { fminf( radiance.x * 255.0, 255.0 ),
                      fminf( radiance.y * 255.0, 255.0 ),
                      fminf( radiance.z * 255.0, 255.0 ) };

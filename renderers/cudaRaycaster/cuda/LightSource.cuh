@@ -21,7 +21,6 @@
 
 #include "cuda.h"
 #include "math.cuh"
-#include "Allocate.cuh"
 
 #include <cuda_runtime_api.h>
 #include <livre/core/mathTypes.h>
@@ -39,6 +38,9 @@ struct LightData
     float weight;
     float distance;
 };
+
+template< class LightSource >
+::livre::cuda::LightSource* getCudaLight( const LightSource& ls ) const;
 
 class LightSource
 {
@@ -103,6 +105,31 @@ private:
     const float3 _direction;
     const float3 _color;
 };
+
+class DirectLightSource : public LightSource
+{
+public:
+    CUDA_CALL DirectLightSource( const CudaImage& cudaImage )
+        : LightSource( 1u )
+        , _direction( direction )
+        , _color( color )
+    {}
+
+    CUDA_CALL void getSamples( LightData* array, const float3& ) const final
+    {
+        LightData& data = array[ 0 ];
+        data.color = _color;
+        data.dir = _direction;
+        data.weight = 1.0;
+        data.distance = 1e10;
+    }
+
+private:
+
+    const float3 _direction;
+    const float3 _color;
+};
+
 }
 }
 #endif // _Cuda_LightSource_h_

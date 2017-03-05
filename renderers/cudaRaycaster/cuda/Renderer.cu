@@ -173,38 +173,34 @@ __global__ void rayCast( const cudaTextureObject_t dataTexture,
         // Front-to-back absorption-emission integrator
         for( float travel = dist; travel > 0.0; pos += step, travel -= stepSize )
         {
-            float3 texPos = ((( pos - boxMin ) / boxSize) * texSize ) + texMin;
-            const float density = tex3D< unsigned char >( dataTexture,
-                                                          texPos.x,
-                                                          texPos.y,
-                                                          texPos.z );
-            float4 transferFn = tex1D< float4 >( tfTexture.getTexture(),
+            const float3& texTfPos = ((( pos - boxMin ) / boxSize) * texSize ) + texMin;
+            const float density = tex3D< unsigned char >( dataTexture, texTfPos.x, texTfPos.y, texTfPos.z );
+            const float4& transferFn = tex1D< float4 >( tfTexture.getTexture(),
                                                  density * multiplyer + addedValue );
 
-            const float alpha = transferFn.w;
+            const float3& texPos = ( pos - globalBoxMin ) / globalBoxSize;
+            float4 irradiance = { 0.0 };
+            irradiance.x = tex3D<float>( irrTextures[ 0 ], texPos.x, texPos.y, texPos.z );
+            irradiance.y = tex3D<float>( irrTextures[ 1 ], texPos.x, texPos.y, texPos.z );
+            irradiance.z = tex3D<float>( irrTextures[ 2 ], texPos.x, texPos.y, texPos.z );
+            // irradiance.w = transferFn.w;
 
-            texPos = ( pos - globalBoxMin ) / globalBoxSize;
-            const float irradianceR = tex3D<float>( irrTextures[ 0 ],
-                                                      texPos.x,
-                                                      texPos.y,
-                                                      texPos.z );
-            const float irradianceG = tex3D<float>( irrTextures[ 1 ],
-                                                      texPos.x,
-                                                      texPos.y,
-                                                      texPos.z );
-            const float irradianceB = tex3D<float>( irrTextures[ 2 ],
-                                                      texPos.x,
-                                                      texPos.y,
-                                                      texPos.z );
-            const float4 irradianceF = { irradianceR,
-                                         irradianceG,
-                                         irradianceB,
-                                         0 };
+            color = composite( transferFn + irradiance, color, alphaCorrection );
 
-            transferFn = transferFn + irradianceF;
-            transferFn.w = alpha;
+            /*
+            if( threadIdx.x == 0 && threadIdx.y == 0 && threadIdx.z == 0 )
+            {
+                printf("%f, %f %f %f %f, %f %f %f, %f %f %f, %f %f %f, %f %f %f, %f %f %f\n",
+                                     density * multiplyer + addedValue,
+                                     transferFn,x, transferFn.y, transferFn.z, transferFn.w,
+                                     texTfPos.x, texTfPos.y, texTfPos.z,
+                                     irradiance.x, irradiance.y, irradiance.z,
+                                     texPos.x, texPos.y, texPos.z,
+                                     emmColor.x, emmColor.y, emmColor.z,
+                                     irrColor.x, irrColor.y, irrColor.z );
 
-            color = composite( transferFn , color, alphaCorrection );
+            }
+            */
             isEarlyExit = color.w > EARLY_EXIT;
 
             if( isEarlyExit )
@@ -287,6 +283,7 @@ struct Renderer::Impl
                                           _nodeCount,
                                           _cudaNodeDatas,
                                           renderData );
+        checkCudaErrors( cudaThreadSynchronize( ));
     }
 
     void postRender()

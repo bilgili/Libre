@@ -15,21 +15,36 @@
  * along with this library; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#include "LightSource.h"
+
+#ifndef _Cuda_Image_h_
+#define _Cuda_Image_h_
+
+#include "cuda.h"
+#include "math.cuh"
+
+#include <cuda_runtime_api.h>
+#include <livre/core/mathTypes.h>
+
+#define PI 3.141592654f
 
 namespace livre
 {
-
-bool PointLightSource::operator==( const LightSource& ls ) const
+namespace cuda
 {
-    const PointLightSource* pls = dynamic_cast< const PointLightSource* >( &ls );
-    return pls && pls->position == position && pls->color == color;
-}
 
-bool DirectLightSource::operator==( const LightSource& ls ) const
+class Image
 {
-    const DirectLightSource* dls = dynamic_cast< const DirectLightSource* >( &ls );
-    return dls && dls->direction == direction && pls->color == color;
+public:
+    Image( const ::livre::Image& image )
+    {}
+
+    void getTexture() const  { return _textureObject; }
+
+private:
+    cudaTextureObject_t _textureObject;
+};
+
 }
 }
+#endif // _Cuda_LightSource_h_
 

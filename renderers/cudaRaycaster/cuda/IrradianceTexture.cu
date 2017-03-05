@@ -112,6 +112,7 @@ IrradianceTexture::IrradianceTexture(size_t dataTypeSize,
     }
 
     texDesc.filterMode = cudaFilterModePoint;
+    texDesc.readMode = cudaReadModeElementType;
     surfRes.res.array.array = _volumeArray;
     checkCudaErrors( cudaCreateTextureObject( &_volumeTexture, &surfRes, &texDesc, NULL ));
 }

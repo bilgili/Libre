@@ -43,7 +43,7 @@ ColorMap::ColorMap()
     ::memset( &texDesc, 0, sizeof( cudaTextureDesc ));
     texDesc.readMode = cudaReadModeElementType;
     texDesc.addressMode[ 0 ] = cudaAddressModeClamp;
-    texDesc.filterMode = cudaFilterModeLinear;
+    texDesc.filterMode = cudaFilterModePoint;
     texDesc.normalizedCoords = 1;
 
     // create texture object: we only have to do this once!

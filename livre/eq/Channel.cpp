@@ -287,8 +287,8 @@ public:
         ConstLightSources lightSources; // Scene later !
         /*lightSources.emplace_back( new PointLightSource( { -1.0f, -1.0f, -1.0f },
                                                          { 1.0f, 0.0f, 0.0f } ));*/
-        lightSources.emplace_back( new PointLightSource( { 0.0f, 0.0f, 1.0f },
-                                                         { 1.0f, 0.0f, 1.0f } ));
+        lightSources.emplace_back( new PointLightSource( { 0.0f, 1.0f, 1.0f },
+                                                         { 0.0f, 0.0f, 1.0f } ));
         const RenderInputs inputs= {
                                         _frameInfo,
                                         {{ _drawRange.start, _drawRange.end }},

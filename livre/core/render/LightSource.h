@@ -27,7 +27,8 @@ namespace livre
 enum LightSourceType
 {
     DIRECT,
-    POINT
+    POINT,
+    INFINITE
 };
 
 class LightSource

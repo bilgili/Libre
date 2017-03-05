@@ -15,21 +15,34 @@
  * along with this library; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#include "LightSource.h"
+
+#ifndef _Image_h_
+#define _Image_h_
+
+#include <livre/core/types.h>
+#include <livre/core/mathTypes.h>
 
 namespace livre
 {
 
-bool PointLightSource::operator==( const LightSource& ls ) const
+class Image
 {
-    const PointLightSource* pls = dynamic_cast< const PointLightSource* >( &ls );
-    return pls && pls->position == position && pls->color == color;
-}
+public:
 
-bool DirectLightSource::operator==( const LightSource& ls ) const
-{
-    const DirectLightSource* dls = dynamic_cast< const DirectLightSource* >( &ls );
-    return dls && dls->direction == direction && pls->color == color;
+    Image( const Strings& resourceFolders, const std::string& imageFileName );
+    Image getTonedImage( double gamma, double exposure ) const;
+    bool isHDR() const;
+    Vector4f getPixel( size_t x, size_t y ) const;
+    Vector2ui getSize() const;
+
+private:
+
+    Image( const Image& image, double gamma, double exposure );
+
+    struct Impl;
+    std::shared_ptr< Impl >  _impl;
+};
+
 }
-}
+#endif // _Image_h_
 
