@@ -40,7 +40,7 @@ ClipPlanes::ClipPlanes()
 }
 
 ClipPlanes::ClipPlanes( const ClipPlanes& rhs )
-    : co::Distributable< ::lexis::render::ClipPlanes >( rhs )
+    : co::Distributable< ::lexis::render::detail::ClipPlanes >( rhs )
 {
     if( this == &rhs )
         return;
@@ -53,7 +53,7 @@ ClipPlanes& ClipPlanes::operator=( const ClipPlanes& rhs )
     if( this == &rhs )
         return *this;
 
-    static_cast< ::lexis::render::ClipPlanes& >( *this ) = rhs;
+    static_cast< ::lexis::render::detail::ClipPlanes& >( *this ) = rhs;
     return *this;
 }
 
@@ -72,7 +72,7 @@ void ClipPlanes::reset()
     clear();
     for( size_t i = 0; i < 6; ++i )
     {
-        ::lexis::render::Plane plane;
+        ::lexis::render::detail::Plane plane;
         plane.setNormal( normals[ i ] );
         plane.setD( 0.5 );
         getPlanes().push_back( plane );
@@ -84,7 +84,7 @@ bool ClipPlanes::isClipped( const Boxf& worldBox ) const
     const auto& vec = getPlanes();
     for( size_t i = 0; i < vec.size(); ++i )
     {
-        const ::lexis::render::Plane& p = vec[ i ];
+        const ::lexis::render::detail::Plane& p = vec[ i ];
         const Vector3f& middle = worldBox.getCenter();
         const Vector3f& extent = worldBox.getSize() * 0.5f;
 

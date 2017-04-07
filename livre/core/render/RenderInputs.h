@@ -28,7 +28,8 @@
 #include <livre/core/settings/RenderSettings.h>
 #include <livre/core/configuration/RendererParameters.h>
 #include <livre/core/render/FrameInfo.h>
-#include <livre/core/pipeline/PipeFilter.h>
+
+#include <tuyau/pipeFilter.h>
 
 namespace livre
 {
@@ -44,7 +45,7 @@ struct RenderInputs
     const ApplicationSettings appSettings;
     const RenderSettings renderSettings;
     const RendererParameters vrParameters;
-    const PipeFilterMap filters;
+    const tuyau::PipeFilterMap filters;
     DataSource& dataSource;
 };
 

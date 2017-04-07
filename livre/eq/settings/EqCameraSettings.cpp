@@ -44,14 +44,12 @@ void EqCameraSettings::registerNotifyChanged(
     _notifyChangedFunc = notifyChangedFunc;
 }
 
-void EqCameraSettings::serialize( co::DataOStream& os, const uint64_t dirtyBits )
+void EqCameraSettings::serialize( co::DataOStream& os, uint64_t )
 {
-    co::Serializable::serialize( os, dirtyBits );
     os << _modelview.get();
 }
-void EqCameraSettings::deserialize( co::DataIStream& is, const uint64_t dirtyBits )
+void EqCameraSettings::deserialize( co::DataIStream& is, uint64_t )
 {
-    co::Serializable::deserialize( is, dirtyBits );
     is >> _modelview.get();
 }
 }

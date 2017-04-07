@@ -53,9 +53,8 @@ eq::uint128_t EqFrameSettings::getCurrentViewId() const
     return _currentViewId.get();
 }
 
-void EqFrameSettings::serialize( co::DataOStream& os, const uint64_t dirtyBits )
+void EqFrameSettings::serialize( co::DataOStream& os, uint64_t )
 {
-    co::Serializable::serialize( os, dirtyBits );
     os << _currentViewId.get()
        << _frameNumber.get()
        << _screenShot.get()
@@ -64,9 +63,8 @@ void EqFrameSettings::serialize( co::DataOStream& os, const uint64_t dirtyBits )
        << _grabFrame.get();
 }
 
-void EqFrameSettings::deserialize( co::DataIStream& is, const uint64_t dirtyBits )
+void EqFrameSettings::deserialize( co::DataIStream& is, uint64_t )
 {
-    co::Serializable::deserialize( is, dirtyBits );
     is >> _currentViewId.get()
        >> _frameNumber.get()
        >> _screenShot.get()

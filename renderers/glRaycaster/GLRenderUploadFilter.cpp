@@ -25,8 +25,8 @@
 #include <livre/lib/cache/TextureObject.h>
 
 #include <livre/core/configuration/RendererParameters.h>
-#include <livre/core/pipeline/Pipeline.h>
-#include <livre/core/pipeline/SimpleExecutor.h>
+#include <tuyau/pipeline.h>
+#include <tuyau/pushExecutor.h>
 #include <livre/core/data/NodeId.h>
 #include <livre/core/cache/Cache.h>
 #include <livre/core/render/GLContext.h>
@@ -44,7 +44,7 @@ public:
           TextureCache& textureCache,
           TexturePool& texturePool,
           size_t nUploadThreads,
-          Executor& executor )
+          tuyau::Executor& executor )
         : _dataCache( dataCache )
         , _textureCache( textureCache )
         , _texturePool( texturePool )
@@ -52,9 +52,9 @@ public:
         , _executor( executor )
     {}
 
-    void execute( const FutureMap& input, PromiseMap& output ) const
+    void execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const
     {
-        const UniqueFutureMap futureMap( input.getFutures( ));
+        const tuyau::UniqueFutureMap futureMap( input.getFutures( ));
         ConstCacheObjects cacheObjects; // Lock
         NodeIds notAvailable;
         const auto& renderInputs = futureMap.get< RenderInputs >( "RenderInputs" );
@@ -77,11 +77,12 @@ public:
         }
 
         const size_t perThreadSize = std::max( (size_t)1, notAvailable.size() / _nUploadThreads );
-        Pipeline pipeline;
-        PipeFilter textureUploader = pipeline.add< TextureUploadFilter >( "TextureUploader",
-                                                                          _dataCache,
-                                                                          _textureCache,
-                                                                          _texturePool );
+        tuyau::Pipeline pipeline;
+        tuyau::PipeFilter textureUploader =
+                pipeline.add< TextureUploadFilter >( "TextureUploader",
+                                                     _dataCache,
+                                                     _textureCache,
+                                                     _texturePool );
         textureUploader.getPromise( "RenderInputs" ).set( renderInputs );
         for( size_t i = 0; i < _nUploadThreads; ++i )
         {
@@ -98,14 +99,15 @@ public:
                                       begin + perThreadSize );
             std::stringstream str;
             str << "DataUploader" << i;
-            PipeFilter dataUploader = pipeline.add< DataUploadFilter >( str.str( ), _dataCache );
+            tuyau::PipeFilter dataUploader =
+                    pipeline.add< DataUploadFilter >( str.str( ), _dataCache );
             dataUploader.connect( "DataCacheObjects", textureUploader, "DataCacheObjects" );
             dataUploader.getPromise( "RenderInputs" ).set( renderInputs );
             dataUploader.getPromise( "NodeIds" ).set( partialData );
         }
 
         pipeline.schedule( _executor );
-        UniqueFutureMap uploaderFutureMap( textureUploader.getPostconditions( ));
+        tuyau::UniqueFutureMap uploaderFutureMap( textureUploader.getPostconditions( ));
         const auto& textureCacheObjects =
                 uploaderFutureMap.get< ConstCacheObjects >( "TextureCacheObjects" );
         cacheObjects.insert( cacheObjects.end(),
@@ -120,14 +122,14 @@ public:
     TextureCache& _textureCache;
     TexturePool& _texturePool;
     const size_t _nUploadThreads;
-    Executor& _executor;
+    tuyau::Executor& _executor;
 };
 
 GLRenderUploadFilter::GLRenderUploadFilter( DataCache& dataCache,
                                             TextureCache& textureCache,
                                             TexturePool& texturePool,
                                             size_t nUploadThreads,
-                                            Executor& executor )
+                                            tuyau::Executor& executor )
     : _impl( new GLRenderUploadFilter::Impl( dataCache,
                                              textureCache,
                                              texturePool,
@@ -139,7 +141,7 @@ GLRenderUploadFilter::GLRenderUploadFilter( DataCache& dataCache,
 GLRenderUploadFilter::~GLRenderUploadFilter()
 {}
 
-void GLRenderUploadFilter::execute( const FutureMap& input, PromiseMap& output ) const
+void GLRenderUploadFilter::execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const
 {
     _impl->execute( input, output );
 }

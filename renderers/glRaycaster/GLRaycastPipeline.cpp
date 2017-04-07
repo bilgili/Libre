@@ -28,8 +28,8 @@
 #include <livre/lib/cache/TextureObject.h>
 
 #include <livre/core/cache/Cache.h>
-#include <livre/core/pipeline/SimpleExecutor.h>
-#include <livre/core/pipeline/Pipeline.h>
+#include <tuyau/pushExecutor.h>
+#include <tuyau/pipeline.h>
 #include <livre/core/data/DataSource.h>
 #include <livre/core/render/RenderInputs.h>
 #include <livre/core/render/TexturePool.h>
@@ -65,19 +65,32 @@ boost::thread_specific_ptr< TextureCache > textureCache;
 boost::thread_specific_ptr< TexturePool > texturePool;
 std::unique_ptr< DataCache > dataCache;
 std::unique_ptr< HistogramCache > histogramCache;
+
+void makeCurrent( const ConstGLContextPtr& glContext )
+{
+    const auto& clonedContext = glContext->clone();
+    clonedContext->share( *glContext );
+    clonedContext->makeCurrent();
+}
+
 }
 
 struct GLRaycastPipeline::Impl
 {
     Impl()
-        : _renderExecutor( nRenderThreads, "Render Executor", GLContext::getCurrent()->clone( ))
-        , _computeExecutor( nComputeThreads, "Compute Executor", GLContext::getCurrent()->clone( ))
-        , _uploadExecutor( nUploadThreads, "Upload Executor", GLContext::getCurrent()->clone( ))
-        , _asyncUploadExecutor( nAsyncUploadThreads, "Async Upload Executor", GLContext::getCurrent()->clone( ))
+        : _currentContext( GLContext::getCurrent( ))
+        , _renderExecutor( nRenderThreads, "Render Executor",
+                           [this]{ makeCurrent( _currentContext ); } )
+        , _computeExecutor( nComputeThreads, "Compute Executor",
+                           [this]{ makeCurrent( _currentContext ); }  )
+        , _uploadExecutor( nUploadThreads, "Upload Executor",
+                           [this]{ makeCurrent( _currentContext ); }  )
+        , _asyncUploadExecutor( nAsyncUploadThreads, "Async Upload Executor",
+                                [this]{ makeCurrent( _currentContext ); } )
     {
     }
 
-    void setupVisibleGeneratorFilter( PipeFilter& visibleSetGenerator,
+    void setupVisibleGeneratorFilter( tuyau::PipeFilter& visibleSetGenerator,
                                       const RenderInputs& renderInputs ) const
     {
         visibleSetGenerator.getPromise( "Frustum" ).set( renderInputs.frameInfo.frustum );
@@ -117,9 +130,9 @@ struct GLRaycastPipeline::Impl
                      const RenderInputs& renderInputs )
     {
 
-        PipeFilter sendHistogramFilter = renderInputs.filters.find( "SendHistogramFilter" )->second;
-        PipeFilter preRenderFilter = renderInputs.filters.find( "PreRenderFilter" )->second;
-        PipeFilterT< VisibleSetGeneratorFilter > visibleSetGenerator( "VisibleSetGenerator",
+        tuyau::PipeFilter sendHistogramFilter = renderInputs.filters.find( "SendHistogramFilter" )->second;
+        tuyau::PipeFilter preRenderFilter = renderInputs.filters.find( "PreRenderFilter" )->second;
+        tuyau::PipeFilterT< VisibleSetGeneratorFilter > visibleSetGenerator( "VisibleSetGenerator",
                                                                       renderInputs.dataSource );
         setupVisibleGeneratorFilter( visibleSetGenerator, renderInputs );
         visibleSetGenerator.connect( "VisibleNodes", preRenderFilter, "VisibleNodes" );
@@ -127,7 +140,7 @@ struct GLRaycastPipeline::Impl
         visibleSetGenerator.execute();
         preRenderFilter.execute();
 
-        const livre::UniqueFutureMap portFutures( visibleSetGenerator.getPostconditions( ));
+        const tuyau::UniqueFutureMap portFutures( visibleSetGenerator.getPostconditions( ));
         NodeIds nodeIdsCopy = portFutures.get< NodeIds >( "VisibleNodes" );
         DistanceOperator distanceOp( renderInputs.dataSource, renderInputs.frameInfo.frustum );
         std::sort( nodeIdsCopy.begin(), nodeIdsCopy.end(), distanceOp );
@@ -172,10 +185,10 @@ struct GLRaycastPipeline::Impl
                 ++(*showProgress);
         }
 
-        PipeFilterT< HistogramFilter > histogramFilter( "HistogramFilter",
-                                                        *histogramCache,
-                                                        *dataCache,
-                                                        renderInputs.dataSource );
+        tuyau::PipeFilterT< HistogramFilter > histogramFilter( "HistogramFilter",
+                                                               *histogramCache,
+                                                               *dataCache,
+                                                               renderInputs.dataSource );
         histogramFilter.getPromise( "Frustum" ).set( renderInputs.frameInfo.frustum );
         histogramFilter.connect( "Histogram", sendHistogramFilter, "Histogram" );
         histogramFilter.getPromise( "RelativeViewport" ).set( renderInputs.viewport );
@@ -188,7 +201,7 @@ struct GLRaycastPipeline::Impl
         histogramFilter.schedule( _computeExecutor );
         sendHistogramFilter.schedule( _computeExecutor );
 
-        const UniqueFutureMap futures( visibleSetGenerator.getPostconditions( ));
+        const tuyau::UniqueFutureMap futures( visibleSetGenerator.getPostconditions( ));
         statistics.nAvailable = futures.get< NodeIds >( "VisibleNodes" ).size();
         statistics.nNotAvailable = 0;
         statistics.nRenderAvailable = statistics.nAvailable;
@@ -200,15 +213,15 @@ struct GLRaycastPipeline::Impl
                                    const uint32_t renderStages )
     {
 
-        Pipeline renderPipeline;
+        tuyau::Pipeline renderPipeline;
 
-        PipeFilterT< RenderFilter > renderFilter( "RenderFilter",
+        tuyau::PipeFilterT< RenderFilter > renderFilter( "RenderFilter",
                                                   renderInputs.dataSource,
                                                   renderer );
         renderFilter.getPromise( "RenderInputs" ).set( renderInputs );
         renderFilter.getPromise( "RenderStages" ).set( renderStages );
 
-        PipeFilterT< GLRenderUploadFilter > renderUploader( "RenderUploader",
+        tuyau::PipeFilterT< GLRenderUploadFilter > renderUploader( "RenderUploader",
                                                             *dataCache,
                                                             *textureCache,
                                                             *texturePool,
@@ -229,10 +242,13 @@ struct GLRaycastPipeline::Impl
                       Renderer& renderer,
                       const RenderInputs& renderInputs )
     {
-        PipeFilter sendHistogramFilter = renderInputs.filters.find( "SendHistogramFilter" )->second;
-        PipeFilter preRenderFilter = renderInputs.filters.find( "PreRenderFilter" )->second;
-        PipeFilter redrawFilter = renderInputs.filters.find( "RedrawFilter" )->second;
-        PipeFilterT< HistogramFilter > histogramFilter( "HistogramFilter",
+        tuyau::PipeFilter sendHistogramFilter =
+                renderInputs.filters.find( "SendHistogramFilter" )->second;
+        tuyau::PipeFilter preRenderFilter =
+                renderInputs.filters.find( "PreRenderFilter" )->second;
+        tuyau::PipeFilter redrawFilter =
+                renderInputs.filters.find( "RedrawFilter" )->second;
+        tuyau::PipeFilterT< HistogramFilter > histogramFilter( "HistogramFilter",
                                                         *histogramCache,
                                                         *dataCache,
                                                         renderInputs.dataSource );
@@ -244,19 +260,19 @@ struct GLRaycastPipeline::Impl
         sendHistogramFilter.getPromise( "Id" ).set( renderInputs.frameInfo.frameId );
         preRenderFilter.getPromise( "Frustum" ).set( renderInputs.frameInfo.frustum );
 
-        Pipeline renderPipeline;
-        Pipeline uploadPipeline;
+        tuyau::Pipeline renderPipeline;
+        tuyau::Pipeline uploadPipeline;
 
-        PipeFilterT< RenderFilter > renderFilter( "RenderFilter",
-                                                  renderInputs.dataSource,
-                                                  renderer );
+        tuyau::PipeFilterT< RenderFilter > renderFilter( "RenderFilter",
+                                                         renderInputs.dataSource,
+                                                         renderer );
 
-        PipeFilter visibleSetGenerator =
+        tuyau::PipeFilter visibleSetGenerator =
                 renderPipeline.add< VisibleSetGeneratorFilter >(
                     "VisibleSetGenerator", renderInputs.dataSource );
         setupVisibleGeneratorFilter( visibleSetGenerator, renderInputs );
 
-        PipeFilter renderingSetGenerator =
+        tuyau::PipeFilter renderingSetGenerator =
                 renderPipeline.add< RenderingSetGeneratorFilter< TextureObject >>(
                     "RenderingSetGenerator", *textureCache );
 
@@ -266,12 +282,12 @@ struct GLRaycastPipeline::Impl
         renderingSetGenerator.connect( "RenderingDone", redrawFilter, "RenderingDone" );
         visibleSetGenerator.connect( "VisibleNodes", preRenderFilter, "VisibleNodes" );
 
-        PipeFilterT< GLRenderUploadFilter > renderUploader( "RenderUploader",
-                                                           *dataCache,
-                                                           *textureCache,
-                                                           *texturePool,
-                                                           nUploadThreads,
-                                                           _uploadExecutor );
+        tuyau::PipeFilterT< GLRenderUploadFilter > renderUploader( "RenderUploader",
+                                                                   *dataCache,
+                                                                   *textureCache,
+                                                                   *texturePool,
+                                                                   nUploadThreads,
+                                                                   _uploadExecutor );
 
         renderUploader.getPromise( "RenderInputs" ).set( renderInputs );
         visibleSetGenerator.connect( "VisibleNodes", renderUploader, "NodeIds" );
@@ -287,7 +303,7 @@ struct GLRaycastPipeline::Impl
         preRenderFilter.execute();
         renderFilter.execute();
 
-        const UniqueFutureMap futures( renderingSetGenerator.getPostconditions( ));
+        const tuyau::UniqueFutureMap futures( renderingSetGenerator.getPostconditions( ));
         statistics = futures.get< RenderStatistics >( "RenderStatistics" );
     }
 
@@ -325,10 +341,11 @@ struct GLRaycastPipeline::Impl
             renderAsync( statistics, renderer, renderInputs );
     }
 
-    SimpleExecutor _renderExecutor;
-    SimpleExecutor _computeExecutor;
-    SimpleExecutor _uploadExecutor;
-    SimpleExecutor _asyncUploadExecutor;
+    ConstGLContextPtr _currentContext;
+    tuyau::PushExecutor _renderExecutor;
+    tuyau::PushExecutor _computeExecutor;
+    tuyau::PushExecutor _uploadExecutor;
+    tuyau::PushExecutor _asyncUploadExecutor;
     boost::mutex _initMutex;
 };
 

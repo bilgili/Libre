@@ -44,9 +44,9 @@
 #include <livre/core/render/RenderInputs.h>
 #include <livre/core/settings/ApplicationSettings.h>
 #include <livre/core/visitor/DFSTraversal.h>
-#include <livre/core/pipeline/PipeFilter.h>
-#include <livre/core/pipeline/FutureMap.h>
-#include <livre/core/pipeline/Filter.h>
+#include <tuyau/pipeFilter.h>
+#include <tuyau/futureMap.h>
+#include <tuyau/filter.h>
 
 #ifdef LIVRE_USE_ZEROEQ
 #  include <zeroeq/publisher.h>
@@ -61,42 +61,42 @@ namespace livre
 const float nearPlane = 0.1f;
 const float farPlane = 15.0f;
 
-struct RedrawFilter : public Filter
+struct RedrawFilter : public tuyau::Filter
 {
     explicit RedrawFilter( Channel* channel )
         : _channel( channel )
     {}
 
     ~RedrawFilter() {}
-    void execute( const FutureMap& input, PromiseMap& ) const final
+    void execute( const tuyau::FutureMap& input, tuyau::PromiseMap& ) const final
     {
         waitForAny( input.getFutures( ));
 
-        const bool isRenderingDone =  input.get< bool >( "RenderingDone" )[ 0 ];
+        const bool isRenderingDone = input.get< bool >( "RenderingDone" )[ 0 ];
         if( !isRenderingDone )
             _channel->getConfig()->sendEvent( REDRAW );
     }
 
-    DataInfos getInputDataInfos() const final
+    tuyau::DataInfos getInputDataInfos() const final
     {
         return
         {
-            { "CacheObjects", getType< ConstCacheObjects >() },
-            { "RenderingDone", getType< bool >() }
+            { "CacheObjects", tuyau::getType< ConstCacheObjects >() },
+            { "RenderingDone", tuyau::getType< bool >() }
         };
     }
 
     Channel* _channel;
 };
 
-struct SendHistogramFilter : public Filter
+struct SendHistogramFilter : public tuyau::Filter
 {
     explicit SendHistogramFilter( Channel* channel )
         : _channel( channel )
     {}
 
     ~SendHistogramFilter() {}
-    void execute( const FutureMap& inputs, PromiseMap& ) const final
+    void execute( const tuyau::FutureMap& inputs, tuyau::PromiseMap& ) const final
     {
         const auto viewport = inputs.get< Viewport >( "RelativeViewport" ).front();
         const auto frameCounter =  inputs.get< uint32_t >( "Id" ).front();
@@ -111,13 +111,13 @@ struct SendHistogramFilter : public Filter
                 << frameCounter;
     }
 
-    DataInfos getInputDataInfos() const final
+    tuyau::DataInfos getInputDataInfos() const final
     {
         return
         {
-            { "Histogram", getType< Histogram >() },
-            { "RelativeViewport", getType< Viewport >() },
-            { "Id", getType< uint32_t >() }
+            { "Histogram", tuyau::getType< Histogram >() },
+            { "RelativeViewport", tuyau::getType< Viewport >() },
+            { "Id", tuyau::getType< uint32_t >() }
         };
     }
 
@@ -137,7 +137,7 @@ public:
         _channel->setNearFar( nearPlane, farPlane );
 
         eq::FrameDataPtr frameData = new eq::FrameData();
-        frameData->setBuffers( eq::Frame::BUFFER_COLOR );
+        frameData->setBuffers( eq::Frame::Buffer::color );
         _frame.setFrameData( frameData );
         _frame.setName( std::string( "self." ) + _channel->getName( ));
     }
@@ -229,27 +229,27 @@ public:
 #endif
     }
 
-    struct PreRenderFilter : public Filter
+    struct PreRenderFilter : public tuyau::Filter
     {
         explicit PreRenderFilter( Channel::Impl* channel )
             : _channel( channel )
         {}
 
         ~PreRenderFilter() {}
-        void execute( const FutureMap& input, PromiseMap& ) const final
+        void execute( const tuyau::FutureMap& input, tuyau::PromiseMap& ) const final
         {
-            const UniqueFutureMap uniqueInputs( input.getFutures( ));
+            const tuyau::UniqueFutureMap uniqueInputs( input.getFutures( ));
             const auto& nodeIds = uniqueInputs.get< NodeIds >( "VisibleNodes" );
             const auto& frustum = uniqueInputs.get< Frustum >( "Frustum" );
             _channel->updateRegions( nodeIds, frustum );
         }
 
-        DataInfos getInputDataInfos() const final
+        tuyau::DataInfos getInputDataInfos() const final
         {
             return
             {
-                { "VisibleNodes", getType< NodeIds >() },
-                { "Frustum", getType< Frustum >() }
+                { "VisibleNodes", tuyau::getType< NodeIds >() },
+                { "Frustum", tuyau::getType< Frustum >() }
             };
         }
 
@@ -292,13 +292,13 @@ public:
                                         frameData.getRenderSettings(),
                                         frameData.getVRParameters(),
                                         {{ "SendHistogramFilter",
-                                           PipeFilterT< SendHistogramFilter >(
+                                           tuyau::PipeFilterT< SendHistogramFilter >(
                                            "SendHistogramFilter", _channel )},
                                          { "RedrawFilter",
-                                           PipeFilterT< RedrawFilter >(
+                                           tuyau::PipeFilterT< RedrawFilter >(
                                            "RedrawFilter", _channel )},
                                          { "PreRenderFilter",
-                                           PipeFilterT< PreRenderFilter >(
+                                           tuyau::PipeFilterT< PreRenderFilter >(
                                            "PreRenderFilter", this )}
                                         },
                                         node->getDataSource()
@@ -438,7 +438,7 @@ public:
     void frameReadback( const eq::Frames& frames ) const
     {
         for( eq::Frame* frame: frames ) // Drop depth buffer from output frames
-            frame->disableBuffer( eq::Frame::BUFFER_DEPTH );
+            frame->disableBuffer( eq::Frame::Buffer::depth );
     }
 
     void frameAssemble( const eq::Frames& frames )

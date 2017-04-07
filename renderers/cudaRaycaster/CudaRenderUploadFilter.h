@@ -24,7 +24,7 @@
 
 #include <livre/lib/types.h>
 #include <livre/core/render/RenderInputs.h>
-#include <livre/core/pipeline/Filter.h>
+#include <tuyau/filter.h>
 
 namespace livre
 {
@@ -34,7 +34,7 @@ namespace livre
  * CudaRenderUploadFilter class implements the parallel data loading for raw volume data and
  * textures.
  */
-class CudaRenderUploadFilter : public Filter
+class CudaRenderUploadFilter : public tuyau::Filter
 {
 public:
 
@@ -50,28 +50,28 @@ public:
                             CudaTextureCache& cudaCache,
                             CudaTexturePool& texturePool,
                             size_t nUploadThreads,
-                            Executor& executor );
+                            tuyau::Executor& executor );
     ~CudaRenderUploadFilter();
 
     /** @copydoc Filter::execute */
-    void execute( const FutureMap& input, PromiseMap& output ) const final;
+    void execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const final;
 
     /** @copydoc Filter::getInputDataInfos */
-    DataInfos getInputDataInfos() const final
+    tuyau::DataInfos getInputDataInfos() const final
     {
         return
         {
-            { "RenderInputs", getType< RenderInputs >() },
-            { "NodeIds", getType< NodeIds >() },
+            { "RenderInputs", tuyau::getType< RenderInputs >() },
+            { "NodeIds", tuyau::getType< NodeIds >() },
         };
     }
 
     /** @copydoc Filter::getOutputDataInfos */
-    DataInfos getOutputDataInfos() const final
+    tuyau::DataInfos getOutputDataInfos() const final
     {
         return
         {
-            { "CudaTextureCacheObjects", getType< ConstCacheObjects >() },
+            { "CudaTextureCacheObjects", tuyau::getType< ConstCacheObjects >() },
         };
     }
 

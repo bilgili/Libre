@@ -29,7 +29,7 @@ ClipPlanes::ClipPlanes()
 ClipPlanes::~ClipPlanes()
 {}
 
-void ClipPlanes::upload( const lexis::render::ClipPlanes& clipPlanes )
+void ClipPlanes::upload( const lexis::render::detail::ClipPlanes& clipPlanes )
 {
     const unsigned int nPlanes = clipPlanes.getPlanes().size();
 
@@ -38,7 +38,7 @@ void ClipPlanes::upload( const lexis::render::ClipPlanes& clipPlanes )
 
     for( size_t i = 0; i < nPlanes; ++i )
     {
-        const ::lexis::render::Plane& plane = clipPlanes.getPlanes()[ i ];
+        const ::lexis::render::detail::Plane& plane = clipPlanes.getPlanes()[ i ];
         const float* normal = plane.getNormal();
         _clipPlanes[ i ] = make_float4( normal[ 0 ], normal[ 1 ], normal[ 2 ], plane.getD( ));
     }

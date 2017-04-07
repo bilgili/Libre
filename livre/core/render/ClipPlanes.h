@@ -24,13 +24,13 @@
 #include <livre/core/types.h>
 #include <livre/core/mathTypes.h>
 #include <co/distributable.h> // base class
-#include <lexis/render/clipPlanes.h> // CRTP base class
+#include <lexis/render/detail/clipPlanes.h> // CRTP base class
 
 
 namespace livre
 {
 
-class ClipPlanes : public co::Distributable< ::lexis::render::ClipPlanes >
+class ClipPlanes : public co::Distributable< ::lexis::render::detail::ClipPlanes >
 {
 public:
     /**

@@ -21,7 +21,7 @@
 
 #include <livre/core/mathTypes.h>
 #include <lexis/render/ColorMap.h>
-#include <lexis/render/clipPlanes.h>
+#include <lexis/render/detail/clipPlanes.h>
 
 #include <vector>
 
@@ -79,7 +79,7 @@ public:
      * @param clipPlanes is the clip palnes
      * @param colorMap is the color map
      */
-    void update( const lexis::render::ClipPlanes& clipPlanes,
+    void update( const lexis::render::detail::ClipPlanes& clipPlanes,
                  const lexis::render::ColorMap& colorMap );
 
     /**

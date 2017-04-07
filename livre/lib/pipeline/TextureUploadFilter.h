@@ -21,7 +21,7 @@
 #define _TextureUploadFilter_h_
 
 #include <livre/lib/types.h>
-#include <livre/core/pipeline/Filter.h>
+#include <tuyau/filter.h>
 #include <livre/core/render/RenderInputs.h>
 
 namespace livre
@@ -31,7 +31,7 @@ namespace livre
 /**
  * TextureUploadFilter class implements the TextureObject uploading
  */
-class TextureUploadFilter : public Filter
+class TextureUploadFilter : public tuyau::Filter
 {
 public:
 
@@ -46,24 +46,24 @@ public:
     ~TextureUploadFilter();
 
     /** @copydoc Filter::execute */
-    void execute( const FutureMap& input, PromiseMap& output ) const final;
+    void execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const final;
 
     /** @copydoc Filter::getInputDataInfos */
-    DataInfos getInputDataInfos() const final
+    tuyau::DataInfos getInputDataInfos() const final
     {
         return
         {
-            { "RenderInputs", getType< RenderInputs >() },
-            { "DataCacheObjects", getType< ConstCacheObjects >() },
+            { "RenderInputs", tuyau::getType< RenderInputs >() },
+            { "DataCacheObjects", tuyau::getType< ConstCacheObjects >() },
         };
     }
 
     /** @copydoc Filter::getOutputDataInfos */
-    DataInfos getOutputDataInfos() const final
+    tuyau::DataInfos getOutputDataInfos() const final
     {
         return
         {
-            { "TextureCacheObjects", getType< ConstCacheObjects >() },
+            { "TextureCacheObjects", tuyau::getType< ConstCacheObjects >() },
         };
     }
 

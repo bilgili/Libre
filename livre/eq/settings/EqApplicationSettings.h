@@ -38,7 +38,7 @@ public:
 
 private:
 
-    void serialize(   co::DataOStream& os, const uint64_t dirtyBits ) final;
+    void serialize( co::DataOStream& os, const uint64_t dirtyBits ) final;
     void deserialize( co::DataIStream& is, const uint64_t dirtyBits ) final;
 };
 

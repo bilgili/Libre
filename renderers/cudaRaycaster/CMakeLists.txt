@@ -13,6 +13,7 @@ foreach(DEPEND Livre Lunchbox Servus vmmlib Collage Pression Lexis ZeroBuf)
                            ${${DEPEND}_BINARY_DIR}/include)
 endforeach()
 set(CUDA_NVCC_FLAGS -gencode arch=compute_52,code=sm_52
+                    -gencode arch=compute_50,code=sm_50
                     --std c++11
                     --use_fast_math
                     --default-stream per-thread

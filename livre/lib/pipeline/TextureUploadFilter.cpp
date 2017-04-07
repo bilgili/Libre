@@ -21,7 +21,7 @@
 
 #include <livre/lib/cache/TextureObject.h>
 
-#include <livre/core/pipeline/Pipeline.h>
+#include <tuyau/pipeline.h>
 #include <livre/core/data/NodeId.h>
 #include <livre/core/cache/Cache.h>
 
@@ -40,7 +40,7 @@ public:
         , _texturePool( texturePool )
     {}
 
-    void execute( const FutureMap& input, PromiseMap& output ) const
+    void execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const
     {
         ConstCacheObjects cacheObjects;
         const RenderInputs renderInputs = input.get< RenderInputs >( "RenderInputs" )[ 0 ];
@@ -75,7 +75,7 @@ TextureUploadFilter::TextureUploadFilter( const DataCache& dataCache,
 TextureUploadFilter::~TextureUploadFilter()
 {}
 
-void TextureUploadFilter::execute( const FutureMap& input, PromiseMap& output ) const
+void TextureUploadFilter::execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const
 {
     _impl->execute( input, output );
 }

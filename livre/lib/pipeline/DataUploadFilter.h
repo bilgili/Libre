@@ -21,7 +21,7 @@
 #define _DataUploadFilter_h_
 
 #include <livre/lib/types.h>
-#include <livre/core/pipeline/Filter.h>
+#include <tuyau/filter.h>
 #include <livre/core/render/RenderInputs.h>
 
 namespace livre
@@ -31,7 +31,7 @@ namespace livre
 /**
  * DataUploadFilter class implements the data loading for raw volume data
  */
-class DataUploadFilter : public Filter
+class DataUploadFilter : public tuyau::Filter
 {
 public:
 
@@ -40,24 +40,24 @@ public:
     ~DataUploadFilter();
 
     /** @copydoc Filter::execute */
-    void execute( const FutureMap& input, PromiseMap& output ) const final;
+    void execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const final;
 
     /** @copydoc Filter::getInputDataInfos */
-    DataInfos getInputDataInfos() const final
+    tuyau::DataInfos getInputDataInfos() const final
     {
         return
         {
-            { "RenderInputs", getType< RenderInputs >() },
-            { "NodeIds", getType< NodeIds >() },
+            { "RenderInputs", tuyau::getType< RenderInputs >() },
+            { "NodeIds", tuyau::getType< NodeIds >() },
         };
     }
 
     /** @copydoc Filter::getOutputDataInfos */
-    DataInfos getOutputDataInfos() const final
+    tuyau::DataInfos getOutputDataInfos() const final
     {
         return
         {
-            { "DataCacheObjects", getType< ConstCacheObjects >() },
+            { "DataCacheObjects", tuyau::getType< ConstCacheObjects >() },
         };
     }
 

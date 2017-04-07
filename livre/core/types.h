@@ -79,28 +79,6 @@ class TexturePool;
 class VisitState;
 class RendererParameters;
 
-
-/**
- * Pipeline
- */
-class AsyncData;
-class Executor;
-class Executable;
-class Filter;
-class Future;
-class FutureMap;
-class FutureMap;
-class InputPort;
-class PortData;
-class Promise;
-class PromiseMap;
-class OutputPort;
-class OutFutures;
-class UniqueFutureMap;
-class Pipeline;
-class PipeFilter;
-class Workers;
-
 struct FrameInfo;
 struct RenderStatistics;
 struct RenderInputs;
@@ -126,10 +104,6 @@ typedef std::shared_ptr< CacheObject > CacheObjectPtr;
 typedef std::shared_ptr< const CacheObject > ConstCacheObjectPtr;
 typedef std::shared_ptr< CacheObject > CacheObjectPtr;
 typedef std::shared_ptr< const CacheObject > ConstCacheObjectPtr;
-typedef std::shared_ptr< PortData > PortDataPtr;
-typedef std::shared_ptr< Executable > ExecutablePtr;
-
-typedef std::unique_ptr< Filter > FilterPtr;
 
 /**
  * Helper classes for shared_ptr objects
@@ -181,28 +155,10 @@ typedef std::vector< ConstCacheObjectPtr > ConstCacheObjects;
 typedef std::vector< std::string > Strings;
 
 /**
- * List definitions for complex types
- */
-typedef std::list< Executable* > Executables;
-typedef std::list< Future > Futures;
-typedef std::list< Promise > Promises;
-
-/**
  * Map definitions
  */
 typedef std::unordered_map< CacheId, ConstCacheObjectPtr > ConstCacheMap;
 typedef std::unordered_map< uint32_t, EventHandlerPtr > EventHandlerMap;
-
-template < class T >
-inline std::type_index getType()
-{
-    typedef typename std::remove_const<T>::type UnconstT;
-    return std::type_index( typeid( UnconstT ));
-}
-
-typedef std::map< std::string, std::type_index > DataInfos;
-typedef std::map< std::string, PipeFilter > PipeFilterMap;
-typedef DataInfos::value_type DataInfo;
 
 /**
  * Set definitions

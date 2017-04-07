@@ -41,7 +41,7 @@ EqRenderSettings::EqRenderSettings()
 
     _clipPlanes.get().clear();
 }
-void EqRenderSettings::serialize( co::DataOStream& os, const uint64_t dirtyBits )
+void EqRenderSettings::serialize( co::DataOStream& os, uint64_t dirtyBits )
 {
     if( dirtyBits & DIRTY_COLORMAP )
         os << _colorMap.get();
@@ -51,11 +51,9 @@ void EqRenderSettings::serialize( co::DataOStream& os, const uint64_t dirtyBits 
 
     if( dirtyBits & DIRTY_CLIPPLANES )
         os << _clipPlanes.get();
-
-    co::Serializable::serialize( os, dirtyBits );
 }
 
-void EqRenderSettings::deserialize( co::DataIStream& is, const uint64_t dirtyBits )
+void EqRenderSettings::deserialize( co::DataIStream& is, uint64_t dirtyBits )
 {
     if( dirtyBits & DIRTY_COLORMAP )
         is >> _colorMap.get();
@@ -65,8 +63,6 @@ void EqRenderSettings::deserialize( co::DataIStream& is, const uint64_t dirtyBit
 
     if( dirtyBits & DIRTY_CLIPPLANES )
         is >> _clipPlanes.get();
-
-    co::Serializable::deserialize( is, dirtyBits );
 }
 
 }

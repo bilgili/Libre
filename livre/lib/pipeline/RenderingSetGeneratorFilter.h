@@ -24,7 +24,7 @@
 
 #include <livre/core/cache/Cache.h>
 #include <livre/core/render/FrameInfo.h>
-#include <livre/core/pipeline/Filter.h>
+#include <tuyau/filter.h>
 #include <livre/core/render/FrameInfo.h>
 
 namespace livre
@@ -34,7 +34,7 @@ namespace livre
  * RenderingSetGeneratorFilter class generates the rendering set given the visibles.
  */
 template< class CacheObjectT >
-class RenderingSetGeneratorFilter : public Filter
+class RenderingSetGeneratorFilter : public tuyau::Filter
 {
 public:
 
@@ -46,26 +46,26 @@ public:
     ~RenderingSetGeneratorFilter();
 
     /** @copydoc Filter::execute */
-    void execute( const FutureMap& input, PromiseMap& output ) const final;
+    void execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const final;
 
     /** @copydoc Filter::getInputDataInfos */
-    DataInfos getInputDataInfos() const final
+    tuyau::DataInfos getInputDataInfos() const final
     {
         return
         {
-            { "VisibleNodes", getType< NodeIds >() }
+            { "VisibleNodes", tuyau::getType< NodeIds >() }
         };
     }
 
     /** @copydoc Filter::getOutputDataInfos */
-    DataInfos getOutputDataInfos() const final
+    tuyau::DataInfos getOutputDataInfos() const final
     {
         return
         {
-            { "CacheObjects", getType< ConstCacheObjects >() },
-            { "NodeIds", getType< NodeIds >() },
-            { "RenderingDone", getType< bool >() },
-            { "RenderStatistics", getType< RenderStatistics >() },
+            { "CacheObjects", tuyau::getType< ConstCacheObjects >() },
+            { "NodeIds", tuyau::getType< NodeIds >() },
+            { "RenderingDone", tuyau::getType< bool >() },
+            { "RenderStatistics", tuyau::getType< RenderStatistics >() },
         };
     }
 

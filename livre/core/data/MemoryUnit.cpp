@@ -45,32 +45,30 @@ const uint8_t* ConstMemoryUnit::_getData() const
 
 size_t AllocMemoryUnit::getMemSize() const
 {
-    return _rawData.getSize();
+    return _size;
 }
 
 size_t AllocMemoryUnit::getAllocSize() const
 {
-    return _rawData.getMaxSize();
+    return _size;
 }
 
 AllocMemoryUnit::~AllocMemoryUnit()
-{
-    _rawData.clear();
-}
+{}
 
 void AllocMemoryUnit::_alloc( const size_t nBytes )
 {
-    _rawData.reset( nBytes );
+    _rawData.reset( new uint8_t[ nBytes ] );
 }
 
 const uint8_t* AllocMemoryUnit::_getData() const
 {
-    return _rawData.getData();
+    return _rawData.get();
 }
 
 uint8_t* AllocMemoryUnit::_getData()
 {
-    return _rawData.getData();
+    return _rawData.get();
 }
 
 }

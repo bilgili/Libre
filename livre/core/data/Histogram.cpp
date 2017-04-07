@@ -31,7 +31,7 @@ Histogram::Histogram()
 }
 
 Histogram::Histogram( const Histogram& histogram )
-    : co::Distributable< ::lexis::render::Histogram >( histogram )
+    : co::Distributable< ::lexis::render::detail::Histogram >( histogram )
 {
     if( this == &histogram )
         return;
@@ -44,7 +44,7 @@ Histogram& Histogram::operator=( const Histogram& histogram )
     if( this == &histogram )
         return *this;
 
-    static_cast< ::lexis::render::Histogram& >( *this ) = histogram;
+    static_cast< ::lexis::render::detail::Histogram& >( *this ) = histogram;
     return *this;
 }
 

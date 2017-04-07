@@ -41,24 +41,16 @@ public:
      */
     virtual void share( const GLContext& src ) = 0;
 
-    /**
-     * @return a clone of the context.
-     */
+    /** @return a clone of the context. */
     virtual GLContextPtr clone() const = 0;
 
-    /**
-     * Makes the context current.
-     */
+    /** Makes the context current.  */
     virtual void makeCurrent();
 
-    /**
-     * Clears the current context.
-     */
+    /** Clears the current context. */
     virtual void doneCurrent();
 
-    /**
-     * Gets the current context
-     */
+    /** Gets the current context */
     LIVRECORE_API static const GLContext* getCurrent();
 };
 
