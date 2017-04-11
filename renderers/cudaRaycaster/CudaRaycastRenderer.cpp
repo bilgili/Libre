@@ -78,7 +78,7 @@ struct CudaRaycastRenderer::Impl
     ~Impl()
     {}
 
-    void update( const lexis::render::ClipPlanes& clipPlanes,
+    void update( const lexis::render::detail::ClipPlanes& clipPlanes,
                  const lexis::render::ColorMap& colorMap )
     {
         _cudaRenderer.update( clipPlanes, colorMap );

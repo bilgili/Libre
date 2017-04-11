@@ -74,7 +74,7 @@ struct HistogramFilter::Impl
         return ndcCube.isIn( mvpCenterHom );
     }
 
-    void execute( const FutureMap& input, PromiseMap& output ) const
+    void execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const
     {
         const auto& frustums = input.get< Frustum >( "Frustum" );
         const auto& viewports = input.get< Viewport >( "RelativeViewport" );
@@ -150,7 +150,7 @@ HistogramFilter::~HistogramFilter()
 {
 }
 
-void HistogramFilter::execute( const FutureMap& input, PromiseMap& output ) const
+void HistogramFilter::execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const
 {
     _impl->execute( input, output );
 }

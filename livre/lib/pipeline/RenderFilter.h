@@ -22,7 +22,7 @@
 
 #include <livre/lib/types.h>
 
-#include <livre/core/pipeline/Filter.h>
+#include <tuyau/filter.h>
 
 namespace livre
 {
@@ -30,7 +30,7 @@ namespace livre
 /**
  * RenderFilter implements the rendering of loaded textures given the renderer.
  */
-class RenderFilter : public Filter
+class RenderFilter : public tuyau::Filter
 {
 
 public:
@@ -44,16 +44,16 @@ public:
     ~RenderFilter();
 
     /** @copydoc Filter::execute */
-    void execute( const FutureMap& input, PromiseMap& output ) const final;
+    void execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const final;
 
     /** @copydoc Filter::getInputDataInfos */
-    DataInfos getInputDataInfos() const final
+    tuyau::DataInfos getInputDataInfos() const final
     {
         return
         {
-            { "CacheObjects", getType< ConstCacheObjects >() },
-            { "RenderInputs", getType< RenderInputs >() },
-            { "RenderStages", getType< uint32_t >() },
+            { "CacheObjects", tuyau::getType< ConstCacheObjects >() },
+            { "RenderInputs", tuyau::getType< RenderInputs >() },
+            { "RenderStages", tuyau::getType< uint32_t >() },
         };
     }
 

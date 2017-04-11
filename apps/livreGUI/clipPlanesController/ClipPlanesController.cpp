@@ -180,7 +180,7 @@ struct ClipPlanesController::Impl
             if( i == planes.size())
                 break;
 
-            ::lexis::render::Plane& plane = planes[ i ];
+            ::lexis::render::detail::Plane& plane = planes[ i ];
             spinBox->setValue(( i % 2 ) == 0  ? plane.getD() : -plane.getD( ));
             ++i;
         }

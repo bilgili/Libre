@@ -104,7 +104,7 @@ struct RenderingSetGeneratorFilter< CacheObjectT >::Impl
         : _cache( cache )
     {}
 
-    void execute( const FutureMap& input, PromiseMap& output ) const
+    void execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const
     {
         RenderingSetGenerator< CacheObjectT > renderSetGenerator( _cache );
 
@@ -149,8 +149,8 @@ RenderingSetGeneratorFilter< CacheObjectT >::~RenderingSetGeneratorFilter()
 }
 
 template< class CacheObjectT >
-void RenderingSetGeneratorFilter< CacheObjectT >::execute( const FutureMap& input,
-                                           PromiseMap& output ) const
+void RenderingSetGeneratorFilter< CacheObjectT >::execute( const tuyau::FutureMap& input,
+                                           tuyau::PromiseMap& output ) const
 {
     _impl->execute( input, output );
 }

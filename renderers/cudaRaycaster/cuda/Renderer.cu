@@ -242,7 +242,7 @@ struct Renderer::Impl
         cudaFree( _cudaNodeDatas );
     }
 
-    void update( const lexis::render::ClipPlanes& clipPlanes,
+    void update( const lexis::render::detail::ClipPlanes& clipPlanes,
                  const lexis::render::ColorMap& colorMap )
     {
         _cudaClipPlanes.upload( clipPlanes );
@@ -357,7 +357,7 @@ void Renderer::postRender()
     _impl->postRender();
 }
 
-void Renderer::update( const lexis::render::ClipPlanes& clipPlanes,
+void Renderer::update( const lexis::render::detail::ClipPlanes& clipPlanes,
                        const lexis::render::ColorMap& colorMap )
 {
     _impl->update( clipPlanes, colorMap );

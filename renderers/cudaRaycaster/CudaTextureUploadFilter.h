@@ -23,14 +23,14 @@
 #include "types.h"
 
 #include <livre/lib/types.h>
-#include <livre/core/pipeline/Filter.h>
+#include <tuyau/filter.h>
 #include <livre/core/render/RenderInputs.h>
 
 namespace livre
 {
 
 /** CudaTextureUploadFilter class implements the CudaTextureObject uploading */
-class CudaTextureUploadFilter : public Filter
+class CudaTextureUploadFilter : public tuyau::Filter
 {
 public:
 
@@ -46,24 +46,24 @@ public:
     ~CudaTextureUploadFilter();
 
     /** @copydoc Filter::execute */
-    void execute( const FutureMap& input, PromiseMap& output ) const final;
+    void execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const final;
 
     /** @copydoc Filter::getInputDataInfos */
-    DataInfos getInputDataInfos() const final
+    tuyau::DataInfos getInputDataInfos() const final
     {
         return
         {
-            { "RenderInputs", getType< RenderInputs >() },
-            { "DataCacheObjects", getType< ConstCacheObjects >() },
+            { "RenderInputs", tuyau::getType< RenderInputs >() },
+            { "DataCacheObjects", tuyau::getType< ConstCacheObjects >() },
         };
     }
 
     /** @copydoc Filter::getOutputDataInfos */
-    DataInfos getOutputDataInfos() const final
+    tuyau::DataInfos getOutputDataInfos() const final
     {
         return
         {
-            { "CudaTextureCacheObjects", getType< ConstCacheObjects >() },
+            { "CudaTextureCacheObjects", tuyau::getType< ConstCacheObjects >() },
         };
     }
 

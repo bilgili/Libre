@@ -35,15 +35,13 @@ EqVolumeSettings::EqVolumeSettings()
                                     [this](const Vector2f&){ setDirty( DIRTY_ALL ); } );
 }
 
-void EqVolumeSettings::serialize( co::DataOStream& os, const uint64_t dirtyBits )
+void EqVolumeSettings::serialize( co::DataOStream& os, uint64_t )
 {
-    co::Serializable::serialize( os, dirtyBits );
     os  << _uri.get() << _dataSourceRange.get();
 }
 
-void EqVolumeSettings::deserialize( co::DataIStream& is, const uint64_t dirtyBits )
+void EqVolumeSettings::deserialize( co::DataIStream& is, uint64_t )
 {
-    co::Serializable::deserialize( is, dirtyBits );
     is >> _uri.get() >> _dataSourceRange.get();
 }
 

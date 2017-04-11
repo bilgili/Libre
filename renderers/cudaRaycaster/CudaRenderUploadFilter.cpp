@@ -27,8 +27,8 @@
 #include <livre/lib/cache/DataObject.h>
 
 #include <livre/core/configuration/RendererParameters.h>
-#include <livre/core/pipeline/Pipeline.h>
-#include <livre/core/pipeline/SimpleExecutor.h>
+#include <tuyau/pipeline.h>
+#include <tuyau/pushExecutor.h>
 #include <livre/core/data/NodeId.h>
 #include <livre/core/cache/Cache.h>
 #include <livre/core/render/GLContext.h>
@@ -46,7 +46,7 @@ public:
           CudaTextureCache& cudaCache,
           CudaTexturePool& texturePool,
           size_t nUploadThreads,
-          Executor& executor )
+          tuyau::Executor& executor )
         : _dataCache( dataCache )
         , _cudaCache( cudaCache )
         , _texturePool( texturePool )
@@ -54,9 +54,9 @@ public:
         , _executor( executor )
     {}
 
-    void execute( const FutureMap& input, PromiseMap& output ) const
+    void execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const
     {
-        const UniqueFutureMap futureMap( input.getFutures( ));
+        const tuyau::UniqueFutureMap futureMap( input.getFutures( ));
         ConstCacheObjects cacheObjects; // Lock
         NodeIds notAvailable;
         const auto& renderInputs = futureMap.get< RenderInputs >( "RenderInputs" );
@@ -79,11 +79,12 @@ public:
         }
 
         const size_t perThreadSize = std::max( (size_t)1, notAvailable.size() / _nUploadThreads );
-        Pipeline pipeline;
-        PipeFilter textureUploader = pipeline.add< CudaTextureUploadFilter >( "CudaUploader",
-                                                                              _dataCache,
-                                                                              _cudaCache,
-                                                                              _texturePool );
+        tuyau::Pipeline pipeline;
+        tuyau::PipeFilter textureUploader =
+                pipeline.add< CudaTextureUploadFilter >( "CudaUploader",
+                                                         _dataCache,
+                                                         _cudaCache,
+                                                         _texturePool );
         textureUploader.getPromise( "RenderInputs" ).set( renderInputs );
         for( size_t i = 0; i < _nUploadThreads; ++i )
         {
@@ -100,14 +101,14 @@ public:
                                       begin + perThreadSize );
             std::stringstream str;
             str << "DataUploader" << i;
-            PipeFilter dataUploader = pipeline.add< DataUploadFilter >( str.str(), _dataCache );
+            tuyau::PipeFilter dataUploader = pipeline.add< DataUploadFilter >( str.str(), _dataCache );
             dataUploader.connect( "DataCacheObjects", textureUploader, "DataCacheObjects" );
             dataUploader.getPromise( "RenderInputs" ).set( renderInputs );
             dataUploader.getPromise( "NodeIds" ).set( partialData );
         }
 
         pipeline.schedule( _executor );
-        UniqueFutureMap uploaderFutureMap( textureUploader.getPostconditions( ));
+        tuyau::UniqueFutureMap uploaderFutureMap( textureUploader.getPostconditions( ));
         const auto& textureCacheObjects =
                 uploaderFutureMap.get< ConstCacheObjects >( "CudaTextureCacheObjects" );
         cacheObjects.insert( cacheObjects.end(),
@@ -121,14 +122,14 @@ public:
     CudaTextureCache& _cudaCache;
     CudaTexturePool& _texturePool;
     const size_t _nUploadThreads;
-    Executor& _executor;
+    tuyau::Executor& _executor;
 };
 
 CudaRenderUploadFilter::CudaRenderUploadFilter( DataCache& dataCache,
                                                 CudaTextureCache& cudaCache,
                                                 CudaTexturePool& texturePool,
                                                 size_t nUploadThreads,
-                                                Executor& executor )
+                                                tuyau::Executor& executor )
     : _impl( new CudaRenderUploadFilter::Impl( dataCache,
                                                cudaCache,
                                                texturePool,
@@ -140,7 +141,7 @@ CudaRenderUploadFilter::CudaRenderUploadFilter( DataCache& dataCache,
 CudaRenderUploadFilter::~CudaRenderUploadFilter()
 {}
 
-void CudaRenderUploadFilter::execute( const FutureMap& input, PromiseMap& output ) const
+void CudaRenderUploadFilter::execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const
 {
     _impl->execute( input, output );
 }

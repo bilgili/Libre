@@ -43,18 +43,6 @@ set(LIVRECORE_HEADERS
   events/EventHandlerFactory.h
   events/EventInfo.h
   events/EventMapper.h
-  pipeline/Executable.h
-  pipeline/Filter.h
-  pipeline/FutureMap.h
-  pipeline/InputPort.h
-  pipeline/OutputPort.h
-  pipeline/PipeFilter.h
-  pipeline/Pipeline.h
-  pipeline/PortData.h
-  pipeline/FuturePromise.h
-  pipeline/PromiseMap.h
-  pipeline/SimpleExecutor.h
-  pipeline/Workers.h
   render/ClipPlanes.cpp
   render/FrameInfo.h
   render/Frustum.h
@@ -87,16 +75,6 @@ set(LIVRECORE_SOURCES
   data/DataSourcePlugin.cpp
   data/VolumeInformation.cpp
   events/EventMapper.cpp
-  pipeline/Executable.cpp
-  pipeline/FutureMap.cpp
-  pipeline/InputPort.cpp
-  pipeline/OutputPort.cpp
-  pipeline/PipeFilter.cpp
-  pipeline/Pipeline.cpp
-  pipeline/FuturePromise.cpp
-  pipeline/PromiseMap.cpp
-  pipeline/SimpleExecutor.cpp
-  pipeline/Workers.cpp
   render/ClipPlanes.cpp
   render/FrameInfo.cpp
   render/Frustum.cpp
@@ -117,7 +95,7 @@ set(LIVRECORE_SOURCES
   visitor/VisitState.cpp)
 
 set(LIVRECORE_LINK_LIBRARIES
-  PUBLIC ${Boost_LIBRARIES} Collage Lexis Lunchbox vmmlib ZeroBuf ${GLEW_LIBRARIES})
+  PUBLIC ${Boost_LIBRARIES} Collage Lexis Lunchbox Tuyau vmmlib ZeroBuf ${GLEW_LIBRARIES})
 
 set(LIVRECORE_INCLUDE_NAME livre/core)
 set(LIVRECORE_NAMESPACE livrecore)

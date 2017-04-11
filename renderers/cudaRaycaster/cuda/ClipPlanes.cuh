@@ -21,7 +21,7 @@
 
 #include "cuda.h"
 
-#include <lexis/render/clipPlanes.h>
+#include <lexis/render/detail/clipPlanes.h>
 
 #include <cuda_gl_interop.h>
 #include <cuda_runtime.h>
@@ -46,7 +46,7 @@ public:
      * Uploads the clip planes to cuda structures
      * @param clipPlanes is the clip planes
      */
-    void upload( const lexis::render::ClipPlanes& clipPlanes );
+    void upload( const lexis::render::detail::ClipPlanes& clipPlanes );
 
     /** @return the clip planes as cuda variables */
     CUDA_CALL const float4* getClipPlanes() const { return _clipPlanes; }

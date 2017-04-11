@@ -47,8 +47,8 @@ public:
 
 private:
 
-    virtual void serialize( co::DataOStream& os, const uint64_t dirtyBits );
-    virtual void deserialize( co::DataIStream& is, const uint64_t dirtyBits );
+    void serialize( co::DataOStream& os, const uint64_t dirtyBits ) final;
+    void deserialize( co::DataIStream& is, const uint64_t dirtyBits ) final;
 
     std::function< void( const Matrix4f& )> _notifyChangedFunc;
 };

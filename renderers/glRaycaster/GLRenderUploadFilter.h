@@ -22,7 +22,7 @@
 
 #include <livre/lib/types.h>
 #include <livre/core/render/RenderInputs.h>
-#include <livre/core/pipeline/Filter.h>
+#include <tuyau/filter.h>
 
 namespace livre
 {
@@ -33,7 +33,7 @@ namespace livre
  * textures. A group of uploaders is executed in rendering pipeline and each uploader
  * has an id in the group.
  */
-class GLRenderUploadFilter : public Filter
+class GLRenderUploadFilter : public tuyau::Filter
 {
 public:
 
@@ -48,28 +48,28 @@ public:
                           TextureCache& textureCache,
                           TexturePool& texturePool,
                           size_t nUploadThreads,
-                          Executor& executor );
+                          tuyau::Executor& executor );
     ~GLRenderUploadFilter();
 
     /** @copydoc Filter::execute */
-    void execute( const FutureMap& input, PromiseMap& output ) const final;
+    void execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const final;
 
     /** @copydoc Filter::getInputDataInfos */
-    DataInfos getInputDataInfos() const final
+    tuyau::DataInfos getInputDataInfos() const final
     {
         return
         {
-            { "RenderInputs", getType< RenderInputs >() },
-            { "NodeIds", getType< NodeIds >() },
+            { "RenderInputs", tuyau::getType< RenderInputs >() },
+            { "NodeIds", tuyau::getType< NodeIds >() },
         };
     }
 
     /** @copydoc Filter::getOutputDataInfos */
-    DataInfos getOutputDataInfos() const final
+    tuyau::DataInfos getOutputDataInfos() const final
     {
         return
         {
-            { "TextureCacheObjects", getType< ConstCacheObjects >() },
+            { "TextureCacheObjects", tuyau::getType< ConstCacheObjects >() },
         };
     }
 

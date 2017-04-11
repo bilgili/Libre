@@ -34,15 +34,13 @@ EqApplicationSettings::EqApplicationSettings()
                                           [this](const std::string&){ setDirty( DIRTY_ALL ); });
 }
 
-void EqApplicationSettings::serialize( co::DataOStream& os, const uint64_t dirtyBits )
+void EqApplicationSettings::serialize( co::DataOStream& os, uint64_t )
 {
-    co::Serializable::serialize( os, dirtyBits );
     os << _resourceFolders.get() << _renderer.get();
 }
 
-void EqApplicationSettings::deserialize( co::DataIStream& is, const uint64_t dirtyBits )
+void EqApplicationSettings::deserialize( co::DataIStream& is, uint64_t )
 {
-    co::Serializable::deserialize( is, dirtyBits );
     is >> _resourceFolders.get() >> _renderer.get();
 }
 

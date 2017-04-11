@@ -22,7 +22,8 @@
 
 #include <livre/core/api.h>
 #include <livre/core/types.h>
-#include <lunchbox/buffer.h> // member
+
+#include <lunchbox/debug.h>
 
 namespace livre
 {
@@ -106,12 +107,14 @@ public:
      */
     template< typename T >
     AllocMemoryUnit( const T* sourceData, const size_t size )
+        : _size( size * sizeof( T ))
     {
         _allocAndSetData( sourceData, size );
     }
 
     /** "void" specialization of the constructor */
     LIVRECORE_API AllocMemoryUnit( const void* sourceData, const size_t size )
+        : _size( size )
     {
         _allocAndSetData( static_cast< const uint8_t* >( sourceData ), size );
     }
@@ -122,6 +125,7 @@ public:
      */
     template< typename T >
     explicit AllocMemoryUnit( const std::vector< T >& sourceData )
+        : _size( sourceData.size() * sizeof( T ))
     {
         _allocAndSetData( &sourceData[ 0 ], sourceData.size( ));
     }
@@ -131,6 +135,7 @@ public:
      * @param size memory size
      */
     LIVRECORE_API explicit AllocMemoryUnit( const size_t size )
+        : _size( size )
     {
         _alloc( size );
     }
@@ -147,8 +152,8 @@ private:
     template< class T >
     void _allocAndSetData( const T* sourceData, const size_t size )
     {
-        _alloc( sizeof( T ) * size );
-        ::memcpy( _rawData.getData(), sourceData, size * sizeof( T ) );
+        _alloc( size * sizeof( T ));
+        ::memcpy( (void *)_rawData.get(), sourceData, size * sizeof( T ));
     }
 
     void _alloc( size_t nBytes );
@@ -156,7 +161,8 @@ private:
     const uint8_t* _getData() const final;
     uint8_t* _getData() final;
 
-    lunchbox::Bufferb _rawData;
+    std::unique_ptr<uint8_t[]> _rawData;
+    size_t _size;
 };
 
 }

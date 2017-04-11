@@ -21,7 +21,7 @@
 #include "CudaTextureObject.h"
 #include "cuda_runtime.h"
 
-#include <livre/core/pipeline/Pipeline.h>
+#include <tuyau/pipeline.h>
 #include <livre/core/data/NodeId.h>
 #include <livre/core/cache/Cache.h>
 
@@ -40,7 +40,7 @@ public:
         , _texturePool( texturePool )
     {}
 
-    void execute( const FutureMap& input, PromiseMap& output ) const
+    void execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const
     {
         ConstCacheObjects cacheObjects;
         const RenderInputs renderInputs = input.get< RenderInputs >( "RenderInputs" )[ 0 ];
@@ -74,7 +74,7 @@ CudaTextureUploadFilter::CudaTextureUploadFilter( const DataCache& dataCache,
 CudaTextureUploadFilter::~CudaTextureUploadFilter()
 {}
 
-void CudaTextureUploadFilter::execute( const FutureMap& input, PromiseMap& output ) const
+void CudaTextureUploadFilter::execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const
 {
     _impl->execute( input, output );
 }

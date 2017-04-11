@@ -37,7 +37,7 @@ struct RenderFilter::Impl
         , _renderer( renderer )
     {}
 
-    void execute( const FutureMap& input, PromiseMap&) const
+    void execute( const tuyau::FutureMap& input, tuyau::PromiseMap&) const
     {
         ConstCacheObjects renderBricks;
         for( const auto& cacheObjects: input.getFutures( "CacheObjects" ))
@@ -62,8 +62,8 @@ RenderFilter::RenderFilter( const DataSource& dataSource,
 RenderFilter::~RenderFilter()
 {}
 
-void RenderFilter::execute( const FutureMap& input,
-                            PromiseMap& output ) const
+void RenderFilter::execute( const tuyau::FutureMap& input,
+                            tuyau::PromiseMap& output ) const
 {
     _impl->execute( input, output );
 }

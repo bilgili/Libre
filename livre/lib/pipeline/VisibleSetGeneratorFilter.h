@@ -22,7 +22,7 @@
 
 #include <livre/lib/types.h>
 
-#include <livre/core/pipeline/Filter.h>
+#include <tuyau/filter.h>
 #include <livre/core/render/FrameInfo.h>
 
 namespace livre
@@ -32,7 +32,7 @@ namespace livre
  * Collects all the visibles for given inputs ( Frustums, Frames, Data Ranges,
  * Rendering params and Viewports )
  */
-class VisibleSetGeneratorFilter : public Filter
+class VisibleSetGeneratorFilter : public tuyau::Filter
 {
 
 public:
@@ -45,29 +45,29 @@ public:
     ~VisibleSetGeneratorFilter();
 
     /** @copydoc Filter::execute */
-    void execute( const FutureMap& input, PromiseMap& output ) const final;
+    void execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const final;
 
     /** @copydoc Filter::getInputDataInfos */
-    DataInfos getInputDataInfos() const final
+    tuyau::DataInfos getInputDataInfos() const final
     {
         return
         {
-            { "Frustum", getType< Frustum >() },
-            { "Frame", getType< uint32_t >() },
-            { "DataRange", getType< Range >() },
-            { "Params", getType< RendererParameters >() },
-            { "Viewport", getType< PixelViewport >() },
-            { "ClipPlanes", getType< ClipPlanes >() }
+            { "Frustum", tuyau::getType< Frustum >() },
+            { "Frame", tuyau::getType< uint32_t >() },
+            { "DataRange", tuyau::getType< Range >() },
+            { "Params", tuyau::getType< RendererParameters >() },
+            { "Viewport", tuyau::getType< PixelViewport >() },
+            { "ClipPlanes", tuyau::getType< ClipPlanes >() }
         };
     }
 
     /** @copydoc Filter::getOutputDataInfos */
-    DataInfos getOutputDataInfos() const final
+    tuyau::DataInfos getOutputDataInfos() const final
     {
         return
         {
-            { "VisibleNodes", getType< NodeIds >() },
-            { "Params", getType< RendererParameters >() }
+            { "VisibleNodes", tuyau::getType< NodeIds >() },
+            { "Params", tuyau::getType< RendererParameters >() }
         };
     }
 

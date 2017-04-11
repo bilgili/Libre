@@ -25,13 +25,13 @@
 #include <livre/core/mathTypes.h>
 #include <co/distributable.h> // base class
 
-#include <lexis/render/histogram.h> // base class
+#include <lexis/render/detail/histogram.h> // base class
 
 
 namespace livre
 {
 
-class Histogram : public co::Distributable< ::lexis::render::Histogram >
+class Histogram : public co::Distributable< ::lexis::render::detail::Histogram >
 {
 public:
     /**

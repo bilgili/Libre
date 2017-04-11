@@ -20,7 +20,6 @@
 #include <livre/lib/cache/DataObject.h>
 #include <livre/lib/pipeline/DataUploadFilter.h>
 
-#include <livre/core/pipeline/Pipeline.h>
 #include <livre/core/data/NodeId.h>
 #include <livre/core/cache/Cache.h>
 
@@ -33,7 +32,7 @@ struct DataUploadFilter::Impl
         : _dataCache( dataCache )
     {}
 
-    void execute( const FutureMap& input, PromiseMap& output ) const
+    void execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const
     {
         ConstCacheObjects cacheObjects;
         const RenderInputs renderInputs = input.get< RenderInputs >( "RenderInputs" )[ 0 ];
@@ -60,8 +59,8 @@ DataUploadFilter::DataUploadFilter( DataCache& dataCache )
 DataUploadFilter::~DataUploadFilter()
 {}
 
-void DataUploadFilter::execute( const FutureMap& input,
-                                PromiseMap& output ) const
+void DataUploadFilter::execute( const tuyau::FutureMap& input,
+                                tuyau::PromiseMap& output ) const
 {
     _impl->execute( input, output );
 }

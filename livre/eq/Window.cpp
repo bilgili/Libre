@@ -58,16 +58,10 @@ public:
 
     void configInit()
     {
-        shareGLContexts();
-
         const livre::Pipe* pipe = static_cast< const livre::Pipe* >( _window->getPipe( ));
         const ApplicationSettings& settings = pipe->getFrameData()->getApplicationSettings();
-
         _renderPipeline.reset( new RenderPipeline( settings.getRenderer( )));
-    }
 
-    void shareGLContexts()
-    {
         const Window* sharedWindow = static_cast< const Window* >(
                                          _window->getSharedContextWindow( ));
 

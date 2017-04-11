@@ -23,7 +23,7 @@
 #include <livre/lib/types.h>
 
 #include <livre/core/mathTypes.h>
-#include <livre/core/pipeline/Filter.h>
+#include <tuyau/filter.h>
 
 #include <livre/core/data/Histogram.h>
 
@@ -35,7 +35,7 @@ namespace livre
  * are in or intersecting the frustum.
  *
  */
-class HistogramFilter : public Filter
+class HistogramFilter : public tuyau::Filter
 {
 
 public:
@@ -52,26 +52,26 @@ public:
     ~HistogramFilter();
 
     /** @copydoc Filter::execute */
-    void execute( const FutureMap& input, PromiseMap& output ) const final;
+    void execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const final;
 
     /** @copydoc Filter::getInputDataInfos */
-    DataInfos getInputDataInfos() const final
+    tuyau::DataInfos getInputDataInfos() const final
     {
         return
         {
-            { "Frustum", getType< Frustum >() },
-            { "RelativeViewport", getType< Viewport >() },
-            { "NodeIds", getType< NodeIds >() },
-            { "DataSourceRange", getType< Vector2f >() },
+            { "Frustum", tuyau::getType< Frustum >() },
+            { "RelativeViewport", tuyau::getType< Viewport >() },
+            { "NodeIds", tuyau::getType< NodeIds >() },
+            { "DataSourceRange", tuyau::getType< Vector2f >() },
         };
     }
 
     /** @copydoc Filter::getOutputDataInfos */
-    DataInfos getOutputDataInfos() const final
+    tuyau::DataInfos getOutputDataInfos() const final
     {
         return
         {
-            { "Histogram", getType< Histogram >() },
+            { "Histogram", tuyau::getType< Histogram >() },
         };
     }
 

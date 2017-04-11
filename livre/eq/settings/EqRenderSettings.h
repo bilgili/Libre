@@ -30,8 +30,7 @@
 namespace livre
 {
 
-class EqRenderSettings : public co::Serializable,
-                         public RenderSettings
+class EqRenderSettings : public co::Serializable, public RenderSettings
 {
     /** The changed parts of the data since the last pack( ). */
     enum DirtyBits

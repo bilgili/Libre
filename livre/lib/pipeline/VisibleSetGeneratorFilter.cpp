@@ -21,13 +21,14 @@
 #include <livre/core/configuration/RendererParameters.h>
 
 #include <livre/core/cache/Cache.h>
-#include <livre/core/pipeline/InputPort.h>
-#include <livre/core/pipeline/Workers.h>
-#include <livre/core/pipeline/PortData.h>
 #include <livre/core/render/SelectVisibles.h>
 #include <livre/core/render/ClipPlanes.h>
 #include <livre/core/data/DataSource.h>
 #include <livre/core/visitor/DFSTraversal.h>
+
+#include <tuyau/workers.h>
+#include <tuyau/portData.h>
+#include <tuyau/futureMap.h>
 
 namespace livre
 {
@@ -38,10 +39,10 @@ struct VisibleSetGeneratorFilter::Impl
         : _dataSource( dataSource )
     {}
 
-    void execute( const FutureMap& input,
-                  PromiseMap& output ) const
+    void execute( const tuyau::FutureMap& input,
+                  tuyau::PromiseMap& output ) const
     {
-        const UniqueFutureMap uniqueInputs( input.getFutures( ));
+        const tuyau::UniqueFutureMap uniqueInputs( input.getFutures( ));
 
         const auto& frustum = uniqueInputs.get< Frustum >( "Frustum" );
         const auto& frame =  uniqueInputs.get< uint32_t >( "Frame" );
@@ -83,7 +84,7 @@ VisibleSetGeneratorFilter::VisibleSetGeneratorFilter( const DataSource& dataSour
 VisibleSetGeneratorFilter::~VisibleSetGeneratorFilter()
 {}
 
-void VisibleSetGeneratorFilter::execute( const FutureMap& input, PromiseMap& output ) const
+void VisibleSetGeneratorFilter::execute( const tuyau::FutureMap& input, tuyau::PromiseMap& output ) const
 {
     _impl->execute( input, output );
 }
